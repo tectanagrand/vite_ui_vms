@@ -18,8 +18,10 @@ import {
   Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import { useState, useRef, useEffect } from 'react';
+import { VenBankTable } from 'src/components/FormVendor';
+import { BankV } from 'src/_mock/Bank';
+import UploadButton from 'src/components/common/UploadButton';
 
 export default function FormVendorPage() {
   const initialForm = {
@@ -46,45 +48,29 @@ export default function FormVendorPage() {
     limit_vendor: 0,
     lim_curr: '',
   };
-  // let temp_ven_bank = {
-  //   method: '',
-  //   ven_id: '',
-  //   bankv_id: '',
-  //   bank_id: '',
-  //   bank_acc: '',
-  //   acc_hold: '',
-  //   acc_name: '',
-  //   created_by: '',
-  // };
-  const [ven_bank, setVen_bank] = useState([
-    {
-      id: 1,
-      bankName: 'TE',
-      accountNumber: '123',
-      accountHolder: '123',
-      action: '2',
-    },
-  ]);
+  const [ven_bank, setVen_bank] = useState([]);
   const [ven_file, setVen_file] = useState([]);
-  const columns = [
-    { field: 'bankName', headerName: 'Bank Name', width: 300, editable: true },
-    { field: 'accountNumber', headerName: 'Account Number', width: 300, editable: true },
-    { field: 'accountHolder', headerName: 'Account Holder', width: 300, editable: true },
-    { field: 'action', headerName: 'Action', width: 200 },
-  ];
   const [localovs, setLocalovs] = useState('');
   const [expanded, setExpanded] = useState({
     panelReqDet: true,
     panelCompDet: false,
     panelAddr: false,
   });
+
+  const setVen_bankFromChild = (ven_bank) => {
+    setVen_bank(ven_bank);
+    console.log(ven_bank);
+  };
+
   const handleChangeLocOvs = (e, data) => {
     console.log(data);
     setLocalovs(e.target.value);
   };
+
   const handleFormChange = (e) => {
     console.log(e.target.value);
   };
+
   const handleExpanded = (panel) => () => {
     if (panel === 'panelReqDet') {
       setExpanded({
@@ -102,6 +88,10 @@ export default function FormVendorPage() {
         panelAddr: expanded.panelAddr ? false : true,
       });
     }
+  };
+
+  const handleUpload = (uploadedFile) => {
+    setVen_file(uploadedFile);
   };
   return (
     <>
@@ -203,7 +193,7 @@ export default function FormVendorPage() {
                   <FormControl fullWidth>
                     <InputLabel htmlFor="countrySelect">Country</InputLabel>
                     <Select id="countrySelect" labelId="countrySelect" label="Country" variant="outlined">
-                      <MenuItem value={'check1'}>Check1</MenuItem>
+                      <MenuItem>Check1</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -214,7 +204,7 @@ export default function FormVendorPage() {
                   <FormControl fullWidth>
                     <InputLabel htmlFor="postalCode">Postal</InputLabel>
                     <Select id="postalCode" labelId="postalCode" label="Postal" variant="outlined">
-                      <MenuItem value={'postal'}>Postal</MenuItem>
+                      <MenuItem>Postal</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -295,9 +285,26 @@ export default function FormVendorPage() {
               <Typography>Bank Information</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Box sx={{ height: 300, width: '100%' }}>
-                <DataGrid columns={columns} rows={ven_bank} />
-              </Box>
+              <VenBankTable onChildDataChange={setVen_bankFromChild} initData={BankV} />
+            </AccordionDetails>
+          </Accordion>
+          <Accordion>
+            <AccordionSummary
+              sx={{
+                pointerEvents: 'none',
+              }}
+              expandIcon={
+                <ExpandMoreIcon
+                  sx={{
+                    pointerEvents: 'auto',
+                  }}
+                />
+              }
+            >
+              <Typography>File Upload</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <UploadButton inputTypes={['SPPKP', 'KTP']} uploadHandler={handleUpload} />
             </AccordionDetails>
           </Accordion>
         </Container>

@@ -1,9 +1,9 @@
-import { BrowserRouter } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
+import { BrowserRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
-import ThemeProvider from "./theme";
+import ThemeProvider from './theme';
 
-import Router from "./routes";
+import Router from './routes';
 
 function App() {
   return (
