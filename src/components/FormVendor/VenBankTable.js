@@ -137,7 +137,9 @@ export default function VenBankTable({ onChildDataChange, initData }) {
       headerName: 'Action',
       width: 100,
       cellClassName: 'actions',
-      getActions: ({ id }) => {
+      getActions: (row) => {
+        console.log(row);
+        let id = row.id;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {
           return [

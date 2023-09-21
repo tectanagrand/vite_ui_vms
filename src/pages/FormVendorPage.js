@@ -21,6 +21,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState, useRef, useEffect } from 'react';
 import { VenBankTable } from 'src/components/FormVendor';
 import { BankV } from 'src/_mock/Bank';
+import { File } from 'src/_mock/File';
 import UploadButton from 'src/components/common/UploadButton';
 
 export default function FormVendorPage() {
@@ -60,6 +61,11 @@ export default function FormVendorPage() {
   const setVen_bankFromChild = (ven_bank) => {
     setVen_bank(ven_bank);
     console.log(ven_bank);
+  };
+
+  const setVen_fileFromChild = (ven_file) => {
+    setVen_file(ven_file);
+    console.log(ven_file);
   };
 
   const handleChangeLocOvs = (e, data) => {
@@ -304,7 +310,12 @@ export default function FormVendorPage() {
               <Typography>File Upload</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <UploadButton inputTypes={['SPPKP', 'KTP']} uploadHandler={handleUpload} />
+              <UploadButton
+                inputTypes={['SPPKP', 'KTP']}
+                uploadHandler={handleUpload}
+                iniData={File}
+                onChildDtChg={setVen_fileFromChild}
+              />
             </AccordionDetails>
           </Accordion>
         </Container>
