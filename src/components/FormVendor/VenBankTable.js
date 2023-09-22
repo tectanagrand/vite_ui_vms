@@ -22,7 +22,7 @@ function EditToolbar(props) {
     const id = randomId();
     setVen_bank((oldRows) => [
       ...oldRows,
-      { id: id, bank_id: '', bank_acc: '', acc_hold: '', acc_name: '', isNew: true, mode: 'insert', isDb: false },
+      { id: id, bank_id: '', bank_acc: '', acc_hold: '', acc_name: '', isNew: true, method: 'insert', isDb: false },
     ]);
     setRowModesModel((oldModel) => ({ ...oldModel, [id]: { mode: GridRowModes.Edit, fieldToFocus: 'bankv_id' } }));
   };
@@ -39,14 +39,14 @@ export default function VenBankTable({ onChildDataChange, initData }) {
   let covtData = [];
   if (initData != null) {
     initData.map((item) => {
-      covtData.push({ ...item, isDb: true, isNew: false, mode: '' });
+      covtData.push({ ...item, isDb: true, isNew: false, method: '' });
     });
   }
   const [ven_bank, setVen_bank] = useState(covtData ? covtData : []);
   const sendDataParent = (ven_bank) => {
     let items = [];
     ven_bank.map((item) => {
-      if (item.mode !== '') {
+      if (item.method !== '') {
         let temp = { ...item };
         delete temp.isDb;
         delete temp.isNew;
@@ -72,7 +72,7 @@ export default function VenBankTable({ onChildDataChange, initData }) {
     ven_bank.map((item) => {
       if (item.id === id) {
         if (item.isDb == true) {
-          prevData.push({ ...item, mode: 'delete' });
+          prevData.push({ ...item, method: 'delete' });
         }
       } else {
         prevData.push(item);
@@ -101,7 +101,7 @@ export default function VenBankTable({ onChildDataChange, initData }) {
     ven_bank.map((row) => {
       if (row.id === newRow.id) {
         if (row.isDb === true) {
-          prevData.push({ ...updatedRow, mode: 'update' });
+          prevData.push({ ...updatedRow, method: 'update' });
         } else {
           prevData.push(updatedRow);
         }
@@ -138,7 +138,6 @@ export default function VenBankTable({ onChildDataChange, initData }) {
       width: 100,
       cellClassName: 'actions',
       getActions: (row) => {
-        console.log(row);
         let id = row.id;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {

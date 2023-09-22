@@ -58,14 +58,15 @@ export default function FormVendorPage() {
     panelAddr: false,
   });
 
-  const setVen_bankFromChild = (ven_bank) => {
-    setVen_bank(ven_bank);
+  const setVen_bankFromChild = (newItem) => {
+    setVen_bank(newItem);
     console.log(ven_bank);
   };
 
-  const setVen_fileFromChild = (ven_file) => {
-    setVen_file(ven_file);
-    console.log(ven_file);
+  const setVen_fileFromChild = (newItem) => {
+    setVen_file(newItem);
+    // console.log(newItem);
+    // console.log(ven_file);
   };
 
   const handleChangeLocOvs = (e, data) => {
@@ -73,6 +74,10 @@ export default function FormVendorPage() {
     setLocalovs(e.target.value);
   };
 
+  const handleSubmit = (event) => {
+    console.log(ven_bank);
+    console.log(ven_file);
+  };
   const handleFormChange = (e) => {
     console.log(e.target.value);
   };
@@ -96,9 +101,6 @@ export default function FormVendorPage() {
     }
   };
 
-  const handleUpload = (uploadedFile) => {
-    setVen_file(uploadedFile);
-  };
   return (
     <>
       <Container>
@@ -311,14 +313,21 @@ export default function FormVendorPage() {
             </AccordionSummary>
             <AccordionDetails>
               <UploadButton
-                inputTypes={['SPPKP', 'KTP']}
-                uploadHandler={handleUpload}
+                inputTypes={[
+                  { key: 'SPPKP', value: 'SPPKP' },
+                  { key: 'KTP', value: 'KTP' },
+                ]}
                 iniData={File}
-                onChildDtChg={setVen_fileFromChild}
+                onChildDataChange={setVen_fileFromChild}
               />
             </AccordionDetails>
           </Accordion>
         </Container>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+          <Button sx={{ height: 50, width: 100, margin: 2 }} onClick={handleSubmit}>
+            Submit
+          </Button>
+        </Box>
       </Container>
     </>
   );
