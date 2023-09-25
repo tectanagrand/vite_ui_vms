@@ -14,11 +14,11 @@ import {
   FormControlLabel,
   Checkbox,
   FormGroup,
-  Stack,
   Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useState, useRef, useEffect } from 'react';
+import { NumericFormat } from 'react-number-format';
+import { useState, useRef, useEffect, useReducer } from 'react';
 import { VenBankTable } from 'src/components/FormVendor';
 import { BankV } from 'src/_mock/Bank';
 import { File } from 'src/_mock/File';
@@ -29,11 +29,13 @@ export default function FormVendorPage() {
     is_draft: true,
     ticket_id: '',
   };
+
   const ven_detail = {
     ticket_num: '',
     ven_id: '',
     proc_id: '',
     name_1: '',
+    title: '',
     street: '',
     telf1: '',
     fax: '',
@@ -48,15 +50,163 @@ export default function FormVendorPage() {
     local_ovs: '',
     limit_vendor: 0,
     lim_curr: '',
+    city: '',
+    country: '',
   };
+
   const [ven_bank, setVen_bank] = useState([]);
   const [ven_file, setVen_file] = useState([]);
-  const [localovs, setLocalovs] = useState('');
+  const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [expanded, setExpanded] = useState({
     panelReqDet: true,
-    panelCompDet: false,
-    panelAddr: false,
+    panelCompDet: true,
+    panelAddr: true,
+    panelTax: false,
+    panelBank: false,
+    panelFile: true,
   });
+  const [header, setHeader] = useState({
+    email_head: 'aaaa@xmail.com',
+    dept_head: 'MXMS',
+  });
+
+  const formReducer = (state, action) => {
+    switch (action.type) {
+      case 'name': {
+        return {
+          ...state,
+          name_1: action.name_1,
+        };
+      }
+      case 'title': {
+        return {
+          ...state,
+          title: action.title,
+        };
+      }
+      case 'street': {
+        return {
+          ...state,
+          street: action.street,
+        };
+      }
+      case 'telf1': {
+        return {
+          ...state,
+          telf1: action.telf1,
+        };
+      }
+      case 'fax': {
+        return {
+          ...state,
+          fax: action.fax,
+        };
+      }
+      case 'postal': {
+        return {
+          ...state,
+          postal: action.postal,
+        };
+      }
+      case 'email': {
+        return {
+          ...state,
+          email: action.email,
+        };
+      }
+      case 'is_pkp': {
+        return {
+          ...state,
+          is_pkp: action.is_pkp,
+        };
+      }
+      case 'npwp': {
+        return {
+          ...state,
+          npwp: action.npwp,
+        };
+      }
+      case 'pay_mthd': {
+        return {
+          ...state,
+          pay_mthd: action.pay_mthd,
+        };
+      }
+      case 'pay_term': {
+        return {
+          ...state,
+          pay_term: action.pay_term,
+        };
+      }
+      case 'is_tender': {
+        return {
+          ...state,
+          is_tender: action.is_tender,
+        };
+      }
+      case 'local_ovs': {
+        return {
+          ...state,
+          local_ovs: action.local_ovs,
+        };
+      }
+      case 'limit_vendor': {
+        return {
+          ...state,
+          limit_vendor: action.limit_vendor,
+        };
+      }
+      case 'lim_curr': {
+        return {
+          ...state,
+          lim_curr: action.lim_curr,
+        };
+      }
+      case 'country': {
+        return {
+          ...state,
+          country: action.country,
+        };
+      }
+      case 'city': {
+        return {
+          ...state,
+          city: action.city,
+        };
+      }
+    }
+  };
+
+  const [state, dispatch] = useReducer(formReducer, ven_detail);
+
+  const dynaCity = async () => {
+    const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ countryId: state.country }),
+    });
+    const response = await cities.json();
+    const result = response.data;
+    setCities(result.data);
+  };
+
+  const dynaCountry = async () => {
+    const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
+      method: 'POST',
+    });
+    const response = await country.json();
+    const result = response.data;
+    setCountries(result.data);
+  };
+
+  useEffect(() => {
+    dynaCountry();
+    dynaCity();
+    console.log(countries, cities);
+  }, [state.country]);
 
   const setVen_bankFromChild = (newItem) => {
     setVen_bank(newItem);
@@ -69,17 +219,9 @@ export default function FormVendorPage() {
     // console.log(ven_file);
   };
 
-  const handleChangeLocOvs = (e, data) => {
-    console.log(data);
-    setLocalovs(e.target.value);
-  };
-
   const handleSubmit = (event) => {
     console.log(ven_bank);
     console.log(ven_file);
-  };
-  const handleFormChange = (e) => {
-    console.log(e.target.value);
   };
 
   const handleExpanded = (panel) => () => {
@@ -97,6 +239,21 @@ export default function FormVendorPage() {
       setExpanded({
         ...expanded,
         panelAddr: expanded.panelAddr ? false : true,
+      });
+    } else if (panel === 'panelTax') {
+      setExpanded({
+        ...expanded,
+        panelTax: expanded.panelTax ? false : true,
+      });
+    } else if (panel === 'panelBank') {
+      setExpanded({
+        ...expanded,
+        panelBank: expanded.panelBank ? false : true,
+      });
+    } else if (panel === 'panelFile') {
+      setExpanded({
+        ...expanded,
+        panelFile: expanded.panelFile ? false : true,
       });
     }
   };
@@ -129,10 +286,28 @@ export default function FormVendorPage() {
             <AccordionDetails>
               <Grid container spacing={2}>
                 <Grid item xs>
-                  <TextField fullWidth id="emailRequestor" label="Email" variant="outlined" />
+                  <TextField
+                    fullWidth
+                    id="emailRequestor"
+                    label="Email"
+                    variant="outlined"
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                    value={header.email_head}
+                  />
                 </Grid>
                 <Grid item xs>
-                  <TextField fullWidth id="deptRequestor" label="Department" variant="outlined" />
+                  <TextField
+                    fullWidth
+                    id="deptRequestor"
+                    label="Department"
+                    variant="outlined"
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                    value={header.dept_head}
+                  />
                 </Grid>
               </Grid>
             </AccordionDetails>
@@ -155,26 +330,57 @@ export default function FormVendorPage() {
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={2}>
-                <Grid item xs>
-                  <TextField fullWidth id="titleComp" label="Title" variant="outlined" />
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    id="titleComp"
+                    label="Title"
+                    variant="outlined"
+                    onChange={(e) => {
+                      dispatch({ type: 'title', title: e.target.value });
+                    }}
+                    value={state.title}
+                  />
                 </Grid>
-                <Grid item xs>
+                <Grid item xs={3}>
                   <FormControl fullWidth>
                     <InputLabel id="local-ovs-label">Local / Overseas</InputLabel>
                     <Select
                       id="localOverseas"
                       labelId="local-ovs-label"
-                      value={localovs}
+                      value={state.local_ovs}
                       label="Local / Overseas"
                       variant="outlined"
-                      onChange={handleChangeLocOvs}
+                      onChange={(e) => {
+                        dispatch({ type: 'local_ovs', local_ovs: e.target.value });
+                      }}
                     >
-                      <MenuItem value={'local'}>Local</MenuItem>
+                      <MenuItem value={'LOCAL'}>Local</MenuItem>
+                      <MenuItem value={'OVERSEAS'}>Overseas</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={8}>
-                  <TextField fullWidth id="nameComp" label="Company Name" variant="outlined" />
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    id="nameComp"
+                    label="Company Name"
+                    variant="outlined"
+                    value={state.name_1}
+                    onChange={(e) => {
+                      dispatch({ type: 'name', name_1: e.target.value });
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <NumericFormat
+                    value={state.limit_vendor}
+                    prefix="IDR "
+                    thousandSeparator
+                    customInput={TextField}
+                    label={'Limit Vendor'}
+                    fullWidth
+                  />
                 </Grid>
               </Grid>
             </AccordionDetails>
@@ -200,39 +406,103 @@ export default function FormVendorPage() {
                 <Grid item xs={3}>
                   <FormControl fullWidth>
                     <InputLabel htmlFor="countrySelect">Country</InputLabel>
-                    <Select id="countrySelect" labelId="countrySelect" label="Country" variant="outlined">
-                      <MenuItem>Check1</MenuItem>
+                    <Select
+                      id="countrySelect"
+                      labelId="countrySelect"
+                      label="Country"
+                      variant="outlined"
+                      value={state.country}
+                      onChange={(e) => dispatch({ type: 'country', country: e.target.value })}
+                    >
+                      {countries.map((item) => (
+                        <MenuItem id={item.country_code} key={item.code} value={item.country_code}>
+                          {item.country_name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
                 <Grid item xs={9}>
-                  <TextField fullWidth id="addressField" label="Address" />
+                  <TextField
+                    fullWidth
+                    id="addressField"
+                    label="Address"
+                    value={state.street}
+                    onChange={(e) => {
+                      dispatch({ type: 'street', street: e.target.value });
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    id="postalCode"
+                    label="Postal Code"
+                    value={state.postal}
+                    onChange={(e) => {
+                      dispatch({ type: 'postal', postal: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel htmlFor="postalCode">Postal</InputLabel>
-                    <Select id="postalCode" labelId="postalCode" label="Postal" variant="outlined">
-                      <MenuItem>Postal</MenuItem>
+                    <InputLabel htmlFor="City">City</InputLabel>
+                    <Select
+                      id="cityField"
+                      label="City"
+                      labelId="City"
+                      variant="outlined"
+                      value={state.city}
+                      onChange={(e) => {
+                        dispatch({ type: 'city', city: e.target.value });
+                      }}
+                    >
+                      {cities.map((item) => (
+                        <MenuItem id={item.code} key={item.code} value={item.city}>
+                          {item.city}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
-                </Grid>
-                <Grid item xs={3}>
-                  <TextField fullWidth id="cityField" label="City" />
+                  {/* <TextField fullWidth id="cityField" label="City" /> */}
                 </Grid>
                 <Grid item xs={6}></Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="telf1Field" label="Telephone" />
+                  <TextField
+                    fullWidth
+                    id="telf1Field"
+                    label="Telephone"
+                    value={state.telf1}
+                    onChange={(e) => {
+                      dispatch({ type: 'telf1', telf1: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="faxField" label="Fax" />
+                  <TextField
+                    fullWidth
+                    id="faxField"
+                    label="Fax"
+                    value={state.fax}
+                    onChange={(e) => {
+                      dispatch({ type: 'fax', fax: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="email" label="Email" />
+                  <TextField
+                    fullWidth
+                    id="email"
+                    label="Email"
+                    value={state.telf1}
+                    onChange={(e) => {
+                      dispatch({ type: 'email', email: e.target.value });
+                    }}
+                  />
                 </Grid>
               </Grid>
             </AccordionDetails>
           </Accordion>
-          <Accordion>
+          <Accordion expanded={expanded.panelTax} onChange={handleExpanded('panelTax')}>
             <AccordionSummary
               sx={{
                 pointerEvents: 'none',
@@ -251,17 +521,41 @@ export default function FormVendorPage() {
               <Grid container spacing={2}>
                 <Grid item xs={4}>
                   <FormGroup>
-                    <FormControlLabel control={<Checkbox id="is_PKP" />} label="Pengusaha Kena Pajak (PKP)" />
+                    <FormControlLabel
+                      control={<Checkbox id="is_PKP" />}
+                      value={state.is_pkp}
+                      onChange={(e) => {
+                        console.log(e);
+                        dispatch({ type: 'is_pkp', is_pkp: e.target.checked });
+                      }}
+                      label="Pengusaha Kena Pajak (PKP)"
+                    />
                   </FormGroup>
                 </Grid>
                 <Grid item xs={9}></Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth id="taxNumberField" label="Tax Number (NPWP)" />
+                  <TextField
+                    fullWidth
+                    id="taxNumberField"
+                    label="Tax Number (NPWP)"
+                    value={state.npwp}
+                    onChange={(e) => {
+                      dispatch({ type: 'npwp', npwp: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={2}>
                   <FormControl fullWidth>
                     <InputLabel htmlFor="paymentMethodField">Payment Method</InputLabel>
-                    <Select id="paymentMethodLabel" labelId="paymentMethodLabel" variant="outlined">
+                    <Select
+                      id="paymentMethodLabel"
+                      labelId="paymentMethodLabel"
+                      variant="outlined"
+                      value={state.pay_mthd}
+                      onChange={(e) => {
+                        dispatch({ type: 'pay_mthd', pay_mthd: e.target.value });
+                      }}
+                    >
                       <MenuItem>Bank</MenuItem>
                     </Select>
                   </FormControl>
@@ -269,7 +563,15 @@ export default function FormVendorPage() {
                 <Grid item xs={2}>
                   <FormControl fullWidth>
                     <InputLabel htmlFor="paymentTermField">Payment Term</InputLabel>
-                    <Select id="paymentTermField" labelId="paymentTermField" variant="outlined">
+                    <Select
+                      id="paymentTermField"
+                      labelId="paymentTermField"
+                      variant="outlined"
+                      value={state.pay_term}
+                      onChange={(e) => {
+                        dispatch({ type: 'pay_term', pay_term: e.target.value });
+                      }}
+                    >
                       <MenuItem>30</MenuItem>
                     </Select>
                   </FormControl>
@@ -277,7 +579,7 @@ export default function FormVendorPage() {
               </Grid>
             </AccordionDetails>
           </Accordion>
-          <Accordion>
+          <Accordion expanded={expanded.panelBank} onChange={handleExpanded('panelBank')}>
             <AccordionSummary
               sx={{
                 pointerEvents: 'none',
@@ -296,7 +598,7 @@ export default function FormVendorPage() {
               <VenBankTable onChildDataChange={setVen_bankFromChild} initData={BankV} />
             </AccordionDetails>
           </Accordion>
-          <Accordion>
+          <Accordion expanded={expanded.panelFile} onChange={handleExpanded('panelFile')}>
             <AccordionSummary
               sx={{
                 pointerEvents: 'none',
