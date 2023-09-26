@@ -37,7 +37,7 @@ function EditToolbar(props) {
 
 export default function VenBankTable({ onChildDataChange, initData }) {
   let covtData = [];
-  if (initData != null) {
+  if (Object.keys(initData).length != 0) {
     initData.map((item) => {
       covtData.push({ ...item, isDb: true, isNew: false, method: '' });
     });

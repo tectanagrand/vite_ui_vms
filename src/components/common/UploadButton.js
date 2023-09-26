@@ -39,7 +39,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData })
   };
 
   useEffect(() => {
-    if (iniData != null) {
+    if (Object.keys(iniData).length != 0) {
       const covtData = [];
       iniData.map((item) => {
         covtData.push({ ...item, method: '', id: item.file_id });

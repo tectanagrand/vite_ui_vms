@@ -23,35 +23,36 @@ import { VenBankTable } from 'src/components/FormVendor';
 import { BankV } from 'src/_mock/Bank';
 import { File } from 'src/_mock/File';
 import UploadButton from 'src/components/common/UploadButton';
-import { useParams } from 'react-router-dom';
 
 export default function FormVendorPage() {
-  const params = useParams();
-  const ttoken = params.token;
   const initialForm = {
-    is_draft: false,
+    is_draft: true,
     ticket_id: '',
-    ven_id: '',
-    email_head: '',
-    dept_head: '',
   };
-  const [local_ovs, setLocalovs] = useState('');
-  const [lim_curr, setLimitCurr] = useState('');
-  const [lim_ven, setLimven] = useState('');
-  const [country_ven, setCountryven] = useState('');
-  const [city_ven, setCityven] = useState('');
-  const [pay_mthd, setPayMthd] = useState('');
-  const [pay_term, setPayTerm] = useState('');
 
-  const comp_name = useRef();
-  const title = useRef();
-  const address = useRef();
-  const postalcode = useRef();
-  const telf = useRef();
-  const fax = useRef();
-  const tax_num = useRef();
-  const email_ven = useRef();
-  const is_pkp = useRef();
+  const ven_detail = {
+    ticket_num: '',
+    ven_id: '',
+    proc_id: '',
+    name_1: '',
+    title: '',
+    street: '',
+    telf1: '',
+    fax: '',
+    postal: '',
+    email: '',
+    is_pkp: false,
+    npwp: '',
+    pay_mthd: '',
+    pay_term: '',
+    is_tender: false,
+    is_active: true,
+    local_ovs: '',
+    limit_vendor: 0,
+    lim_curr: '',
+    city: '',
+    country: '',
+  };
 
   const [ven_bank, setVen_bank] = useState([]);
   const [ven_file, setVen_file] = useState([]);
@@ -62,92 +63,165 @@ export default function FormVendorPage() {
     panelReqDet: true,
     panelCompDet: true,
     panelAddr: true,
-    panelTax: true,
-    panelBank: true,
+    panelTax: false,
+    panelBank: false,
     panelFile: true,
   });
-  const [headerForm, setHeaderForm] = useState(initialForm);
+  const [header, setHeader] = useState({
+    email_head: 'aaaa@xmail.com',
+    dept_head: 'MXMS',
+  });
+
+  const formReducer = (state, action) => {
+    switch (action.type) {
+      case 'name': {
+        return {
+          ...state,
+          name_1: action.name_1,
+        };
+      }
+      case 'title': {
+        return {
+          ...state,
+          title: action.title,
+        };
+      }
+      case 'street': {
+        return {
+          ...state,
+          street: action.street,
+        };
+      }
+      case 'telf1': {
+        return {
+          ...state,
+          telf1: action.telf1,
+        };
+      }
+      case 'fax': {
+        return {
+          ...state,
+          fax: action.fax,
+        };
+      }
+      case 'postal': {
+        return {
+          ...state,
+          postal: action.postal,
+        };
+      }
+      case 'email': {
+        return {
+          ...state,
+          email: action.email,
+        };
+      }
+      case 'is_pkp': {
+        return {
+          ...state,
+          is_pkp: action.is_pkp,
+        };
+      }
+      case 'npwp': {
+        return {
+          ...state,
+          npwp: action.npwp,
+        };
+      }
+      case 'pay_mthd': {
+        return {
+          ...state,
+          pay_mthd: action.pay_mthd,
+        };
+      }
+      case 'pay_term': {
+        return {
+          ...state,
+          pay_term: action.pay_term,
+        };
+      }
+      case 'is_tender': {
+        return {
+          ...state,
+          is_tender: action.is_tender,
+        };
+      }
+      case 'local_ovs': {
+        return {
+          ...state,
+          local_ovs: action.local_ovs,
+        };
+      }
+      case 'limit_vendor': {
+        return {
+          ...state,
+          limit_vendor: action.limit_vendor,
+        };
+      }
+      case 'lim_curr': {
+        return {
+          ...state,
+          lim_curr: action.lim_curr,
+        };
+      }
+      case 'country': {
+        return {
+          ...state,
+          country: action.country,
+        };
+      }
+      case 'city': {
+        return {
+          ...state,
+          city: action.city,
+        };
+      }
+    }
+  };
+
+  const [state, dispatch] = useReducer(formReducer, ven_detail);
 
   const dynaCity = async () => {
-    try {
-      const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ countryId: country_ven }),
-      });
-      const response = await cities.json();
-      const result = response.data;
-      setCities(result.data);
-    } catch (err) {
-      alert(err.stack);
-    }
+    const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ countryId: state.country }),
+    });
+    const response = await cities.json();
+    const result = response.data;
+    setCities(result.data);
   };
 
   const dynaCountry = async () => {
-    try {
-      const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
-        method: 'POST',
-      });
-      const response = await country.json();
-      const result = response.data;
-      setCountries(result.data);
-    } catch (err) {
-      alert(err.stack);
-    }
+    const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
+      method: 'POST',
+    });
+    const response = await country.json();
+    const result = response.data;
+    setCountries(result.data);
   };
 
   const getCurr = async () => {
-    try {
-      const curr = await fetch(`${process.env.REACT_APP_URL_LOC}/master/curr`, {
-        method: 'GET',
-      });
-      const response = await curr.json();
-      const result = response.data;
-      let currobj = {};
-      result.data.map((item) => {
-        currobj[item.id_cur] = item.code;
-      });
-      setCurrencies(currobj);
-    } catch (err) {
-      alert(err.stack);
-    }
+    const curr = await fetch(`${process.env.REACT_APP_URL_LOC}/master/curr`, {
+      method: 'GET',
+    });
+    const response = await curr.json();
+    const result = response.data;
+    let currobj = {};
+    result.data.map((item) => {
+      currobj[item.id_cur] = item.code;
+    });
+    setCurrencies(currobj);
   };
-
-  const getHeader = async () => {
-    try {
-      const ticket = await fetch(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`, {
-        method: 'GET',
-      });
-      const response = await ticket.json();
-      const data = response.data;
-      setHeaderForm({
-        is_draft: false,
-        ticket_id: data.ticket_id,
-        ven_id: data.ven_id,
-        email_head: data.email_proc,
-        dept_head: data.dep_proc,
-      });
-    } catch (err) {
-      alert(err.stack);
-    }
-  };
+  useEffect(() => {
+    dynaCountry();
+    dynaCity();
+  }, [state.country]);
 
   useEffect(() => {
-    const getTimeout = setTimeout(() => {
-      dynaCountry();
-      dynaCity();
-    }, 500);
-    return () => clearTimeout(getTimeout);
-  }, [country_ven]);
-
-  useEffect(() => {
-    const getTimeout = setTimeout(() => {
-      getCurr();
-      getHeader();
-    }, 500);
-    return () => clearTimeout(getTimeout);
+    getCurr();
   }, []);
 
   const setVen_bankFromChild = (newItem) => {
@@ -161,7 +235,11 @@ export default function FormVendorPage() {
     // console.log(ven_file);
   };
 
-  const handleSubmit = (event) => {};
+  const handleSubmit = (event) => {
+    console.log(ven_bank);
+    console.log(ven_file);
+    console.log(state);
+  };
 
   const handleExpanded = (panel) => () => {
     if (panel === 'panelReqDet') {
@@ -230,10 +308,10 @@ export default function FormVendorPage() {
                     id="emailRequestor"
                     label="Email"
                     variant="outlined"
-                    value={headerForm.email_head}
                     InputProps={{
                       readOnly: true,
                     }}
+                    value={header.email_head}
                   />
                 </Grid>
                 <Grid item xs>
@@ -242,10 +320,10 @@ export default function FormVendorPage() {
                     id="deptRequestor"
                     label="Department"
                     variant="outlined"
-                    value={headerForm.dept_head}
                     InputProps={{
                       readOnly: true,
                     }}
+                    value={header.dept_head}
                   />
                 </Grid>
               </Grid>
@@ -270,7 +348,16 @@ export default function FormVendorPage() {
             <AccordionDetails>
               <Grid container spacing={2}>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="titleComp" label="Title" variant="outlined" inputRef={title} />
+                  <TextField
+                    fullWidth
+                    id="titleComp"
+                    label="Title"
+                    variant="outlined"
+                    onChange={(e) => {
+                      dispatch({ type: 'title', title: e.target.value });
+                    }}
+                    value={state.title}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
@@ -278,11 +365,11 @@ export default function FormVendorPage() {
                     <Select
                       id="localOverseas"
                       labelId="local-ovs-label"
+                      value={state.local_ovs}
                       label="Local / Overseas"
                       variant="outlined"
-                      value={local_ovs}
                       onChange={(e) => {
-                        setLocalovs(e.target.value);
+                        dispatch({ type: 'local_ovs', local_ovs: e.target.value });
                       }}
                     >
                       <MenuItem value={'LOCAL'}>Local</MenuItem>
@@ -291,7 +378,16 @@ export default function FormVendorPage() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth id="nameComp" label="Company Name" variant="outlined" inputRef={comp_name} />
+                  <TextField
+                    fullWidth
+                    id="nameComp"
+                    label="Company Name"
+                    variant="outlined"
+                    value={state.name_1}
+                    onChange={(e) => {
+                      dispatch({ type: 'name', name_1: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
@@ -299,11 +395,11 @@ export default function FormVendorPage() {
                     <Select
                       id="limCurr"
                       labelId="limCurrLabel"
-                      value={lim_curr}
+                      value={state.lim_curr}
                       label="Limit Currency"
                       variant="outlined"
                       onChange={(e) => {
-                        setLimitCurr(e.target.value);
+                        dispatch({ type: 'lim_curr', lim_curr: e.target.value });
                       }}
                     >
                       {Object.keys(currencies).map((id) => {
@@ -318,17 +414,12 @@ export default function FormVendorPage() {
                 </Grid>
                 <Grid item xs={4}>
                   <NumericFormat
-                    value={lim_ven}
-                    prefix={currencies[lim_curr] + ' '}
+                    value={state.limit_vendor}
+                    prefix={currencies[state.lim_curr] + ' '}
                     thousandSeparator
                     customInput={TextField}
                     label={'Limit Vendor'}
                     fullWidth
-                    onChange={(e) => {
-                      setTimeout(() => {
-                        setLimven(e.target.value.replace(`-?\\d+(\\.\\d+)?`, ''));
-                      }, 1000);
-                    }}
                   />
                 </Grid>
               </Grid>
@@ -354,23 +445,17 @@ export default function FormVendorPage() {
               <Grid container spacing={2}>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel id="countrySelectLabel" htmlFor="countrySelect">
-                      Country
-                    </InputLabel>
+                    <InputLabel htmlFor="countrySelect">Country</InputLabel>
                     <Select
                       id="countrySelect"
-                      labelId="countrySelectLabel"
+                      labelId="countrySelect"
                       label="Country"
                       variant="outlined"
-                      value={country_ven}
-                      onChange={(e) => {
-                        setTimeout(() => {
-                          setCountryven(e.target.value);
-                        }, 300);
-                      }}
+                      value={state.country}
+                      onChange={(e) => dispatch({ type: 'country', country: e.target.value })}
                     >
-                      {countries.map((item, idx) => (
-                        <MenuItem key={`${item.country_id}_${idx}`} value={item.country_code}>
+                      {countries.map((item) => (
+                        <MenuItem id={item.country_code} key={item.code} value={item.country_code}>
                           {item.country_name}
                         </MenuItem>
                       ))}
@@ -378,10 +463,25 @@ export default function FormVendorPage() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={9}>
-                  <TextField fullWidth id="addressField" label="Address" inputRef={address} />
+                  <TextField
+                    fullWidth
+                    id="addressField"
+                    label="Address"
+                    value={state.street}
+                    onChange={(e) => {
+                      dispatch({ type: 'street', street: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField id="postalCode" label="Postal Code" inputRef={postalcode} />
+                  <TextField
+                    id="postalCode"
+                    label="Postal Code"
+                    value={state.postal}
+                    onChange={(e) => {
+                      dispatch({ type: 'postal', postal: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
@@ -391,9 +491,9 @@ export default function FormVendorPage() {
                       label="City"
                       labelId="City"
                       variant="outlined"
-                      value={city_ven}
+                      value={state.city}
                       onChange={(e) => {
-                        setCityven(e.target.value);
+                        dispatch({ type: 'city', city: e.target.value });
                       }}
                     >
                       {cities.map((item) => (
@@ -407,13 +507,37 @@ export default function FormVendorPage() {
                 </Grid>
                 <Grid item xs={6}></Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="telf1Field" label="Telephone" inputRef={telf} />
+                  <TextField
+                    fullWidth
+                    id="telf1Field"
+                    label="Telephone"
+                    value={state.telf1}
+                    onChange={(e) => {
+                      dispatch({ type: 'telf1', telf1: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="faxField" label="Fax" inputRef={fax} />
+                  <TextField
+                    fullWidth
+                    id="faxField"
+                    label="Fax"
+                    value={state.fax}
+                    onChange={(e) => {
+                      dispatch({ type: 'fax', fax: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="email" label="Email" inputRef={email_ven} />
+                  <TextField
+                    fullWidth
+                    id="email"
+                    label="Email"
+                    value={state.telf1}
+                    onChange={(e) => {
+                      dispatch({ type: 'email', email: e.target.value });
+                    }}
+                  />
                 </Grid>
               </Grid>
             </AccordionDetails>
@@ -438,14 +562,27 @@ export default function FormVendorPage() {
                 <Grid item xs={4}>
                   <FormGroup>
                     <FormControlLabel
-                      control={<Checkbox id="is_PKP" inputRef={is_pkp} />}
+                      control={<Checkbox id="is_PKP" />}
+                      value={state.is_pkp}
+                      onChange={(e) => {
+                        console.log(e);
+                        dispatch({ type: 'is_pkp', is_pkp: e.target.checked });
+                      }}
                       label="Pengusaha Kena Pajak (PKP)"
                     />
                   </FormGroup>
                 </Grid>
                 <Grid item xs={9}></Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth id="taxNumberField" label="Tax Number (NPWP)" inputRef={tax_num} />
+                  <TextField
+                    fullWidth
+                    id="taxNumberField"
+                    label="Tax Number (NPWP)"
+                    value={state.npwp}
+                    onChange={(e) => {
+                      dispatch({ type: 'npwp', npwp: e.target.value });
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={2}>
                   <FormControl fullWidth>
@@ -454,9 +591,9 @@ export default function FormVendorPage() {
                       id="paymentMethodLabel"
                       labelId="paymentMethodLabel"
                       variant="outlined"
-                      value={pay_mthd}
+                      value={state.pay_mthd}
                       onChange={(e) => {
-                        setPayMthd(e.target.value);
+                        dispatch({ type: 'pay_mthd', pay_mthd: e.target.value });
                       }}
                     >
                       <MenuItem>Bank</MenuItem>
@@ -470,9 +607,9 @@ export default function FormVendorPage() {
                       id="paymentTermField"
                       labelId="paymentTermField"
                       variant="outlined"
-                      value={pay_term}
+                      value={state.pay_term}
                       onChange={(e) => {
-                        setPayTerm(e.target.value);
+                        dispatch({ type: 'pay_term', pay_term: e.target.value });
                       }}
                     >
                       <MenuItem>30</MenuItem>
@@ -498,7 +635,7 @@ export default function FormVendorPage() {
               <Typography>Bank Information</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <VenBankTable onChildDataChange={setVen_bankFromChild} initData={{}} />
+              <VenBankTable onChildDataChange={setVen_bankFromChild} initData={BankV} />
             </AccordionDetails>
           </Accordion>
           <Accordion expanded={expanded.panelFile} onChange={handleExpanded('panelFile')}>
@@ -522,7 +659,7 @@ export default function FormVendorPage() {
                   { key: 'SPPKP', value: 'SPPKP' },
                   { key: 'KTP', value: 'KTP' },
                 ]}
-                iniData={{}}
+                iniData={File}
                 onChildDataChange={setVen_fileFromChild}
               />
             </AccordionDetails>

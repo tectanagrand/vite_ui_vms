@@ -62,8 +62,12 @@ export default function VenFileTable({ initData, upTable }) {
             });
             onDeleteSBar();
           } else {
-            const deletedFile = await fetch(`${process.env.REACT_APP_URL_LOC}/vendor/file/${id}`, {
+            const deletedFile = await fetch(`${process.env.REACT_APP_URL_LOC}/vendor/file`, {
               method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ id: id }),
             });
             const response = await deletedFile.json();
             if (response.status == 200) {
