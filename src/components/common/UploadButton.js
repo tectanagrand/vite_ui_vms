@@ -18,7 +18,7 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function UploadButton({ inputTypes, onChildDataChange, iniData }) {
+export default function UploadButton({ inputTypes, onChildDataChange, iniData, idParent }) {
   const [typeFile, setTypeFile] = useState(0);
   const [statUpload, setStatUpload] = useState({ stat: false, type: '', message: '' });
   const [fileStaged, setFileStaged] = useState([]);
@@ -81,7 +81,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData })
       form.append('file_type', inTypes[typeFile].key);
       form.append('created_by', 'MXMS');
       form.append('desc_file', inTypes[typeFile].value);
-      form.append('ven_id', '12312412');
+      form.append('ven_id', idParent);
       const response = await fetch(`${process.env.REACT_APP_URL_LOC}/vendor/uploadTemp`, {
         method: 'POST',
         body: form,

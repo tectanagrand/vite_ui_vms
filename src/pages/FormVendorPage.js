@@ -15,6 +15,7 @@ import {
   Checkbox,
   FormGroup,
   Button,
+  FormHelperText,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NumericFormat } from 'react-number-format';
@@ -28,13 +29,14 @@ import { useParams } from 'react-router-dom';
 export default function FormVendorPage() {
   const params = useParams();
   const ttoken = params.token;
-  const initialForm = {
+  const initialForm = useRef({
     is_draft: false,
     ticket_id: '',
     ven_id: '',
     email_head: '',
     dept_head: '',
-  };
+  });
+
   const [local_ovs, setLocalovs] = useState('');
   const [lim_curr, setLimitCurr] = useState('');
   const [lim_ven, setLimven] = useState('');
@@ -52,6 +54,8 @@ export default function FormVendorPage() {
   const tax_num = useRef();
   const email_ven = useRef();
   const is_pkp = useRef();
+  const banks = useRef();
+  const ven_details = useRef();
 
   const [ven_bank, setVen_bank] = useState([]);
   const [ven_file, setVen_file] = useState([]);
@@ -66,86 +70,124 @@ export default function FormVendorPage() {
     panelBank: true,
     panelFile: true,
   });
-  const [headerForm, setHeaderForm] = useState(initialForm);
-
-  const dynaCity = async () => {
-    try {
-      const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ countryId: country_ven }),
-      });
-      const response = await cities.json();
-      const result = response.data;
-      setCities(result.data);
-    } catch (err) {
-      alert(err.stack);
-    }
-  };
-
-  const dynaCountry = async () => {
-    try {
-      const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
-        method: 'POST',
-      });
-      const response = await country.json();
-      const result = response.data;
-      setCountries(result.data);
-    } catch (err) {
-      alert(err.stack);
-    }
-  };
-
-  const getCurr = async () => {
-    try {
-      const curr = await fetch(`${process.env.REACT_APP_URL_LOC}/master/curr`, {
-        method: 'GET',
-      });
-      const response = await curr.json();
-      const result = response.data;
-      let currobj = {};
-      result.data.map((item) => {
-        currobj[item.id_cur] = item.code;
-      });
-      setCurrencies(currobj);
-    } catch (err) {
-      alert(err.stack);
-    }
-  };
-
-  const getHeader = async () => {
-    try {
-      const ticket = await fetch(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`, {
-        method: 'GET',
-      });
-      const response = await ticket.json();
-      const data = response.data;
-      setHeaderForm({
-        is_draft: false,
-        ticket_id: data.ticket_id,
-        ven_id: data.ven_id,
-        email_head: data.email_proc,
-        dept_head: data.dep_proc,
-      });
-    } catch (err) {
-      alert(err.stack);
-    }
-  };
+  let errObj = {};
+  const errorFields = [
+    'title',
+    'local_ovs',
+    'name_1',
+    'lim_curr',
+    'limit_vendor',
+    'country',
+    'street',
+    'postal',
+    'city',
+    'telf1',
+    'fax',
+    'email',
+    'npwp',
+    'pay_mthd',
+    'pay_term',
+  ];
+  errorFields.map((item) => {
+    errObj[item] = {
+      stat: false,
+      message: '',
+      touched: false,
+    };
+  });
+  const [errorState, setErrorState] = useState(errObj);
 
   useEffect(() => {
     const getTimeout = setTimeout(() => {
+      const dynaCity = async () => {
+        try {
+          const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ countryId: country_ven }),
+          });
+          const response = await cities.json();
+          const result = response.data;
+          setCities(result.data);
+        } catch (err) {
+          alert(err.stack);
+        }
+      };
+
+      const dynaCountry = async () => {
+        try {
+          const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
+            method: 'POST',
+          });
+          const response = await country.json();
+          const result = response.data;
+          setCountries(result.data);
+        } catch (err) {
+          alert(err.stack);
+        }
+      };
+
       dynaCountry();
       dynaCity();
-    }, 500);
+    }, 3000);
     return () => clearTimeout(getTimeout);
   }, [country_ven]);
 
   useEffect(() => {
+    const getCurr = async () => {
+      try {
+        const curr = await fetch(`${process.env.REACT_APP_URL_LOC}/master/curr`, {
+          method: 'GET',
+        });
+        const response = await curr.json();
+        const result = response.data;
+        let currobj = {};
+        result.data.map((item) => {
+          currobj[item.id_cur] = item.code;
+        });
+        setCurrencies(currobj);
+      } catch (err) {
+        alert(err.stack);
+      }
+    };
+
+    const getBanks = async () => {
+      try {
+        const banksData = await fetch(`${process.env.REACT_APP_URL_LOC}/master/bank`, {
+          method: 'GET',
+        });
+        const response = await banksData.json();
+        const result = response.data;
+        banks.current = result.data;
+      } catch (error) {
+        alert(error.stack);
+      }
+    };
+
+    const getHeader = async () => {
+      try {
+        const ticket = await fetch(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`, {
+          method: 'GET',
+        });
+        const response = await ticket.json();
+        const data = response.data;
+        initialForm.current = {
+          is_draft: false,
+          ticket_id: data.ticket_id,
+          ven_id: data.ven_id,
+          email_head: data.email_proc,
+          dept_head: data.dep_proc,
+        };
+      } catch (err) {
+        alert(err.stack);
+      }
+    };
     const getTimeout = setTimeout(() => {
       getCurr();
       getHeader();
+      getBanks();
     }, 500);
     return () => clearTimeout(getTimeout);
   }, []);
@@ -161,7 +203,61 @@ export default function FormVendorPage() {
     // console.log(ven_file);
   };
 
-  const handleSubmit = (event) => {};
+  const handleSubmit = (event) => {
+    ven_details.current = {
+      ven_id: initialForm.current.ven_id,
+      ticket_num: initialForm.current.ticket_id,
+      title: title.current.value,
+      name_1: comp_name.current.value,
+      local_ovs: local_ovs,
+      limit_vendor: lim_ven ? lim_ven.match(/\d+/g)?.join('') : 0,
+      lim_curr: lim_curr,
+      postal: postalcode.current.value,
+      country: country_ven,
+      city: city_ven,
+      street: address.current.value,
+      telf1: telf.current.value,
+      fax: fax.current.value,
+      email: email_ven.current.value,
+      is_pkp: is_pkp.current.checked,
+      npwp: tax_num.current.value,
+      pay_mthd: pay_mthd,
+      pay_term: pay_term,
+    };
+    const jsonSend = {
+      is_draft: initialForm.current.is_draft,
+      ticket_id: initialForm.current.ticket_id,
+      ven_detail: ven_details.current,
+      ven_banks: ven_bank,
+      ven_files: ven_file,
+    };
+    console.log(jsonSend);
+    const newErrorState = {};
+    Object.keys(ven_details.current).map(async (item) => {
+      if (
+        ven_details.current[item].trim().length === 0 ||
+        ven_details.current[item] === '' ||
+        ven_details.current[item] === 0 ||
+        ven_details.current[item] === null ||
+        ven_details.current[item] === undefined
+      ) {
+        newErrorState[item] = {
+          stat: true,
+          message: 'Please fill this field',
+          touched: true,
+        };
+      } else {
+        console.log(item);
+        newErrorState[item] = {
+          stat: false,
+          message: '',
+          touched: true,
+        };
+      }
+    });
+    setErrorState(newErrorState);
+    console.log(errorState);
+  };
 
   const handleExpanded = (panel) => () => {
     if (panel === 'panelReqDet') {
@@ -197,6 +293,29 @@ export default function FormVendorPage() {
     }
   };
 
+  const handleErrCheck = (e) => {
+    const elem = e.target.name;
+    ven_details.current[elem] = e.target.value;
+    console.log(errorState[elem]);
+    console.log(ven_details.current[elem]);
+    if (
+      errorState[elem].touched &&
+      (ven_details.current[elem] !== null ||
+        ven_details.current[elem] !== undefined ||
+        ven_details.current[elem].trim().length !== 0 ||
+        ven_details.current[elem] !== 0 ||
+        ven_details.current[elem] !== '')
+    ) {
+      setErrorState({
+        ...errorState,
+        [elem]: {
+          stat: false,
+          message: '',
+          touched: true,
+        },
+      });
+    }
+  };
   return (
     <>
       <Container>
@@ -230,7 +349,7 @@ export default function FormVendorPage() {
                     id="emailRequestor"
                     label="Email"
                     variant="outlined"
-                    value={headerForm.email_head}
+                    value={initialForm.current.email_head}
                     InputProps={{
                       readOnly: true,
                     }}
@@ -242,7 +361,7 @@ export default function FormVendorPage() {
                     id="deptRequestor"
                     label="Department"
                     variant="outlined"
-                    value={headerForm.dept_head}
+                    value={initialForm.current.dept_head}
                     InputProps={{
                       readOnly: true,
                     }}
@@ -270,41 +389,74 @@ export default function FormVendorPage() {
             <AccordionDetails>
               <Grid container spacing={2}>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="titleComp" label="Title" variant="outlined" inputRef={title} />
+                  <TextField
+                    fullWidth
+                    id="titleComp"
+                    label="Title"
+                    variant="outlined"
+                    name="title"
+                    inputRef={title}
+                    error={errorState['title'].stat}
+                    helperText={errorState['title'].stat && errorState['title'].message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel id="local-ovs-label">Local / Overseas</InputLabel>
+                    <InputLabel error={errorState.local_ovs.stat} id="local-ovs-label">
+                      Local / Overseas
+                    </InputLabel>
                     <Select
                       id="localOverseas"
                       labelId="local-ovs-label"
                       label="Local / Overseas"
                       variant="outlined"
+                      name="local_ovs"
                       value={local_ovs}
                       onChange={(e) => {
                         setLocalovs(e.target.value);
                       }}
+                      error={errorState.local_ovs.stat}
+                      onBlur={handleErrCheck}
                     >
                       <MenuItem value={'LOCAL'}>Local</MenuItem>
                       <MenuItem value={'OVERSEAS'}>Overseas</MenuItem>
                     </Select>
+                    <FormHelperText error={errorState.local_ovs.stat}>
+                      {errorState.local_ovs.stat && errorState.local_ovs.message}
+                    </FormHelperText>
                   </FormControl>
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth id="nameComp" label="Company Name" variant="outlined" inputRef={comp_name} />
+                  <TextField
+                    fullWidth
+                    id="name_1"
+                    label="Company Name"
+                    variant="outlined"
+                    name="name_1"
+                    inputRef={comp_name}
+                    error={errorState.name_1.stat}
+                    helperText={errorState.name_1.stat && errorState.name_1.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel id="limCurrLabel">Limit Currency</InputLabel>
+                    <InputLabel error={errorState.lim_curr.stat} id="limCurrLabel">
+                      Limit Currency
+                    </InputLabel>
                     <Select
                       id="limCurr"
                       labelId="limCurrLabel"
                       value={lim_curr}
                       label="Limit Currency"
                       variant="outlined"
+                      name="lim_curr"
+                      onBlur={handleErrCheck}
                       onChange={(e) => {
                         setLimitCurr(e.target.value);
                       }}
+                      error={errorState.lim_curr.stat}
                     >
                       {Object.keys(currencies).map((id) => {
                         return (
@@ -314,6 +466,9 @@ export default function FormVendorPage() {
                         );
                       })}
                     </Select>
+                    <FormHelperText error={errorState.lim_curr.stat}>
+                      {errorState.lim_curr.stat && errorState.lim_curr.message}
+                    </FormHelperText>
                   </FormControl>
                 </Grid>
                 <Grid item xs={4}>
@@ -324,11 +479,15 @@ export default function FormVendorPage() {
                     customInput={TextField}
                     label={'Limit Vendor'}
                     fullWidth
+                    name="lim_curr"
+                    onBlur={handleErrCheck}
                     onChange={(e) => {
                       setTimeout(() => {
                         setLimven(e.target.value.replace(`-?\\d+(\\.\\d+)?`, ''));
                       }, 1000);
                     }}
+                    error={errorState.limit_vendor?.stat}
+                    helpertext={errorState.limit_vendor?.stat ? errorState.limit_vendor.message : ''}
                   />
                 </Grid>
               </Grid>
@@ -354,20 +513,23 @@ export default function FormVendorPage() {
               <Grid container spacing={2}>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel id="countrySelectLabel" htmlFor="countrySelect">
+                    <InputLabel error={errorState.country.stat} id="countrySelectLabel" htmlFor="countrySelect">
                       Country
                     </InputLabel>
                     <Select
                       id="countrySelect"
                       labelId="countrySelectLabel"
                       label="Country"
+                      name="country"
                       variant="outlined"
                       value={country_ven}
+                      onBlur={handleErrCheck}
                       onChange={(e) => {
                         setTimeout(() => {
                           setCountryven(e.target.value);
                         }, 300);
                       }}
+                      error={errorState.country.stat}
                     >
                       {countries.map((item, idx) => (
                         <MenuItem key={`${item.country_id}_${idx}`} value={item.country_code}>
@@ -375,26 +537,50 @@ export default function FormVendorPage() {
                         </MenuItem>
                       ))}
                     </Select>
+                    <FormHelperText error={errorState.country.stat}>
+                      {errorState.country.stat && errorState.country.message}
+                    </FormHelperText>
                   </FormControl>
                 </Grid>
                 <Grid item xs={9}>
-                  <TextField fullWidth id="addressField" label="Address" inputRef={address} />
+                  <TextField
+                    fullWidth
+                    id="addressField"
+                    label="Address"
+                    name="street"
+                    inputRef={address}
+                    error={errorState.street.stat}
+                    helperText={errorState.street.stat && errorState.street.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField id="postalCode" label="Postal Code" inputRef={postalcode} />
+                  <TextField
+                    id="postalCode"
+                    label="Postal Code"
+                    inputRef={postalcode}
+                    error={errorState.postal.stat}
+                    helperText={errorState.postal.stat && errorState.postal.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
                   <FormControl fullWidth>
-                    <InputLabel htmlFor="City">City</InputLabel>
+                    <InputLabel error={errorState.city.stat} htmlFor="City">
+                      City
+                    </InputLabel>
                     <Select
                       id="cityField"
                       label="City"
                       labelId="City"
                       variant="outlined"
+                      name="city"
                       value={city_ven}
                       onChange={(e) => {
                         setCityven(e.target.value);
                       }}
+                      error={errorState.city.stat}
+                      onBlur={handleErrCheck}
                     >
                       {cities.map((item) => (
                         <MenuItem id={item.code} key={item.code} value={item.city}>
@@ -402,18 +588,48 @@ export default function FormVendorPage() {
                         </MenuItem>
                       ))}
                     </Select>
+                    <FormHelperText error={errorState.city.stat}>
+                      {errorState.city.stat && errorState.city.message}
+                    </FormHelperText>
                   </FormControl>
                   {/* <TextField fullWidth id="cityField" label="City" /> */}
                 </Grid>
                 <Grid item xs={6}></Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="telf1Field" label="Telephone" inputRef={telf} />
+                  <TextField
+                    fullWidth
+                    id="telf1Field"
+                    label="Telephone"
+                    name="telf1"
+                    inputRef={telf}
+                    error={errorState.telf1.stat}
+                    helperText={errorState.telf1.stat && errorState.telf1.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="faxField" label="Fax" inputRef={fax} />
+                  <TextField
+                    fullWidth
+                    id="faxField"
+                    label="Fax"
+                    name="fax"
+                    inputRef={fax}
+                    error={errorState.fax.stat}
+                    helperText={errorState.fax.stat && errorState.fax.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField fullWidth id="email" label="Email" inputRef={email_ven} />
+                  <TextField
+                    fullWidth
+                    id="email"
+                    label="Email"
+                    name="email"
+                    inputRef={email_ven}
+                    error={errorState.email.stat}
+                    helperText={errorState.email.stat && errorState.email.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
               </Grid>
             </AccordionDetails>
@@ -445,38 +661,65 @@ export default function FormVendorPage() {
                 </Grid>
                 <Grid item xs={9}></Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth id="taxNumberField" label="Tax Number (NPWP)" inputRef={tax_num} />
+                  <TextField
+                    fullWidth
+                    id="taxNumberField"
+                    label="Tax Number (NPWP)"
+                    name="npwp"
+                    inputRef={tax_num}
+                    error={errorState.npwp.stat}
+                    helperText={errorState.npwp.stat && errorState.npwp.message}
+                    onBlur={handleErrCheck}
+                  />
                 </Grid>
                 <Grid item xs={2}>
                   <FormControl fullWidth>
-                    <InputLabel htmlFor="paymentMethodField">Payment Method</InputLabel>
+                    <InputLabel error={errorState.pay_mthd.stat} htmlFor="paymentMethodField">
+                      Payment Method
+                    </InputLabel>
                     <Select
                       id="paymentMethodLabel"
                       labelId="paymentMethodLabel"
                       variant="outlined"
+                      label="Payment Method"
+                      name="pay_mthd"
                       value={pay_mthd}
                       onChange={(e) => {
                         setPayMthd(e.target.value);
                       }}
+                      error={errorState.pay_mthd.stat}
+                      onBlur={handleErrCheck}
                     >
-                      <MenuItem>Bank</MenuItem>
+                      <MenuItem value={'bank'}>Bank</MenuItem>
                     </Select>
+                    <FormHelperText error={errorState.pay_mthd.stat}>
+                      {errorState.pay_mthd.stat && errorState.pay_mthd.message}
+                    </FormHelperText>
                   </FormControl>
                 </Grid>
                 <Grid item xs={2}>
                   <FormControl fullWidth>
-                    <InputLabel htmlFor="paymentTermField">Payment Term</InputLabel>
+                    <InputLabel error={errorState.pay_term.stat} htmlFor="paymentTermField">
+                      Payment Term
+                    </InputLabel>
                     <Select
                       id="paymentTermField"
                       labelId="paymentTermField"
+                      label="Payment Term"
+                      name="pay_term"
                       variant="outlined"
                       value={pay_term}
                       onChange={(e) => {
                         setPayTerm(e.target.value);
                       }}
+                      error={errorState.pay_term.stat}
+                      onBlur={handleErrCheck}
                     >
-                      <MenuItem>30</MenuItem>
+                      <MenuItem value={'30'}>30</MenuItem>
                     </Select>
+                    <FormHelperText error={errorState.pay_term.stat}>
+                      {errorState.pay_term.stat && errorState.pay_term.message}
+                    </FormHelperText>
                   </FormControl>
                 </Grid>
               </Grid>
@@ -498,7 +741,12 @@ export default function FormVendorPage() {
               <Typography>Bank Information</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <VenBankTable onChildDataChange={setVen_bankFromChild} initData={{}} />
+              <VenBankTable
+                onChildDataChange={setVen_bankFromChild}
+                initData={{}}
+                idParent={initialForm.current.ven_id}
+                banks={banks.current}
+              />
             </AccordionDetails>
           </Accordion>
           <Accordion expanded={expanded.panelFile} onChange={handleExpanded('panelFile')}>
@@ -523,6 +771,7 @@ export default function FormVendorPage() {
                   { key: 'KTP', value: 'KTP' },
                 ]}
                 iniData={{}}
+                idParent={initialForm.current.ven_id}
                 onChildDataChange={setVen_fileFromChild}
               />
             </AccordionDetails>

@@ -6,7 +6,7 @@ import {
   GridToolbarContainer,
 } from '@mui/x-data-grid';
 import { randomId } from '@mui/x-data-grid-generator';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Save as SaveIcon,
   Add as AddIcon,
@@ -17,14 +17,24 @@ import {
 import { Button } from '@mui/material';
 
 function EditToolbar(props) {
-  const { setVen_bank, setRowModesModel } = props;
+  const { setVen_bank, setRowModesModel, idParent } = props;
   const handleClick = () => {
     const id = randomId();
     setVen_bank((oldRows) => [
       ...oldRows,
-      { id: id, bank_id: '', bank_acc: '', acc_hold: '', acc_name: '', isNew: true, method: 'insert', isDb: false },
+      {
+        id: id,
+        bank_id: '',
+        bank_acc: '',
+        acc_hold: '',
+        acc_name: '',
+        isNew: true,
+        method: 'insert',
+        isDb: false,
+        ven_id: idParent,
+      },
     ]);
-    setRowModesModel((oldModel) => ({ ...oldModel, [id]: { mode: GridRowModes.Edit, fieldToFocus: 'bankv_id' } }));
+    setRowModesModel((oldModel) => ({ ...oldModel, [id]: { mode: GridRowModes.Edit, fieldToFocus: 'bank_id' } }));
   };
   return (
     <GridToolbarContainer>
@@ -35,7 +45,7 @@ function EditToolbar(props) {
   );
 }
 
-export default function VenBankTable({ onChildDataChange, initData }) {
+export default function VenBankTable({ onChildDataChange, initData, idParent, banks }) {
   let covtData = [];
   if (Object.keys(initData).length != 0) {
     initData.map((item) => {
@@ -43,18 +53,28 @@ export default function VenBankTable({ onChildDataChange, initData }) {
     });
   }
   const [ven_bank, setVen_bank] = useState(covtData ? covtData : []);
-  const sendDataParent = (ven_bank) => {
-    let items = [];
-    ven_bank.map((item) => {
-      if (item.method !== '') {
-        let temp = { ...item };
-        delete temp.isDb;
-        delete temp.isNew;
-        items.push(temp);
-      }
-    });
-    onChildDataChange(items);
-  };
+  const banksData = banks?.map((item) => ({ value: item.bank_id, label: item.bank_name }));
+  const bank_data = useRef();
+  bank_data.current = banksData;
+
+  useEffect(() => {
+    const sendDataParent = (ven_bank) => {
+      let items = [];
+      ven_bank.map((item) => {
+        console.log(item);
+        if (item.method !== '') {
+          let temp = { ...item };
+          delete temp.isDb;
+          delete temp.isNew;
+          items.push(temp);
+        }
+      });
+      onChildDataChange(items);
+    };
+
+    sendDataParent(ven_bank);
+  }, [ven_bank]);
+
   const [rowModesModel, setRowModesModel] = useState({});
   const handleRowEditStop = (params, event) => {
     if (params.reason === GridRowEditStopReasons.rowFocusOut) {
@@ -79,7 +99,7 @@ export default function VenBankTable({ onChildDataChange, initData }) {
       }
     });
     setVen_bank(prevData);
-    sendDataParent(prevData);
+    // sendDataParent(prevData);
   };
   const handleCancelClick = (id) => () => {
     setRowModesModel({
@@ -96,6 +116,7 @@ export default function VenBankTable({ onChildDataChange, initData }) {
   };
 
   const processRowUpdate = (newRow) => {
+    console.log(newRow);
     const updatedRow = { ...newRow, isNew: false };
     let prevData = [];
     ven_bank.map((row) => {
@@ -115,20 +136,18 @@ export default function VenBankTable({ onChildDataChange, initData }) {
 
   const handleRowModesModelChange = (newRowModesModel) => {
     setRowModesModel(newRowModesModel);
-    sendDataParent(ven_bank);
+    // sendDataParent(ven_bank);
   };
   const columns = [
     {
       field: 'bank_id',
       type: 'singleSelect',
       headerName: 'Bank Name',
-      valueOptions: [
-        { value: 'C231000', label: 'BBNI' },
-        { value: 'C231001', label: 'BBRI' },
-      ],
+      valueOptions: bank_data.current,
       editable: true,
+      width: 300,
     },
-    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 200, editable: true },
+    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 300, editable: true },
     { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 300, editable: true },
     { field: 'acc_name', type: 'string', headerName: 'Account Name', width: 300, editable: true },
     {
@@ -168,7 +187,7 @@ export default function VenBankTable({ onChildDataChange, initData }) {
           toolbar: EditToolbar,
         }}
         slotProps={{
-          toolbar: { setVen_bank, setRowModesModel },
+          toolbar: { setVen_bank, setRowModesModel, idParent },
         }}
       />
     </>
