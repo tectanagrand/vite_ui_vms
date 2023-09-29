@@ -140,6 +140,7 @@ export default function VenFileTable({ initData, upTable }) {
   return (
     <>
       <DataGridFile
+        autoHeight
         rows={file_ven}
         columns={columns}
         getRowClassName={(params) => {

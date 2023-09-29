@@ -63,9 +63,10 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       ven_bank.map((item) => {
         console.log(item);
         if (item.method !== '') {
-          let temp = { ...item };
+          let temp = { ...item, bankv_id: item.id };
           delete temp.isDb;
           delete temp.isNew;
+          delete temp.id;
           items.push(temp);
         }
       });
@@ -147,9 +148,9 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       editable: true,
       width: 300,
     },
-    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 300, editable: true },
-    { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 300, editable: true },
-    { field: 'acc_name', type: 'string', headerName: 'Account Name', width: 300, editable: true },
+    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 200, editable: true },
+    { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 200, editable: true },
+    { field: 'acc_name', type: 'string', headerName: 'Account Name', width: 200, editable: true },
     {
       field: 'action',
       type: 'actions',
@@ -189,6 +190,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
         slotProps={{
           toolbar: { setVen_bank, setRowModesModel, idParent },
         }}
+        autoHeight
       />
     </>
   );
