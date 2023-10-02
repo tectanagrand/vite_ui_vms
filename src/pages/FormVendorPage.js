@@ -106,13 +106,6 @@ export default function FormVendorPage() {
     const getTimeout = setTimeout(() => {
       const dynaCity = async () => {
         try {
-          // const cities = await fetch(`${process.env.REACT_APP_URL_LOC}/master/city`, {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   body: JSON.stringify({ countryId: country_ven }),
-          // });
           const cities = await axios.post(`${process.env.REACT_APP_URL_LOC}/master/city`, { countryId: country_ven });
           const result = cities.data.data;
           setCities(result.data);
@@ -123,12 +116,7 @@ export default function FormVendorPage() {
 
       const dynaCountry = async () => {
         try {
-          // const country = await fetch(`${process.env.REACT_APP_URL_LOC}/master/country`, {
-          //   method: 'POST',
-          // });
           const country = await axios.post(`${process.env.REACT_APP_URL_LOC}/master/country`);
-          // console.log(country);
-          // const response = await country.json();
           const result = country.data.data;
           setCountries(result.data);
         } catch (err) {
@@ -145,9 +133,6 @@ export default function FormVendorPage() {
   useEffect(() => {
     const getCurr = async () => {
       try {
-        // const curr = await fetch(`${process.env.REACT_APP_URL_LOC}/master/curr`, {
-        //   method: 'GET',
-        // });
         const curr = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/curr`);
         const response = curr.data;
         const result = response.data;
@@ -163,9 +148,6 @@ export default function FormVendorPage() {
 
     const getBanks = async () => {
       try {
-        // const banksData = await fetch(`${process.env.REACT_APP_URL_LOC}/master/bank`, {
-        //   method: 'GET',
-        // });
         const banksData = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/bank`);
         const response = banksData.data;
         const result = response.data;
@@ -177,9 +159,6 @@ export default function FormVendorPage() {
 
     const getHeader = async () => {
       try {
-        // const ticket = await fetch(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`, {
-        //   method: 'GET',
-        // });
         const ticket = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`);
         const response = ticket.data;
         const data = response.data;
@@ -215,25 +194,24 @@ export default function FormVendorPage() {
   };
 
   const handleSubmit = async (event) => {
-    setLoader(true);
     let isError = false;
     ven_details.current = {
       ven_id: initialForm.current.ven_id,
       ticket_num: initialForm.current.ticket_id,
-      title: title.current.value,
-      name_1: comp_name.current.value,
+      title: title.current.value.trim(),
+      name_1: comp_name.current.value.trim(),
       local_ovs: local_ovs,
       limit_vendor: lim_ven ? lim_ven.match(/\d+/g)?.join('') : 0,
       lim_curr: lim_curr,
-      postal: postalcode.current.value,
+      postal: postalcode.current.value.trim(),
       country: country_ven,
       city: city_ven,
-      street: address.current.value,
-      telf1: telf.current.value,
-      fax: fax.current.value,
-      email: email_ven.current.value,
+      street: address.current.value.trim(),
+      telf1: telf.current.value.trim(),
+      fax: fax.current.value.trim(),
+      email: email_ven.current.value.trim(),
       is_pkp: is_pkp.current.checked,
-      npwp: tax_num.current.value,
+      npwp: tax_num.current.value.trim(),
       pay_mthd: pay_mthd,
       pay_term: pay_term,
     };
@@ -262,21 +240,27 @@ export default function FormVendorPage() {
           touched: true,
         };
         isError = true;
-        setFormStat({
-          stat: true,
-          type: 'error',
-          message: 'Fields fill not allowed or still empty',
-        });
       } else {
-        newErrorState[item] = {
-          stat: false,
-          message: '',
-          touched: true,
-        };
+        let value = ven_details.current[item];
+        const check = validateInput(item, value);
+        if (check.stat == true) {
+          newErrorState[item] = {
+            stat: true,
+            message: check.message,
+            touched: true,
+          };
+        } else {
+          newErrorState[item] = {
+            stat: false,
+            message: '',
+            touched: true,
+          };
+        }
       }
     });
     setErrorState({ ...newErrorState, isError: isError });
     if (!isError) {
+      setLoader(true);
       try {
         const submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/form/submit`, jsonSend);
         const response = submit.data;
@@ -287,6 +271,12 @@ export default function FormVendorPage() {
         setFormStat({ stat: true, type: 'error', message: 'error submitting' });
         setLoader(false);
       }
+    } else {
+      setFormStat({
+        stat: true,
+        type: 'error',
+        message: 'Fields fill not allowed or still empty',
+      });
     }
   };
 
@@ -331,8 +321,6 @@ export default function FormVendorPage() {
       }
       const elem = e.target.name;
       ven_details.current[elem] = e.target.value;
-      console.log(elem, ven_details.current[elem]?.trim().length);
-      console.log(errorState);
       if (
         errorState[elem].touched &&
         (ven_details.current[elem] !== null ||
@@ -341,15 +329,28 @@ export default function FormVendorPage() {
           ? ven_details.current[elem]?.trim().length !== 0
           : false || ven_details.current[elem] !== 0 || ven_details.current[elem] !== '')
       ) {
-        console.log('yes');
-        setErrorState((errorState) => ({
-          ...errorState,
-          [elem]: {
-            stat: false,
-            message: '',
-            touched: true,
-          },
-        }));
+        let value = ven_details.current[elem];
+        const check = validateInput(elem, value);
+        console.log(check);
+        if (check.stat == true) {
+          setErrorState((errorState) => ({
+            ...errorState,
+            [elem]: {
+              stat: true,
+              message: check.message,
+              touched: true,
+            },
+          }));
+        } else {
+          setErrorState((errorState) => ({
+            ...errorState,
+            [elem]: {
+              stat: false,
+              message: '',
+              touched: true,
+            },
+          }));
+        }
       } else {
         setErrorState((errorState) => ({
           ...errorState,
@@ -369,6 +370,42 @@ export default function FormVendorPage() {
     }
     setFormStat({ ...formStat, stat: false });
   };
+
+  const validateInput = (field, value) => {
+    let regexpat = '';
+    switch (field) {
+      case 'email':
+        console.log('check - ' + value);
+        regexpat = /[a-z0-9]+@[a-z]+\.[a-z]{2,3}/;
+        if (!regexpat.test(value)) {
+          return { stat: true, message: 'Please fill email field' };
+        } else {
+          return { stat: false, message: '' };
+        }
+      case 'postal':
+        regexpat = /[0-9]/;
+        if (!regexpat.test(value)) {
+          return { stat: true, message: 'Please input just numeric value' };
+        } else {
+          return { stat: false, message: '' };
+        }
+      case 'street':
+        if (value?.trim().length > 30) {
+          return { stat: true, message: 'Please input below 30 characters' };
+        } else {
+          return { stat: false, message: '' };
+        }
+      case 'name_1':
+        if (value?.trim().length > 35) {
+          return { stat: true, message: 'Please input below 30 characters' };
+        } else {
+          return { stat: false, message: '' };
+        }
+      default:
+        return { stat: false, message: '' };
+    }
+  };
+
   if (
     formtype == 'newform' &&
     Object.keys(initialForm.current).length !== 0 &&
