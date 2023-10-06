@@ -25,14 +25,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NumericFormat } from 'react-number-format';
 import { useState, useRef, useEffect } from 'react';
 import { VenBankTable } from 'src/components/FormVendor';
-import { BankV } from 'src/_mock/Bank';
-import { File } from 'src/_mock/File';
 import UploadButton from 'src/components/common/UploadButton';
-import { useParams } from 'react-router-dom';
+import { useLoaderData, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function FormVendorPage() {
   const params = useParams();
+  const loader_data = useLoaderData();
   const ttoken = params.token;
   const formtype = params.formtype;
   const initialForm = useRef({});
@@ -74,7 +73,7 @@ export default function FormVendorPage() {
     panelBank: true,
     panelFile: true,
   });
-  const [loader, setLoader] = useState(false);
+  const [loader, setLoader] = useState(true);
   let errObj = {};
   const errorFields = [
     'title',
@@ -157,26 +156,19 @@ export default function FormVendorPage() {
       }
     };
 
-    const getHeader = async () => {
-      try {
-        const ticket = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${ttoken}`);
-        const response = ticket.data;
-        const data = response.data;
-        initialForm.current = {
-          is_draft: false,
-          ticket_id: data.ticket_id,
-          ven_id: data.ven_id,
-          email_head: data.email_proc,
-          dept_head: data.dep_proc,
-          cur_pos: data.cur_pos,
-        };
-      } catch (err) {
-        alert(err.stack);
-      }
-    };
     const getTimeout = setTimeout(() => {
       getCurr();
-      getHeader();
+      initialForm.current = {
+        is_draft: false,
+        ticket_id: ttoken,
+        ticket_num: loader_data.data.ticket_id,
+        ven_id: loader_data.data.ven_id,
+        email_head: loader_data.data.email_proc,
+        dept_head: loader_data.data.dep_proc,
+        cur_pos: loader_data.data.cur_pos,
+      };
+      console.log(initialForm.current);
+      setLoader(false);
       getBanks();
     }, 500);
     return () => clearTimeout(getTimeout);
@@ -184,13 +176,10 @@ export default function FormVendorPage() {
 
   const setVen_bankFromChild = (newItem) => {
     setVen_bank(newItem);
-    console.log(ven_bank);
   };
 
   const setVen_fileFromChild = (newItem) => {
     setVen_file(newItem);
-    // console.log(newItem);
-    // console.log(ven_file);
   };
 
   const handleSubmit = async (event) => {
@@ -222,7 +211,6 @@ export default function FormVendorPage() {
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
-    console.log(jsonSend);
     const newErrorState = {};
     Object.keys(ven_details.current).map(async (item) => {
       if (
@@ -406,14 +394,7 @@ export default function FormVendorPage() {
     }
   };
 
-  if (
-    formtype == 'newform' &&
-    Object.keys(initialForm.current).length !== 0 &&
-    initialForm.current.cur_pos !== 'VENDOR'
-  ) {
-    console.log('yes');
-    console.log(formtype);
-    console.log(initialForm.current);
+  if (Object.keys(initialForm.current).length !== 0 && initialForm.current.cur_pos !== 'VENDOR') {
     return (
       <>
         <Container
@@ -425,7 +406,7 @@ export default function FormVendorPage() {
             alignItems: 'center',
           }}
         >
-          <h1>Ticket {initialForm.current.ticket_id} already Submitted</h1>
+          <h1>Ticket {initialForm.current.ticket_num} already Submitted</h1>
         </Container>
       </>
     );
@@ -572,13 +553,11 @@ export default function FormVendorPage() {
                         }}
                         error={errorState.lim_curr.stat}
                       >
-                        {Object.keys(currencies).map((id) => {
-                          return (
-                            <MenuItem id={id} value={id} key={id}>
-                              {currencies[id]}
-                            </MenuItem>
-                          );
-                        })}
+                        {Object.keys(currencies).map((id) => (
+                          <MenuItem id={id} value={id} key={id}>
+                            {currencies[id]}
+                          </MenuItem>
+                        ))}
                       </Select>
                       <FormHelperText error={errorState.lim_curr.stat}>
                         {errorState.lim_curr.stat && errorState.lim_curr.message}
