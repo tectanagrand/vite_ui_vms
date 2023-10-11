@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import ThemeProvider from './theme';
 
 import { routes } from './route/routes';
+import AuthProvider from './provider/authProvider';
 
 function App() {
   // return (
@@ -18,7 +19,9 @@ function App() {
   return (
     <HelmetProvider>
       <ThemeProvider>
-        <RouterProvider router={routes} />
+        <AuthProvider>
+          <RouterProvider router={routes} />
+        </AuthProvider>
       </ThemeProvider>
     </HelmetProvider>
   );
