@@ -72,6 +72,7 @@ export default function FormVendorPage() {
     panelTax: true,
     panelBank: true,
     panelFile: true,
+    panelVendetail: true,
   });
   const [loader, setLoader] = useState(true);
   let errObj = {};
@@ -167,7 +168,6 @@ export default function FormVendorPage() {
         dept_head: loader_data.data.dep_proc,
         cur_pos: loader_data.data.cur_pos,
       };
-      console.log(initialForm.current);
       setLoader(false);
       getBanks();
     }, 500);
@@ -299,6 +299,11 @@ export default function FormVendorPage() {
         ...expanded,
         panelFile: expanded.panelFile ? false : true,
       });
+    } else if (panel === 'panelVendetail') {
+      setExpanded({
+        ...expanded,
+        panelVendetail: expanded.panelVendetail ? false : true,
+      });
     }
   };
 
@@ -394,7 +399,11 @@ export default function FormVendorPage() {
     }
   };
 
-  if (Object.keys(initialForm.current).length !== 0 && initialForm.current.cur_pos !== 'VENDOR') {
+  if (
+    Object.keys(initialForm.current).length !== 0 &&
+    initialForm.current.cur_pos !== 'VENDOR' &&
+    formtype === 'newform'
+  ) {
     return (
       <>
         <Container
@@ -820,6 +829,24 @@ export default function FormVendorPage() {
                 </Grid>
               </AccordionDetails>
             </Accordion>
+            {(initialForm.current.cur_pos === 'PROC' || initialForm.current.cur_pos === 'MDM') && (
+              <Accordion expanded={expanded.panelVendetail} onChange={handleExpanded('panelVendetail')}>
+                <AccordionSummary
+                  sx={{
+                    pointerEvents: 'none',
+                  }}
+                  expandIcon={
+                    <ExpandMoreIcon
+                      sx={{
+                        pointerEvents: 'auto',
+                      }}
+                    />
+                  }
+                >
+                  <Typography>Vendor Details</Typography>
+                </AccordionSummary>
+              </Accordion>
+            )}
             <Accordion expanded={expanded.panelBank} onChange={handleExpanded('panelBank')}>
               <AccordionSummary
                 sx={{
