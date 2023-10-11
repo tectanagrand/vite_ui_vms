@@ -1,20 +1,21 @@
 import axios from 'axios';
 import { useContext, createContext, useState, useEffect, useMemo } from 'react';
+import Cookies from 'js-cookie';
 
 const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
-  const [jwttoken, setJWTToken_] = useState(localStorage.getItem('token'));
+  const [jwttoken, setJWTToken_] = useState(Cookies.get('jwttoken'));
   const setJWTToken = (newToken) => {
     setJWTToken_(newToken);
   };
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-      localStorage.setItem('token', token);
+    console.log(jwttoken);
+    if (jwttoken) {
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + jwttoken;
+      Cookies.set('jwttoken', jwttoken);
     } else {
-      delete axios.defaults.headers.common['Authorization'];
-      localStorage.removeItem('token');
+      Cookies.remove('jwttoken');
     }
   }, [jwttoken]);
 
@@ -24,7 +25,7 @@ const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  return useContext(AuthProvider);
+  return useContext(AuthContext);
 };
 
 export default AuthProvider;

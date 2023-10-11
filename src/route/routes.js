@@ -4,8 +4,9 @@ import axios from 'axios';
 import ErrorPage from '../pages/ErrorPage';
 import Error404 from 'src/pages/Error404';
 import LoginPage from 'src/pages/LoginPage';
+import Cookies from 'js-cookie';
 
-async function formLoader({ newform: formType, token }) {
+async function formLoader({ formtype: formType, token }) {
   if (formType == 'newform') {
     const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${token}`);
     if (response.status == 500) {
@@ -16,14 +17,22 @@ async function formLoader({ newform: formType, token }) {
       return response.data;
     }
   } else if (formType == 'form') {
-    return { data: 'yes' };
+    axios.defaults.headers.common.Authorization = 'Bearer ' + Cookies.get('jwttoken');
+    const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
+    if (response.status == 500) {
+      throw new Error({ status: 500, statusText: response.message });
+    } else if (response.status == 401) {
+      throw new Error({ status: 401, statusText: response.message });
+    } else {
+      return response.data;
+    }
   }
   return null;
 }
 
 export const routes = createBrowserRouter([
   {
-    path: 'frm/:newform/:token',
+    path: 'frm/:formtype/:token',
     element: <FormVendorPage />,
     loader: async ({ params }) => {
       console.log(params);
