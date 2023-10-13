@@ -56,11 +56,11 @@ export default function VenFileTable({ initData, upTable }) {
         if (item.id === id) {
           if (item.source == 'ven_file_atth') {
             prevData.push({ ...item, method: 'delete' });
-            setFetchStat({
-              stat: 'success',
-              message: `file ${item.file_name} staged to be deleted`,
-            });
-            onDeleteSBar();
+            // setFetchStat({
+            //   stat: 'success',
+            //   message: `file ${item.file_name} staged to be deleted`,
+            // });
+            // onDeleteSBar();
           } else {
             const deletedFile = await fetch(`${process.env.REACT_APP_URL_LOC}/vendor/file`, {
               method: 'DELETE',
@@ -107,10 +107,10 @@ export default function VenFileTable({ initData, upTable }) {
           pushData.push(item);
         }
       });
-      setFetchStat({ stat: 'info', message: `${row.file_name} delete stage canceled` });
+      // setFetchStat({ stat: 'info', message: `${row.file_name} delete stage canceled` });
       setFile_ven(pushData);
       upTable(pushData);
-      onDeleteSBar();
+      // onDeleteSBar();
     };
 
   const columns = [

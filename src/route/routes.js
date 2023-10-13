@@ -17,12 +17,14 @@ async function formLoader({ formtype: formType, token }) {
       return response.data;
     }
   } else if (formType == 'form') {
-    axios.defaults.headers.common.Authorization = 'Bearer ' + Cookies.get('jwttoken');
+    axios.defaults.headers.common.Authorization =
+      'Bearer ' + (Cookies.get('jwttoken') === undefined ? '' : Cookies.get('jwttoken'));
     const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
     if (response.status == 500) {
       throw new Error({ status: 500, statusText: response.message });
     } else if (response.status == 401) {
-      throw new Error({ status: 401, statusText: response.message });
+      console.log(response.status);
+      redirect('/login');
     } else {
       return response.data;
     }
@@ -35,7 +37,6 @@ export const routes = createBrowserRouter([
     path: 'frm/:formtype/:token',
     element: <FormVendorPage />,
     loader: async ({ params }) => {
-      console.log(params);
       const response = await formLoader(params);
       return response;
     },
@@ -43,7 +44,10 @@ export const routes = createBrowserRouter([
   },
   {
     path: '/',
-    children: [{ path: '404', element: <Error404 /> }],
+    children: [
+      { path: '404', element: <Error404 /> },
+      { path: '', element: <Navigate to="login" /> },
+    ],
   },
   {
     path: 'login',

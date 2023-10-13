@@ -10,7 +10,6 @@ const AuthProvider = ({ children }) => {
     setJWTToken_(newToken);
   };
   useEffect(() => {
-    console.log(jwttoken);
     if (jwttoken) {
       axios.defaults.headers.common['Authorization'] = 'Bearer ' + jwttoken;
       Cookies.set('jwttoken', jwttoken);

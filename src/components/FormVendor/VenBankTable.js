@@ -13,8 +13,10 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Cancel as CancelIcon,
+  Undo,
 } from '@mui/icons-material';
 import { Button } from '@mui/material';
+import { styled, lighten, darken } from '@mui/material/styles';
 
 function EditToolbar(props) {
   const { setVen_bank, setRowModesModel, idParent } = props;
@@ -47,21 +49,44 @@ function EditToolbar(props) {
 
 export default function VenBankTable({ onChildDataChange, initData, idParent, banks }) {
   let covtData = [];
-  if (Object.keys(initData).length != 0) {
-    initData.map((item) => {
-      covtData.push({ ...item, isDb: true, isNew: false, method: '' });
-    });
-  }
-  const [ven_bank, setVen_bank] = useState(covtData ? covtData : []);
+  const [ven_bank, setVen_bank] = useState([]);
   const banksData = banks?.map((item) => ({ value: item.bank_id, label: item.bank_name }));
   const bank_data = useRef();
   bank_data.current = banksData;
+
+  const DataGridBank = styled(DataGrid)(() => ({
+    '& .row-idle': {
+      backgroundColor: '#fff',
+    },
+    '& .row-delete': {
+      backgroundColor: '#fc8b72',
+      '&:hover': {
+        backgroundColor: lighten('#fc8b72', 0.2),
+      },
+      '&.Mui-selected': {
+        backgroundColor: darken('#fc8b72', 0.2),
+        '&:hover': {
+          backgroundColor: lighten('#fc8b72', 0.2),
+        },
+      },
+    },
+  }));
+
+  useEffect(() => {
+    if (Object.keys(initData).length != 0) {
+      initData.map((item) => {
+        covtData.push({ ...item, isDb: true, isNew: false, method: '' });
+      });
+    }
+    setVen_bank((ven_bankprev) => {
+      return [...ven_bankprev, ...covtData];
+    });
+  }, [initData]);
 
   useEffect(() => {
     const sendDataParent = (ven_bank) => {
       let items = [];
       ven_bank.map((item) => {
-        console.log(item);
         if (item.method !== '') {
           let temp = { ...item, bankv_id: item.id };
           delete temp.isDb;
@@ -72,7 +97,6 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       });
       onChildDataChange(items);
     };
-
     sendDataParent(ven_bank);
   }, [ven_bank]);
 
@@ -85,8 +109,11 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   const handleEditClick = (id) => () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
-  const handleSaveClick = (id) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  const handleSaveClick = (row) => () => {
+    let poppedArr = ven_bank.slice(0, -1);
+    console.log(row.row);
+    setVen_bank([...poppedArr, row.row]);
+    setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.View } });
   };
   const handleDeleteClick = (id) => () => {
     let prevData = [];
@@ -115,9 +142,20 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       setVen_bank(ven_bank.filter((row) => row.id != id));
     }
   };
-
+  const handleUndoClick =
+    ({ id }) =>
+    () => {
+      let pushData = [];
+      ven_bank.map((item) => {
+        if (item.id === id) {
+          pushData.push({ ...item, method: '' });
+        } else {
+          pushData.push(item);
+        }
+      });
+      setVen_bank(pushData);
+    };
   const processRowUpdate = (newRow) => {
-    console.log(newRow);
     const updatedRow = { ...newRow, isNew: false };
     let prevData = [];
     ven_bank.map((row) => {
@@ -162,25 +200,39 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {
           return [
-            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(id)} />,
+            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(row)} />,
             <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={handleCancelClick(id)} />,
           ];
+        } else {
+          if (row.row.method == 'delete') {
+            return [
+              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(row)} />,
+              <GridActionsCellItem icon={<Undo />} label="Undo" onClick={handleUndoClick(row)} />,
+            ];
+          }
+          return [
+            <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(row)} />,
+            <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} />,
+          ];
         }
-        return [
-          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(id)} />,
-          <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} />,
-        ];
       },
     },
   ];
 
   return (
     <>
-      <DataGrid
+      <DataGridBank
         rows={ven_bank}
         columns={columns}
         editMode="row"
         rowModesModel={rowModesModel}
+        getRowClassName={(params) => {
+          if (params.row.method == 'delete') {
+            return 'row-delete';
+          } else {
+            return 'row-idle';
+          }
+        }}
         onRowModesModelChange={handleRowModesModelChange}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
