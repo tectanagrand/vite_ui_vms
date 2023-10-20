@@ -1,8 +1,10 @@
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { useState, forwardRef, useEffect } from 'react';
-import { Delete as DeleteIcon, Undo } from '@mui/icons-material';
-import { Alert as MuiAlert, Snackbar } from '@mui/material';
+import { Delete as DeleteIcon, Undo, Download } from '@mui/icons-material';
+import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
+import axios from 'axios';
+import fileDownload from 'js-file-download';
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -11,6 +13,7 @@ const Alert = forwardRef(function Alert(props, ref) {
 export default function VenFileTable({ initData, upTable }) {
   const [file_ven, setFile_ven] = useState(initData);
   const [sbarOpen, setSbarOpen] = useState(false);
+  const [loaderOpen, setLoaderopen] = useState(false);
   const [fetchStat, setFetchStat] = useState({});
   // console.log(initData);
 
@@ -49,7 +52,7 @@ export default function VenFileTable({ initData, upTable }) {
     setSbarOpen(false);
   };
 
-  const handleDeleteClick = (id) => () => {
+  const handleDeleteClick = (id) => {
     let prevData = [];
     file_ven.map(async (item) => {
       try {
@@ -70,6 +73,7 @@ export default function VenFileTable({ initData, upTable }) {
               body: JSON.stringify({ id: id }),
             });
             const response = await deletedFile.json();
+            console.log(response);
             if (response.status == 200) {
               setFetchStat({
                 stat: 'success',
@@ -127,11 +131,40 @@ export default function VenFileTable({ initData, upTable }) {
       headerName: 'Action',
       width: 100,
       cellClassName: 'actions',
-      getActions: (item) => {
+      renderCell: (item) => {
+        const handleDownloadClick = (item) => {
+          const fileName = item.row.file_name;
+          console.log(item.row);
+          const downloadFile = axios
+            .get(`${process.env.REACT_APP_URL_LOC}/master/file/${fileName}`, { responseType: 'blob' })
+            .then((response) => {
+              fileDownload(response.data, fileName);
+            });
+        };
         if (item.row.method == 'delete') {
-          return [<GridActionsCellItem icon={<Undo />} label="Undo" onClick={handleUndoClick(item)} />];
+          return [
+            <GridActionsCellItem
+              key={`undo-${item.id}`}
+              icon={<Undo />}
+              label="Undo"
+              onClick={() => handleUndoClick(item)}
+            />,
+          ];
         } else {
-          return [<GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(item.id)} />];
+          return [
+            <GridActionsCellItem
+              key={`delete-${item.id}`}
+              icon={<DeleteIcon />}
+              label="Delete"
+              onClick={() => handleDeleteClick(item.id)}
+            />,
+            <GridActionsCellItem
+              key={`dwn-${item.id}`}
+              icon={<Download />}
+              label="Download"
+              onClick={() => handleDownloadClick(item)}
+            />,
+          ];
         }
       },
     },
@@ -161,6 +194,9 @@ export default function VenFileTable({ initData, upTable }) {
           {fetchStat.message ? fetchStat.message : 'test'}
         </Alert>
       </Snackbar>
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loaderOpen}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }

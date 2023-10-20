@@ -20,6 +20,7 @@ import {
   Alert,
   CircularProgress,
   Backdrop,
+  Dialog,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NumericFormat } from 'react-number-format';
@@ -28,13 +29,15 @@ import { VenBankTable } from 'src/components/FormVendor';
 import UploadButton from 'src/components/common/UploadButton';
 import { useLoaderData, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useSession } from 'src/provider/sessionProvider';
 
 export default function FormVendorPage() {
   const params = useParams();
+  const { session } = useSession();
   const loader_data = useLoaderData();
   const ttoken = params.token;
-  const formtype = params.formtype;
   const initialForm = useRef({});
+  const [title, setTitle] = useState('');
   const [local_ovs, setLocalovs] = useState('');
   const [lim_curr, setLimitCurr] = useState('');
   const [lim_ven, setLimven] = useState('');
@@ -47,16 +50,16 @@ export default function FormVendorPage() {
   const [venGroup, setVengroup] = useState('');
   const [venType, setVentype] = useState('');
   const [status_mdm, setStatusmdm] = useState('');
+  const [is_pkp, setIspkp] = useState(false);
+  const [is_tender, setIstender] = useState(false);
 
   const comp_name = useRef();
-  const title = useRef();
   const address = useRef();
   const postalcode = useRef();
   const telf = useRef();
   const fax = useRef();
   const tax_num = useRef();
   const email_ven = useRef();
-  const is_pkp = useRef();
   const banks = useRef();
   const comps = useRef();
   const initDataBank = useRef();
@@ -64,7 +67,6 @@ export default function FormVendorPage() {
   const ven_details = useRef();
   const ven_desc = useRef();
   const purOrg = useRef();
-  const is_tender = useRef();
   const ven_code = useRef();
   const remarks = useRef();
 
@@ -86,6 +88,7 @@ export default function FormVendorPage() {
     panelBank: true,
     panelFile: true,
     panelVendetail: true,
+    panelApproval: true,
   });
   const [loader, setLoader] = useState(true);
   let errObj = {};
@@ -206,41 +209,47 @@ export default function FormVendorPage() {
     };
 
     const lastDataForm = () => {
-      comp_name.current.value = loader_data.data.name_1;
-      title.current.value = loader_data.data.title;
-      address.current.value = loader_data.data.street;
-      postalcode.current.value = loader_data.data.postal;
-      telf.current.value = loader_data.data.telf1;
-      fax.current.value = loader_data.data.fax;
-      tax_num.current.value = loader_data.data.npwp;
-      email_ven.current.value = loader_data.data.email;
-      is_pkp.current.checked = loader_data.data.is_pkp;
-      ven_desc.current.value = loader_data.data.remarks;
-      purOrg.current.value = loader_data.data.purch_org;
-      is_tender.current.checked = loader_data.data.is_tender;
+      comp_name.current.value = loader_data.data.name_1 ? loader_data.data.name_1 : '';
+      address.current.value = loader_data.data.street ? loader_data.data.street : '';
+      postalcode.current.value = loader_data.data.postal ? loader_data.data.postal : '';
+      telf.current.value = loader_data.data.telf1 ? loader_data.data.telf1 : '';
+      fax.current.value = loader_data.data.fax ? loader_data.data.fax : '';
+      tax_num.current.value = loader_data.data.npwp ? loader_data.data.npwp : '';
+      email_ven.current.value = loader_data.data.email ? loader_data.data.email : '';
+      if (loader_data.data.cur_pos === 'PROC') {
+        ven_desc.current.value = loader_data.data.description;
+        purOrg.current.value = loader_data.data.purch_org;
+      }
+      if (loader_data.data.cur_pos === 'MDM') {
+        remarks.current.value = loader_data.data.remarks;
+        ven_code.current.value = loader_data.data.header;
+      }
     };
 
     const lastStateForm = () => {
       setTimeout(() => {
-        setLocalovs(loader_data.data.local_ovs);
-        setLimitCurr(loader_data.data.lim_curr);
+        setIstender(loader_data.data.is_tender ? loader_data.data.is_tender : false);
+        setIspkp(loader_data.data.is_pkp ? loader_data.data.is_pkp : false);
+        setLocalovs(loader_data.data.local_ovs ? loader_data.data.local_ovs : '');
+        setLimitCurr(loader_data.data.lim_curr ? loader_data.data.lim_curr : '');
         setLimven(
           typeof loader_data.data.limit_vendor == 'number'
             ? loader_data.data.limit_vendor.toString()
             : loader_data.data.limit_vendor
         );
-        setCountryven(loader_data.data.country);
-        setPayMthd(loader_data.data.pay_mthd);
-        setPayTerm(loader_data.data.pay_term);
-        setComp(loader_data.data.company ? loader_data.data.company : null);
-        setVenacc(loader_data.data.ven_acc ? loader_data.data.ven_acc : null);
-        setVengroup(loader_data.data.ven_group ? loader_data.data.ven_group : null);
-        setVentype(loader_data.data.ven_type ? loader_data.data.ven_type : null);
+        setCountryven(loader_data.data.country ? loader_data.data.country : '');
+        setPayMthd(loader_data.data.pay_mthd ? loader_data.data.pay_mthd : '');
+        setPayTerm(loader_data.data.pay_term ? loader_data.data.pay_term : '');
+        setComp(loader_data.data.company ? loader_data.data.company : '');
+        setVenacc(loader_data.data.ven_acc ? loader_data.data.ven_acc : '');
+        setVengroup(loader_data.data.ven_group ? loader_data.data.ven_group : '');
+        setVentype(loader_data.data.ven_type ? loader_data.data.ven_type : '');
+        setTitle(loader_data.data.title ? loader_data.data.title : '');
         getInitDataBank();
         getInitDataFile();
       }, 600);
       setTimeout(() => {
-        setCityven(loader_data.data.city);
+        setCityven(loader_data.data.city ? loader_data.data.city : '');
       }, 1700);
     };
 
@@ -250,7 +259,7 @@ export default function FormVendorPage() {
         is_draft: false,
         ticket_id: ttoken,
         ticket_num: loader_data.data.ticket_id,
-        ven_id: loader_data.data.ven_id,
+        ven_id: loader_data.data.ven_id ? loader_data.data.ven_id : loader_data.data.ticket_ven_id,
         email_head: loader_data.data.email_proc,
         dept_head: loader_data.data.dep_proc,
         cur_pos: loader_data.data.cur_pos,
@@ -259,10 +268,8 @@ export default function FormVendorPage() {
       getBanks();
       getCompany();
     }, 500);
-    if (loader_data.data.cur_pos === 'PROC' || loader_data.data.cur_pos === 'MDM') {
-      lastDataForm();
-      lastStateForm();
-    }
+    lastDataForm();
+    lastStateForm();
     return () => clearTimeout(getTimeout);
   }, []);
 
@@ -275,105 +282,108 @@ export default function FormVendorPage() {
   };
 
   const handleSubmit = async (event) => {
-    // let isError = false;
-    // ven_details.current = {
-    //   ven_id: initialForm.current.ven_id,
-    //   ticket_num: initialForm.current.ticket_num,
-    //   title: title.current.value.trim(),
-    //   name_1: comp_name.current.value.trim(),
-    //   local_ovs: local_ovs,
-    //   limit_vendor: lim_ven ? lim_ven.match(/\d+/g)?.join('') : 0,
-    //   lim_curr: lim_curr,
-    //   postal: postalcode.current.value.trim(),
-    //   country: country_ven,
-    //   city: city_ven,
-    //   street: address.current.value.trim(),
-    //   telf1: telf.current.value.trim(),
-    //   fax: fax.current.value.trim(),
-    //   email: email_ven.current.value.trim(),
-    //   is_pkp: is_pkp.current.checked,
-    //   is_tender: is_tender.current ? is_tender.current.checked : false,
-    //   npwp: tax_num.current.value.trim(),
-    //   pay_mthd: pay_mthd,
-    //   pay_term: pay_term,
-    // };
-    // if (loader_data.data.cur_pos == 'PROC') {
-    //   ven_details.current = {
-    //     ...ven_details.current,
-    //     company: comp,
-    //     purch_org: purOrg.current.value,
-    //     ven_acc: venAcc,
-    //     ven_group: venGroup,
-    //     ven_type: venType,
-    //   };
-    // }
-    // const jsonSend = {
-    //   is_draft: initialForm.current.is_draft,
-    //   ticket_id: initialForm.current.ticket_id,
-    //   remarks: ven_desc.current ? ven_desc.current.value : '',
-    //   ven_detail: ven_details.current,
-    //   ven_banks: ven_bank,
-    //   ven_files: ven_file,
-    // };
-    // const newErrorState = {};
-    // Object.keys(ven_details.current).map(async (item) => {
-    //   if (
-    //     typeof ven_details.current[item] === 'string'
-    //       ? ven_details.current[item]?.trim().length === 0
-    //       : false ||
-    //         ven_details.current[item] === '' ||
-    //         ven_details.current[item] === 0 ||
-    //         ven_details.current[item] === null ||
-    //         ven_details.current[item] === undefined
-    //   ) {
-    //     newErrorState[item] = {
-    //       stat: true,
-    //       message: 'Please fill this field',
-    //       touched: true,
-    //     };
-    //     isError = true;
-    //   } else {
-    //     let value = ven_details.current[item];
-    //     const check = validateInput(item, value);
-    //     if (check.stat == true) {
-    //       newErrorState[item] = {
-    //         stat: true,
-    //         message: check.message,
-    //         touched: true,
-    //       };
-    //     } else {
-    //       newErrorState[item] = {
-    //         stat: false,
-    //         message: '',
-    //         touched: true,
-    //       };
-    //     }
-    //   }
-    // });
-    // setErrorState({ ...newErrorState, isError: isError });
-    // if (!isError) {
-    //   console.log(jsonSend);
-    //   setLoader(true);
-    //   try {
-    //     const submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/form/submit`, jsonSend);
-    //     const response = submit.data;
-    //     setLoader(false);
-    //     setFormStat({ stat: true, type: 'success', message: response.message });
-    //     window.location.reload();
-    //   } catch (err) {
-    //     console.log(err.stack);
-    //     alert(err.stack);
-    //     setFormStat({ stat: true, type: 'error', message: 'error submitting' });
-    //     setLoader(false);
-    //   }
-    // } else {
-    //   setFormStat({
-    //     stat: true,
-    //     type: 'error',
-    //     message: 'Fields fill not allowed or still empty',
-    //   });
-    // }
-    console.log(ven_bank);
+    let isError = false;
+    ven_details.current = {
+      ven_id: initialForm.current.ven_id ? initialForm.current.ven_id : initialForm.current.ticket_ven_id,
+      ticket_num: initialForm.current.ticket_num,
+      title: title ? title : '',
+      name_1: comp_name.current.value.trim(),
+      local_ovs: local_ovs,
+      limit_vendor: lim_ven ? lim_ven.match(/\d+/g)?.join('') : 0,
+      lim_curr: lim_curr,
+      postal: postalcode.current.value.trim(),
+      country: country_ven,
+      city: city_ven,
+      street: address.current.value.trim(),
+      telf1: telf.current.value.trim(),
+      fax: fax.current.value.trim(),
+      email: email_ven.current.value.trim(),
+      is_pkp: is_pkp,
+      is_tender: is_tender,
+      npwp: tax_num.current.value.trim(),
+      pay_mthd: pay_mthd,
+      pay_term: pay_term,
+    };
+    if (loader_data.data.cur_pos == 'PROC') {
+      ven_details.current = {
+        ...ven_details.current,
+        company: comp,
+        purch_org: purOrg.current.value,
+        ven_acc: venAcc,
+        ven_group: venGroup,
+        ven_type: venType,
+        description: ven_desc.current.value,
+      };
+    }
+    const jsonSend = {
+      is_draft: initialForm.current.is_draft,
+      ticket_id: initialForm.current.ticket_id,
+      remarks: remarks.current ? remarks.current.value : '',
+      ven_detail: ven_details.current,
+      ven_banks: ven_bank,
+      ven_files: ven_file,
+    };
+    const newErrorState = {};
+    Object.keys(ven_details.current).map(async (item) => {
+      if (
+        (typeof ven_details.current[item] === 'string'
+          ? ven_details.current[item]?.trim().length === 0
+          : false ||
+            ven_details.current[item] === '' ||
+            ven_details.current[item] === 0 ||
+            ven_details.current[item] === null ||
+            ven_details.current[item] === undefined) &&
+        (item !== 'description' || item !== 'is_pkp' || item !== 'is_tender' || item !== 'ven_id')
+      ) {
+        newErrorState[item] = {
+          stat: true,
+          message: 'Please fill this field',
+          touched: true,
+        };
+        isError = true;
+      } else {
+        let value = ven_details.current[item];
+        const check = validateInput(item, value);
+        if (check.stat == true) {
+          newErrorState[item] = {
+            stat: true,
+            message: check.message,
+            touched: true,
+          };
+        } else {
+          newErrorState[item] = {
+            stat: false,
+            message: '',
+            touched: true,
+          };
+        }
+      }
+    });
+    setErrorState({ ...newErrorState, isError: isError });
+    if (!isError) {
+      console.log(jsonSend);
+      setLoader(true);
+      try {
+        const submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/form/submit`, jsonSend);
+        const response = submit.data;
+        setLoader(false);
+        setFormStat({ stat: true, type: 'success', message: response.message });
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      } catch (err) {
+        console.log(err.stack);
+        alert(err.stack);
+        setFormStat({ stat: true, type: 'error', message: 'error submitting' });
+        setLoader(false);
+      }
+    } else {
+      setFormStat({
+        stat: true,
+        type: 'error',
+        message: 'Fields fill not allowed or still empty',
+      });
+    }
   };
 
   const handleExpanded = (panel) => () => {
@@ -411,6 +421,11 @@ export default function FormVendorPage() {
       setExpanded({
         ...expanded,
         panelVendetail: expanded.panelVendetail ? false : true,
+      });
+    } else if (panel === 'panelApproval') {
+      setExpanded({
+        ...expanded,
+        panelApproval: expanded.panelApproval ? false : true,
       });
     }
   };
@@ -506,11 +521,7 @@ export default function FormVendorPage() {
     }
   };
 
-  if (
-    Object.keys(initialForm.current).length !== 0 &&
-    initialForm.current.cur_pos !== 'VENDOR' &&
-    formtype === 'newform'
-  ) {
+  if (loader_data == null) {
     return (
       <>
         <Container
@@ -529,7 +540,7 @@ export default function FormVendorPage() {
   } else {
     return (
       <>
-        <Container>
+        <Container maxWidth="xl">
           <Box sx={{ height: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Typography variant="h4" gutterBottom>
               Form Vendor Registration
@@ -600,17 +611,26 @@ export default function FormVendorPage() {
               <AccordionDetails>
                 <Grid container spacing={2}>
                   <Grid item xs={3}>
-                    <TextField
-                      fullWidth
-                      id="titleComp"
-                      label="Title"
-                      variant="outlined"
-                      name="title"
-                      inputRef={title}
-                      error={errorState['title'].stat}
-                      helperText={errorState['title'].stat && errorState['title'].message}
-                      onChange={handleErrCheck}
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel error={errorState.title.stat} id="title-label">
+                        Title
+                      </InputLabel>
+                      <Select
+                        id="titleComp"
+                        labelId="title-label"
+                        label="title"
+                        variant="outlined"
+                        name="title"
+                        value={title}
+                        onChange={(e) => {
+                          setTitle(e.target.value);
+                          handleErrCheck(e);
+                        }}
+                      >
+                        <MenuItem value={'COMPANY'}>Company</MenuItem>
+                        <MenuItem value={'PERSONAL'}>Personal</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={3}>
                     <FormControl fullWidth>
@@ -865,7 +885,19 @@ export default function FormVendorPage() {
                   <Grid item xs={4}>
                     <FormGroup>
                       <FormControlLabel
-                        control={<Checkbox id="is_PKP" inputRef={is_pkp} />}
+                        control={
+                          <Checkbox
+                            id="is_PKP"
+                            checked={is_pkp}
+                            onClick={(e) => {
+                              if (is_pkp) {
+                                setIspkp(false);
+                              } else {
+                                setIspkp(true);
+                              }
+                            }}
+                          />
+                        }
                         label="Pengusaha Kena Pajak (PKP)"
                       />
                     </FormGroup>
@@ -1087,10 +1119,22 @@ export default function FormVendorPage() {
                         multiline
                       />
                     </Grid>
-                    <Grid item xs>
+                    <Grid item xs={5}>
                       <FormGroup>
                         <FormControlLabel
-                          control={<Checkbox id="is_tender" inputRef={is_tender} />}
+                          control={
+                            <Checkbox
+                              id="is_tender"
+                              checked={is_tender}
+                              onClick={(e) => {
+                                if (is_tender) {
+                                  setIstender(false);
+                                } else {
+                                  setIstender(true);
+                                }
+                              }}
+                            />
+                          }
                           label="Tender participation above one billion"
                         />
                       </FormGroup>
@@ -1117,7 +1161,7 @@ export default function FormVendorPage() {
               <AccordionDetails>
                 <VenBankTable
                   onChildDataChange={setVen_bankFromChild}
-                  initData={initDataBank.current !== undefined ? initDataBank.current : {}}
+                  initData={initDataBank.current ? initDataBank.current : {}}
                   idParent={initialForm.current.ven_id}
                   banks={banks.current}
                 />
@@ -1150,87 +1194,96 @@ export default function FormVendorPage() {
                 />
               </AccordionDetails>
             </Accordion>
-            <Accordion>
-              <AccordionSummary
-                sx={{ pointerEvents: 'none' }}
-                expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
-              >
-                <Typography>Approval</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <TextField
-                      label="Vendor Code"
-                      id="ven_code"
-                      name="ven_code"
-                      inputRef={ven_code}
-                      fullWidth
-                      error={errorState.ven_code.stat}
-                      helperText={errorState.ven_code.stat && errorState.ven_code.message}
-                    />
+            {loader_data.data.cur_pos == 'MDM' && (
+              <Accordion expanded={expanded.panelApproval} onChange={handleExpanded('panelApproval')}>
+                <AccordionSummary
+                  sx={{ pointerEvents: 'none' }}
+                  expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
+                >
+                  <Typography>Approval</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Vendor Code"
+                        id="ven_code"
+                        name="ven_code"
+                        inputRef={ven_code}
+                        fullWidth
+                        error={errorState.ven_code.stat}
+                        helperText={errorState.ven_code.stat && errorState.ven_code.message}
+                      />
+                    </Grid>
+                    <Grid item xs={3}>
+                      <FormControl fullWidth>
+                        <InputLabel id="status_mdmLabel">Status</InputLabel>
+                        <Select
+                          id="status_mdm"
+                          labelId="status_mdmLabel"
+                          label="Status"
+                          variant="outlined"
+                          name="status_mdm"
+                          value={status_mdm}
+                          onChange={(e) => {
+                            setStatusmdm(e.target.value);
+                          }}
+                          error={errorState.status_mdm.stat}
+                        >
+                          <MenuItem value={'REJECT'}>Reject</MenuItem>
+                          <MenuItem value={'APPROVE'}>Approve</MenuItem>
+                        </Select>
+                        <FormHelperText error={errorState.status_mdm.stat}>
+                          {errorState.status_mdm.stat && errorState.status_mdm.message}
+                        </FormHelperText>
+                      </FormControl>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={3}>
-                    <FormControl fullWidth>
-                      <InputLabel id="status_mdmLabel">Status</InputLabel>
-                      <Select
-                        id="status_mdm"
-                        labelId="status_mdmLabel"
-                        label="Status"
-                        variant="outlined"
-                        name="status_mdm"
-                        value={status_mdm}
-                        onChange={(e) => {
-                          setStatusmdm(e.target.value);
-                        }}
-                        error={errorState.status_mdm.stat}
-                      >
-                        <MenuItem value={'REJECT'}>Reject</MenuItem>
-                        <MenuItem value={'APPROVE'}>Approve</MenuItem>
-                      </Select>
-                      <FormHelperText error={errorState.status_mdm.stat}>
-                        {errorState.status_mdm.stat && errorState.status_mdm.message}
-                      </FormHelperText>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={3}></Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Remarks" id="remarks_mdm" name="remarks" inputRef={remarks} fullWidth multiline />
-                  </Grid>
-                </Grid>
-              </AccordionDetails>
-            </Accordion>
+                </AccordionDetails>
+              </Accordion>
+            )}
+            {(loader_data.data.remarks !== null || loader_data.data.cur_pos !== 'VENDOR') && (
+              <Box sx={{ my: 5 }}>
+                <TextField label="Remarks" id="remarks" name="remarks" inputRef={remarks} fullWidth multiline />
+              </Box>
+            )}
+            {/* <Box fullWidth sx={{ my: 5 }}>
+              <TextField label="Remarks" id="remarks" name="remarks" inputRef={remarks} fullWidth multiline />
+            </Box> */}
+            {loader_data.data.cur_pos === 'VENDOR' && (
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                <Button sx={{ height: 50, width: 100, margin: 2 }} variant="contained" onClick={handleSubmit}>
+                  Submit
+                </Button>
+              </Box>
+            )}
+            {loader_data.data.cur_pos === session.role && (
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                <Box>
+                  <Button sx={{ height: 50, width: 100, margin: 2 }} color="error" variant="text">
+                    Cancel
+                  </Button>
+                </Box>
+                <Box>
+                  <Button sx={{ height: 50, width: 100, margin: 2 }} color="error" variant="contained">
+                    Reject
+                  </Button>
+                  <Button
+                    sx={{ height: 50, width: 120, margin: 2 }}
+                    color="warning"
+                    variant="contained"
+                    onClick={handleSubmit}
+                  >
+                    Save Draft
+                  </Button>
+                  <Button sx={{ height: 50, width: 100, margin: 2 }} variant="contained" onClick={handleSubmit}>
+                    Submit
+                  </Button>
+                </Box>
+              </Box>
+            )}
           </Container>
-          {loader_data.data.cur_pos == 'VENDOR' && (
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-              <Button sx={{ height: 50, width: 100, margin: 2 }} variant="contained" onClick={handleSubmit}>
-                Submit
-              </Button>
-            </Box>
-          )}
-          {loader_data.data.cur_pos == 'PROC' && (
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                sx={{ height: 50, width: 100, margin: 2 }}
-                color="error"
-                variant="contained"
-                onClick={handleSubmit}
-              >
-                Cancel
-              </Button>
-              <Button
-                sx={{ height: 50, width: 120, margin: 2 }}
-                color="warning"
-                variant="contained"
-                onClick={handleSubmit}
-              >
-                Save Draft
-              </Button>
-              <Button sx={{ height: 50, width: 100, margin: 2 }} variant="contained" onClick={handleSubmit}>
-                Submit
-              </Button>
-            </Box>
-          )}
+
           <Snackbar
             open={formStat.stat}
             onClose={handleSnackClose}
@@ -1244,6 +1297,23 @@ export default function FormVendorPage() {
           <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loader}>
             <CircularProgress color="inherit" />
           </Backdrop>
+          <Dialog open={formStat.type === 'success'}>
+            <Box
+              sx={{
+                width: 500,
+                height: 200,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'success.main',
+              }}
+            >
+              <Typography variant="h4" sx={{ m: 2, borderRadius: 2 }} align="justify">
+                {formStat.message}
+              </Typography>
+            </Box>
+          </Dialog>
         </Container>
       </>
     );

@@ -54,7 +54,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   const bank_data = useRef();
   bank_data.current = banksData;
 
-  const DataGridBank = styled(DataGrid)(() => ({
+  const DataGridBank = styled(DataGrid, { shouldForwardProp: (prop) => prop !== 'sx' })(() => ({
     '& .row-idle': {
       backgroundColor: '#fff',
     },
@@ -77,10 +77,8 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       initData.map((item) => {
         covtData.push({ ...item, isDb: true, isNew: false, method: '' });
       });
+      setVen_bank(covtData);
     }
-    setVen_bank((ven_bankprev) => {
-      return [...ven_bankprev, ...covtData];
-    });
   }, [initData]);
 
   useEffect(() => {
@@ -110,9 +108,6 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
   const handleSaveClick = (row) => () => {
-    let poppedArr = ven_bank.slice(0, -1);
-    console.log(row.row);
-    setVen_bank([...poppedArr, row.row]);
     setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.View } });
   };
   const handleDeleteClick = (id) => () => {
@@ -221,18 +216,11 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
 
   return (
     <>
-      <DataGridBank
+      <DataGrid
         rows={ven_bank}
         columns={columns}
         editMode="row"
         rowModesModel={rowModesModel}
-        getRowClassName={(params) => {
-          if (params.row.method == 'delete') {
-            return 'row-delete';
-          } else {
-            return 'row-idle';
-          }
-        }}
         onRowModesModelChange={handleRowModesModelChange}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
@@ -241,6 +229,13 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
         }}
         slotProps={{
           toolbar: { setVen_bank, setRowModesModel, idParent },
+        }}
+        getRowClassName={(params) => {
+          if (params.row.method == 'delete') {
+            return 'row-delete';
+          } else {
+            return 'row-idle';
+          }
         }}
         autoHeight
       />
