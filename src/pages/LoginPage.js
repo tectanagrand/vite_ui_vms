@@ -3,9 +3,9 @@ import { useForm } from 'react-hook-form';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { Typography } from '@mui/material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from 'src/provider/authProvider';
+import { useSession } from 'src/provider/sessionProvider';
 import Cookies from 'js-cookie';
 const defaultValue = {
   Username: '',
@@ -16,7 +16,7 @@ export default function LoginPage() {
   const { handleSubmit, control } = useForm({ defaultValues: defaultValue });
   const [dirForm, setDirform] = useState({ state: 'login', html: 'User with form link ?' });
   const navigate = useNavigate();
-  const { setJWTToken } = useAuth();
+  const { setSession } = useSession();
   const onSubmit = async (data) => {
     if (dirForm.state === 'form') {
       navigate(`/frm/newform/${data.FormToken}`);
@@ -26,9 +26,9 @@ export default function LoginPage() {
           username: data.Username,
           password: data.Password,
         });
-        const jwttoken = logindata.data.token;
-        setJWTToken(jwttoken);
+        setSession(logindata.data);
         alert('Successfull login');
+        navigate('/dashboard');
       } catch (err) {
         alert(err.stack);
       }
