@@ -4,7 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import ThemeProvider from './theme';
 
 import { routes } from './route/routes';
-import AuthProvider from './provider/authProvider';
+import AuthProvider from './provider/sessionProvider';
 
 function App() {
   // return (
