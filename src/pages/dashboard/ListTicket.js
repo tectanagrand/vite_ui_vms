@@ -1,14 +1,24 @@
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Button, IconButton, Box, Paper, Typography, Container, Popper, Grow } from '@mui/material';
+import {
+  Button,
+  IconButton,
+  Box,
+  Paper,
+  Typography,
+  Popper,
+  Grow,
+  Backdrop,
+  CircularProgress,
+  Skeleton,
+} from '@mui/material';
 import axios from 'axios';
-import { useLoaderData } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Edit, Link, Visibility } from '@mui/icons-material';
 import Cookies from 'js-cookie';
-import { styled, useTheme } from '@mui/material/styles';
 import ModalCreateTicket from 'src/components/common/ModalCreateTicket';
 import { useSession } from 'src/provider/sessionProvider';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import ProgressStat from 'src/components/common/ProgressStat';
 
 export async function loaderTicket() {
   axios.defaults.headers.common.Authorization =
@@ -16,15 +26,6 @@ export async function loaderTicket() {
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/`);
   return response.data.data;
 }
-
-const ProgressStat = styled(Paper)(({ theme }) => ({
-  width: 100,
-  height: 40,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  elevation: 1,
-}));
 
 const overrides = {
   '& .MuiDataGrid-main': {
@@ -60,6 +61,7 @@ export function ListTicket() {
   const [btnTicket, setBtn] = useState(false);
   const [grow, setGrow] = useState(false);
   const [anchorEl, setAnchorel] = useState(null);
+  const [loader, setLoader] = useState(false);
   const navigate = useNavigate();
   // const [updateTable, setUpdateTable_] = useState(true);
   // const setUpdatetable = () => {
@@ -79,7 +81,7 @@ export function ListTicket() {
     const interval = setInterval(async () => {
       const tickets = await loadTicket();
       setTicket(tickets);
-    }, 1000 * 120);
+    }, 1000 * 10);
     return () => clearInterval(interval);
   }, []);
 
@@ -104,6 +106,7 @@ export function ListTicket() {
     } else {
       // <Navigate to={`/form/${row.id}`} />;
       navigate(`../form/${row.id}`, { relative: 'path' });
+      setLoader(true);
     }
   };
 
@@ -165,7 +168,7 @@ export function ListTicket() {
         }
         return (
           <>
-            <ProgressStat sx={{ backgroundColor: severity }}>
+            <ProgressStat color={severity}>
               <Typography color={text} variant="body">
                 {status}
               </Typography>
@@ -213,33 +216,48 @@ export function ListTicket() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          sx={{ width: 180, height: 50, my: 2 }}
-          onClick={() => {
-            setOpenmodal(true);
-          }}
-        >
-          Create New Vendor
-        </Button>
-      </Box>
-      <DataGrid
-        sx={overrides}
-        rows={ticket}
-        columns={columnTable}
-        disableColumnFilter
-        disableColumnSelector
-        disableDensitySelector
-        slots={{ toolbar: GridToolbar }}
-        slotProps={{
-          toolbar: {
-            csvOptions: { disableToolbarButton: true },
-            printOptions: { disableToolbarButton: true },
-            showQuickFilter: true,
-          },
-        }}
-      />
+      {ticket.length !== 0 ? (
+        <>
+          {session.role === 'PROC' && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                sx={{ width: 180, height: 50, my: 2 }}
+                onClick={() => {
+                  setOpenmodal(true);
+                }}
+              >
+                Create New Vendor
+              </Button>
+            </Box>
+          )}
+          <DataGrid
+            sx={overrides}
+            rows={ticket}
+            columns={columnTable}
+            disableColumnFilter
+            disableColumnSelector
+            disableDensitySelector
+            slots={{ toolbar: GridToolbar }}
+            slotProps={{
+              toolbar: {
+                csvOptions: { disableToolbarButton: true },
+                printOptions: { disableToolbarButton: true },
+                showQuickFilter: true,
+              },
+            }}
+          />
+        </>
+      ) : (
+        <Box>
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+        </Box>
+      )}
+
       <ModalCreateTicket open={openModal} onClose={handleOnClose} linkUrl={url} urlSet={urlSetFunc} />
       <Popper open={btnTicket} anchorEl={anchorEl} transition>
         {({ TransitionProps }) => {
@@ -250,6 +268,9 @@ export function ListTicket() {
           );
         }}
       </Popper>
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }} open={loader}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }
