@@ -10,7 +10,7 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function VenFileTable({ initData, upTable }) {
+export default function VenFileTable({ initData, upTable, isallow }) {
   const [file_ven, setFile_ven] = useState(initData);
   const [sbarOpen, setSbarOpen] = useState(false);
   const [loaderOpen, setLoaderopen] = useState(false);
@@ -151,20 +151,31 @@ export default function VenFileTable({ initData, upTable }) {
             />,
           ];
         } else {
-          return [
-            <GridActionsCellItem
-              key={`delete-${item.id}`}
-              icon={<DeleteIcon />}
-              label="Delete"
-              onClick={() => handleDeleteClick(item.id)}
-            />,
-            <GridActionsCellItem
-              key={`dwn-${item.id}`}
-              icon={<Download />}
-              label="Download"
-              onClick={() => handleDownloadClick(item)}
-            />,
-          ];
+          if (isallow) {
+            return [
+              <GridActionsCellItem
+                key={`delete-${item.id}`}
+                icon={<DeleteIcon />}
+                label="Delete"
+                onClick={() => handleDeleteClick(item.id)}
+              />,
+              <GridActionsCellItem
+                key={`dwn-${item.id}`}
+                icon={<Download />}
+                label="Download"
+                onClick={() => handleDownloadClick(item)}
+              />,
+            ];
+          } else {
+            return [
+              <GridActionsCellItem
+                key={`dwn-${item.id}`}
+                icon={<Download />}
+                label="Download"
+                onClick={() => handleDownloadClick(item)}
+              />,
+            ];
+          }
         }
       },
     },

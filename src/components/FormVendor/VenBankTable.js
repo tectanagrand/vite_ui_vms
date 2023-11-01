@@ -19,7 +19,7 @@ import { Button } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 
 function EditToolbar(props) {
-  const { setVen_bank, setRowModesModel, idParent } = props;
+  const { setVen_bank, setRowModesModel, idParent, isallow } = props;
   const handleClick = () => {
     const id = randomId();
     setVen_bank((oldRows) => [
@@ -39,15 +39,17 @@ function EditToolbar(props) {
     setRowModesModel((oldModel) => ({ ...oldModel, [id]: { mode: GridRowModes.Edit, fieldToFocus: 'bank_id' } }));
   };
   return (
-    <GridToolbarContainer>
-      <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-        Add
-      </Button>
-    </GridToolbarContainer>
+    isallow && (
+      <GridToolbarContainer>
+        <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+          Add
+        </Button>
+      </GridToolbarContainer>
+    )
   );
 }
 
-export default function VenBankTable({ onChildDataChange, initData, idParent, banks }) {
+export default function VenBankTable({ onChildDataChange, initData, idParent, banks, isallow }) {
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
   const banksData = banks?.map((item) => ({ value: item.bank_id, label: item.bank_name }));
@@ -193,22 +195,26 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       getActions: (row) => {
         let id = row.id;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(row)} />,
-            <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={handleCancelClick(id)} />,
-          ];
-        } else {
-          if (row.row.method == 'delete') {
+        if (isallow) {
+          if (isInEditMode) {
+            return [
+              <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(row)} />,
+              <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={handleCancelClick(id)} />,
+            ];
+          } else {
+            if (row.row.method == 'delete') {
+              return [
+                <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(row)} />,
+                <GridActionsCellItem icon={<Undo />} label="Undo" onClick={handleUndoClick(row)} />,
+              ];
+            }
             return [
               <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(row)} />,
-              <GridActionsCellItem icon={<Undo />} label="Undo" onClick={handleUndoClick(row)} />,
+              <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} />,
             ];
           }
-          return [
-            <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(row)} />,
-            <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} />,
-          ];
+        } else {
+          return [];
         }
       },
     },
@@ -228,7 +234,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
           toolbar: EditToolbar,
         }}
         slotProps={{
-          toolbar: { setVen_bank, setRowModesModel, idParent },
+          toolbar: { setVen_bank, setRowModesModel, idParent, isallow },
         }}
         getRowClassName={(params) => {
           if (params.row.method == 'delete') {
