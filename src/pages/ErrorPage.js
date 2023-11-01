@@ -3,7 +3,7 @@ import { useRouteError, Navigate } from 'react-router-dom';
 
 export default function ErrorPage() {
   const error = useRouteError();
-  if (error.response.status === 401) {
+  if (error.response?.status === 401) {
     return <Navigate replace to="/login" />;
   }
   return (

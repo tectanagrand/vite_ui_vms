@@ -1,15 +1,26 @@
-import { Avatar, IconButton, Menu, MenuItem } from '@mui/material';
+import { Avatar, IconButton, Menu, MenuItem, Backdrop, CircularProgress } from '@mui/material';
 import { useState } from 'react';
 import { useSession } from 'src/provider/sessionProvider';
-
+import { useNavigate } from 'react-router-dom';
 export default function AvatarComp() {
-  const { session } = useSession();
+  const { session, logOut } = useSession();
+  const [loader, setLoader] = useState(false);
+  const navigate = useNavigate();
+
   const [anchorEl, setAnchorel] = useState();
   const handleMenu = (e) => {
     setAnchorel(e.currentTarget);
   };
   const handleClose = () => {
     setAnchorel(null);
+  };
+  const handleLogout = () => {
+    console.log('test');
+    logOut();
+    setLoader(true);
+    setTimeout(() => {
+      navigate('/login');
+    }, 1000);
   };
   return (
     <>
@@ -24,8 +35,11 @@ export default function AvatarComp() {
         onClose={handleClose}
         keepMounted
       >
-        <MenuItem>Logout</MenuItem>
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </Menu>
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }} open={loader}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }

@@ -7,34 +7,17 @@ import LoginPage from 'src/pages/LoginPage';
 import Dashboard from 'src/pages/dashboard/Dashboard';
 import Cookies from 'js-cookie';
 import { ListTicket, loaderTicket } from 'src/pages/dashboard/ListTicket';
+import ListVendor from 'src/pages/dashboard/ListVendor';
 
 async function formLoader({ token }) {
-  // if (formType == 'newform') {
-  //   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/new/${token}`);
-  //   if (response.status == 500) {
-  //     throw new Error({ status: 500, statusText: response.message });
-  //   } else if (response.status == 404) {
-  //     throw new Error({ status: 404, statusText: response.message });
-  //   } else {
-  //     return response.data;
-  //   }
-  // } else if (formType == 'form') {
-  //   axios.defaults.headers.common.Authorization =
-  //     'Bearer ' + (Cookies.get('jwttoken') === undefined ? '' : Cookies.get('jwttoken'));
-  //   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
-  //   if (response.status == 500) {
-  //     throw new Error({ status: 500, statusText: response.message });
-  //   } else if (response.status == 401) {
-  //     console.log(response.status);
-  //     redirect('/login');
-  //   } else {
-  //     return response.data;
-  //   }
-  // }
-  // return null;
   axios.defaults.headers.common.Authorization =
     'Bearer ' + (Cookies.get('jwttoken') === undefined ? '' : Cookies.get('jwttoken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
+  return response;
+}
+
+async function newformLoader({ token }) {
+  const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/newform/${token}`);
   return response;
 }
 
@@ -43,8 +26,8 @@ export const routes = createBrowserRouter([
     path: 'frm/:formtype/:token',
     element: <FormVendorPage />,
     loader: async ({ params }) => {
-      const response = await formLoader(params);
-      return response.data;
+      const response = await newformLoader(params);
+      return { ...response.data, role: 'VENDOR', section: 'VENDOR' };
     },
     errorElement: <ErrorPage />,
   },
@@ -66,21 +49,35 @@ export const routes = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: 'vendor',
+    element: <ListVendor />,
+    errorElement: <ErrorPage />,
+  },
+  {
     path: 'dashboard',
     element: <Dashboard />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: 'form/:token',
         element: <FormVendorPage />,
         loader: async ({ params }) => {
           const response = await formLoader(params);
-          return response.data;
+          if (response.data.data.cur_pos === 'VENDOR' || response.data.data.cur_pos === 'PROC') {
+            return { ...response.data, role: '', section: 'VENDOR' };
+          } else {
+            return { ...response.data, role: '', section: 'MDM' };
+          }
         },
       },
       {
         path: 'ticket',
         element: <ListTicket />,
         loader: loaderTicket,
+      },
+      {
+        path: 'vendor',
+        element: <ListVendor />,
       },
     ],
   },
