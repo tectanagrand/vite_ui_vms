@@ -26,7 +26,7 @@ import StarBorder from '@mui/icons-material/StarBorder';
 import TurnedInIcon from '@mui/icons-material/TurnedIn';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { ListTicket } from './ListTicket';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link, useLocation, useOutlet } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -90,7 +90,9 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 export default function MiniDrawer() {
   const theme = useTheme();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState([]);
   const [openSub, setOpenSub] = useState({
     Vendor: false,
     User: false,
@@ -117,6 +119,22 @@ export default function MiniDrawer() {
       [param]: !openSub[param],
     });
   };
+
+  useEffect(() => {
+    console.log(location.pathname);
+    const path = location.pathname.split('/')[2];
+    switch (path) {
+      case 'form':
+        setSelected([1, 1]);
+        break;
+      case 'ticket':
+        setSelected([1, 1]);
+        break;
+      case 'vendor':
+        setSelected([1, 2]);
+        break;
+    }
+  }, [location.pathname]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -150,7 +168,7 @@ export default function MiniDrawer() {
         <Divider />
         <List>
           <ListItem key={'Vendor'} disablePadding sx={{ display: 'block' }} onClick={handleSubOpen('Vendor')}>
-            <ListItemButton>
+            <ListItemButton selected={selected[0] === 1}>
               <ListItemIcon>
                 <ClassIcon />
               </ListItemIcon>
@@ -160,13 +178,13 @@ export default function MiniDrawer() {
           </ListItem>
           <Collapse in={openSub.Vendor} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4 }}>
+              <ListItemButton component={Link} to="/dashboard/ticket" selected={selected[1] === 1} sx={{ pl: 4 }}>
                 <ListItemIcon>
                   <ConfirmationNumberIcon />
                 </ListItemIcon>
                 <ListItemText primary="Ticket" />
               </ListItemButton>
-              <ListItemButton sx={{ pl: 4 }}>
+              <ListItemButton component={Link} to="/dashboard/vendor" selected={selected[1] === 2} sx={{ pl: 4 }}>
                 <ListItemIcon>
                   <TurnedInIcon />
                 </ListItemIcon>
