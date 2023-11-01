@@ -1,4 +1,4 @@
-import { Paper, Box, Button, Link } from '@mui/material';
+import { Paper, Box, Button, Link, Backdrop } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { Typography } from '@mui/material';
@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
-import Cookies from 'js-cookie';
+import CircularProgress from '@mui/material/CircularProgress';
+import { PasswordFieldComp } from 'src/components/common/PasswordFieldComp';
 const defaultValue = {
   Username: '',
   Password: '',
@@ -14,6 +15,7 @@ const defaultValue = {
 };
 export default function LoginPage() {
   const { handleSubmit, control } = useForm({ defaultValues: defaultValue });
+  const [openLoad, setOpenload] = useState(false);
   const [dirForm, setDirform] = useState({ state: 'login', html: 'User with form link ?' });
   const navigate = useNavigate();
   const { setSession } = useSession();
@@ -28,7 +30,10 @@ export default function LoginPage() {
         });
         setSession(logindata.data);
         alert('Successfull login');
-        navigate('/dashboard');
+        setOpenload(true);
+        setTimeout(() => {
+          navigate('/dashboard/ticket');
+        }, 1000);
       } catch (err) {
         alert(err.stack);
       }
@@ -42,6 +47,7 @@ export default function LoginPage() {
       setDirform({ state: 'login', html: 'User with form link ?' });
     }
   };
+
   return (
     <>
       <Box
@@ -73,7 +79,7 @@ export default function LoginPage() {
               <TextFieldComp name={'Username'} control={control} label={'Username'} rules={{ required: true }} />
             )}
             {dirForm.state === 'login' && (
-              <TextFieldComp name={'Password'} control={control} label={'Password'} rules={{ required: true }} />
+              <PasswordFieldComp name={'Password'} control={control} label={'Password'} rules={{ required: true }} />
             )}
             {dirForm.state === 'form' && (
               <TextFieldComp name={'FormToken'} control={control} label={'Token Form'} rules={{ required: true }} />
@@ -94,6 +100,9 @@ export default function LoginPage() {
           </Paper>
         </form>
       </Box>
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={openLoad}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }
