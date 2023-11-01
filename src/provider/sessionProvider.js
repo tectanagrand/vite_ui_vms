@@ -16,6 +16,9 @@ const SessionProvider = ({ children }) => {
   const setSession = ({ fullname, username, email, token, id, role }) => {
     setSession_({ fullname: fullname, username: username, email: email, jwttoken: token, user_id: id, role: role });
   };
+  const logOut = () => {
+    setSession_({});
+  };
   useEffect(() => {
     if (session.jwttoken) {
       axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.jwttoken;
@@ -35,7 +38,7 @@ const SessionProvider = ({ children }) => {
     }
   }, [session]);
 
-  const contextValue = useMemo(() => ({ session, setSession }), [session]);
+  const contextValue = useMemo(() => ({ session, setSession, logOut }), [session]);
 
   return <SessionContext.Provider value={contextValue}>{children}</SessionContext.Provider>;
 };
