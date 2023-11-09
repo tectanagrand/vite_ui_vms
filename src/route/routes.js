@@ -8,6 +8,8 @@ import Dashboard from 'src/pages/dashboard/Dashboard';
 import Cookies from 'js-cookie';
 import { ListTicket, loaderTicket } from 'src/pages/dashboard/ListTicket';
 import ListVendor from 'src/pages/dashboard/ListVendor';
+import NavSection from 'src/components/nav/NavSection';
+import ListReqStat from 'src/pages/dashboard/ListReqStat';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
@@ -79,11 +81,19 @@ export const routes = createBrowserRouter([
         path: 'vendor',
         element: <ListVendor />,
       },
+      {
+        path: 'ticketreqstat',
+        element: <ListReqStat />,
+      },
     ],
   },
   {
     path: '*',
     element: <Navigate to="/404" />,
+  },
+  {
+    path: '/nav',
+    element: <NavSection />,
   },
 ]);
 
