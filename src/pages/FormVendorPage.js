@@ -465,8 +465,8 @@ export default function FormVendorPage() {
           submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/form/submit`, jsonSend);
         }
         const response = submit.data;
-        setLoader(false);
         setFormStat({ stat: true, type: 'success', message: response.message });
+        setLoader(false);
         if (!is_draft) {
           setIsdraft(false);
           setTimeout(() => {
@@ -601,7 +601,7 @@ export default function FormVendorPage() {
       const response = resultReject.data;
       setFormStat({ stat: true, type: 'success', message: response.message });
       setLoader(false);
-      navigate('..', { relative: 'path' });
+      navigate(0);
     } catch (error) {
       setLoader(false);
       alert(error);
@@ -1509,7 +1509,7 @@ export default function FormVendorPage() {
         </Snackbar>
         <Backdrop
           sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }}
-          open={!(refLoad && stateLoad && fileLoad && bankLoad && banksLoad && currLoad && countryLoad)}
+          open={!(refLoad && stateLoad && fileLoad && bankLoad && banksLoad && currLoad && countryLoad) || loader}
         >
           <CircularProgress color="inherit" />
         </Backdrop>
