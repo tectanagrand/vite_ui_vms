@@ -1,32 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
 import CssBaseline from '@mui/material/CssBaseline';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import Collapse from '@mui/material/Collapse';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import ClassIcon from '@mui/icons-material/Class';
-import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
 import AvatarComp from 'src/components/common/AvatarComp';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import StarBorder from '@mui/icons-material/StarBorder';
-import TurnedInIcon from '@mui/icons-material/TurnedIn';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import { ListTicket } from './ListTicket';
 import { Outlet, Link, useLocation, useOutlet } from 'react-router-dom';
+import NavSection from 'src/components/nav/NavSection';
+import { Menu } from 'src/_mock/Menu';
 
 const drawerWidth = 240;
 
@@ -92,11 +80,11 @@ export default function MiniDrawer() {
   const theme = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState([]);
-  const [openSub, setOpenSub] = useState({
-    Vendor: false,
-    User: false,
+  const [navCol, setNavcol] = useState({
+    head: '',
+    state: false,
   });
+  const [navMenu, setNavmenu] = useState('');
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -104,37 +92,22 @@ export default function MiniDrawer() {
 
   const handleDrawerClose = () => {
     setOpen(false);
-    setOpenSub({
-      Vendor: false,
-      User: false,
+    setNavcol({ ...navCol, state: false });
+  };
+
+  const updateNavcol = (menu) => {
+    setNavcol((prevNav) => {
+      setOpen(prevNav.head != menu ? true : !prevNav.state);
+      return {
+        head: menu,
+        state: prevNav.head != menu ? true : !prevNav.state,
+      };
     });
   };
 
-  const handleSubOpen = (param) => () => {
-    if (open == false) {
-      setOpen((prev) => !prev);
-    }
-    setOpenSub({
-      ...openSub,
-      [param]: !openSub[param],
-    });
+  const updateNavmenu = (menu) => {
+    setNavmenu(menu);
   };
-
-  useEffect(() => {
-    console.log(location.pathname);
-    const path = location.pathname.split('/')[2];
-    switch (path) {
-      case 'form':
-        setSelected([1, 1]);
-        break;
-      case 'ticket':
-        setSelected([1, 1]);
-        break;
-      case 'vendor':
-        setSelected([1, 2]);
-        break;
-    }
-  }, [location.pathname]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -166,52 +139,13 @@ export default function MiniDrawer() {
           </IconButton>
         </DrawerHeader>
         <Divider />
-        <List>
-          <ListItem key={'Vendor'} disablePadding sx={{ display: 'block' }} onClick={handleSubOpen('Vendor')}>
-            <ListItemButton selected={selected[0] === 1}>
-              <ListItemIcon>
-                <ClassIcon />
-              </ListItemIcon>
-              <ListItemText primary={'Vendor'} />
-              {openSub.Vendor == true ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-          </ListItem>
-          <Collapse in={openSub.Vendor} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              <ListItemButton component={Link} to="/dashboard/ticket" selected={selected[1] === 1} sx={{ pl: 4 }}>
-                <ListItemIcon>
-                  <ConfirmationNumberIcon />
-                </ListItemIcon>
-                <ListItemText primary="Ticket" />
-              </ListItemButton>
-              <ListItemButton component={Link} to="/dashboard/vendor" selected={selected[1] === 2} sx={{ pl: 4 }}>
-                <ListItemIcon>
-                  <TurnedInIcon />
-                </ListItemIcon>
-                <ListItemText primary="Master Vendor" />
-              </ListItemButton>
-            </List>
-          </Collapse>
-          <ListItem key={'User'} disablePadding sx={{ display: 'block' }} onClick={handleSubOpen('User')}>
-            <ListItemButton>
-              <ListItemIcon>
-                <SupervisedUserCircleIcon />
-              </ListItemIcon>
-              <ListItemText primary={'User'} />
-              {openSub.User == true ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-          </ListItem>
-          <Collapse in={openSub.User} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4 }}>
-                <ListItemIcon>
-                  <ConfirmationNumberIcon />
-                </ListItemIcon>
-                <ListItemText primary="Ticket" />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </List>
+        <NavSection
+          menu={Menu}
+          collapsemen={navCol}
+          navmen={navMenu}
+          onUpNavCol={updateNavcol}
+          onUpNavMenu={updateNavmenu}
+        />
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3, height: 600 }}>
         <DrawerHeader />
