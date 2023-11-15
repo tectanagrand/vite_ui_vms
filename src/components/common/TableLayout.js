@@ -1,26 +1,29 @@
-const { Table, TableCell, TableRow, TableHead, TableBody } = require('@mui/material');
+import { Table, TableCell, TableRow, TableHead, TableBody } from '@mui/material';
+import TableRows from './TableRows';
 
-export default function TableLayout({ data, details, buttons }) {
+export default function TableLayout({ data, buttons, lengthRow, onAppr }) {
+  const changeOnAppr = (item) => {
+    console.log(item);
+    onAppr(item);
+  };
   return (
-    <>
+    <Table>
       <TableHead>
         <TableRow>
-          {Object.keys(data[0]).map((item) => (
-            <TableCell>{item}</TableCell>
-          ))}
+          <TableCell>details</TableCell>
+          {Object.keys(data[0]).map((item) => {
+            if (item != 'id' && item != 'details') {
+              return <TableCell>{item}</TableCell>;
+            }
+          })}
+          {buttons.length != 0 && <TableCell></TableCell>}
         </TableRow>
       </TableHead>
       <TableBody>
         {data.map((item) => (
-          <TableRow>
-            {Object.keys(item).map((key) => {
-              if (key !== details) {
-                return <TableCell>{item[key]}</TableCell>;
-              }
-            })}
-          </TableRow>
+          <TableRows row={item} length={lengthRow} button={buttons} setApprov={changeOnAppr} />
         ))}
       </TableBody>
-    </>
+    </Table>
   );
 }

@@ -1,36 +1,18 @@
-import {
-  Button,
-  FormControl,
-  Select,
-  MenuItem,
-  Typography,
-  Dialog,
-  Box,
-  DialogTitle,
-  DialogActions,
-  TextField,
-  Snackbar,
-  Alert,
-  Table,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableBody,
-} from '@mui/material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { useEffect, useRef, useState } from 'react';
+import { FormControl, Select, MenuItem, Snackbar, Alert, Dialog, Box, Button, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useSession } from 'src/provider/sessionProvider';
+import TableLayout from 'src/components/common/TableLayout';
 
 const ticketReq = [
   {
     id: 'asjdasdaskdaslkdn',
-    ticket_num: 'SVE2312312',
-    date: '01/01/2022',
-    requestor: 'skdalsdk@gmail.com',
-    request: '1',
-    ven_code: 'LN0012312',
-    ven_name: 'PT KACANG GARUDA',
-    remarks: 'aksdlaksd alskdmasdma laksmdasmd',
+    'Ticket Number': 'SVE2312312',
+    Date: '01/01/2022',
+    Requestor: 'skdalsdk@gmail.com',
+    Request: '1',
+    'Vendor Code': 'LN0012312',
+    'Vendor Name': 'PT KACANG GARUDA',
+    details: 'aksdlaksd alskdmasdma laksmdasmd',
   },
   {
     id: 'jsdfposiadfiwne',
@@ -40,37 +22,28 @@ const ticketReq = [
     request: '0',
     ven_code: 'LN0012312',
     ven_name: 'PT ASDASD ASDAS',
-    remarks: 'aksdlaksd alskdmasdma laksmdasmd',
+    details: 'aksdlaksd alskdmasdma laksmdasmd',
   },
 ];
 
 export default function ListReqStat() {
   const { session } = useSession();
-
-  const overrides = {
-    '& .MuiDataGrid-main': {
-      width: 0,
-      minWidth: '95%',
-    },
-  };
-
+  const [openValid, setOpenval] = useState(false);
+  const [apprType, setAppr] = useState('');
+  // const overrides = {
+  //   '& .MuiDataGrid-main': {
+  //     width: 0,
+  //     minWidth: '95%',
+  //   },
+  // };
+  const [colLength, setColLength] = useState(0);
   const [filterAct, setFilteract] = useState('');
   const [formStat, setFormstat] = useState({
     stat: false,
     type: '',
     message: '',
   });
-  const [dialogOpen, setDialog] = useState(false);
-  const [btnState, setBtnst] = useState({});
-  const [data, setData] = useState([]);
-  const [request, setRequest] = useState({
-    ven_id: '',
-    ven_code: '',
-    ven_name: '',
-    reason: '',
-    requestor: '',
-    requestor_id: '',
-  });
+
   const handleSnackClose = (e, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -78,13 +51,18 @@ export default function ListReqStat() {
     setFormstat({ ...formStat, stat: false });
   };
 
-  const handleCloseMdl = () => {
-    setDialog(false);
+  const handleAppr = (type) => {
+    setOpenval(true);
+    setAppr(type);
   };
 
   useEffect(() => {
     setFilteract(true);
   }, []);
+
+  useEffect(() => {
+    setColLength(Object.entries(ticketReq[0]).length + 1);
+  });
 
   return (
     <>
@@ -102,23 +80,7 @@ export default function ListReqStat() {
         </Select>
       </FormControl>
 
-      <Dialog maxWidth="xl" open={dialogOpen} onClose={handleCloseMdl}>
-        <DialogTitle>Create {btnState.text} Request</DialogTitle>
-        <Box sx={{ width: 800, height: '100%', padding: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField id="ven_code" label="Vendor Code" value={request.ven_code} inputProps={{ readOnly: true }} />
-          <TextField id="name_1" label="Name" value={request.ven_name} inputProps={{ readOnly: true }} />
-          <TextField id="reason" label="Reason" value={request.reason} multiline />
-          <TextField id="request" label="Request By" value={request.requestor} inputProps={{ readOnly: true }} />
-        </Box>
-        <DialogActions>
-          <Button sx={{ width: 120, m: 1 }} color="secondary" onClick={handleCloseMdl}>
-            <Typography>Cancel</Typography>
-          </Button>
-          <Button sx={{ width: 120, m: 1 }} variant="contained" color={btnState.color}>
-            <Typography>{btnState.text}</Typography>
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <TableLayout data={ticketReq} buttons={['accept', 'reject']} lengthRow={colLength} onAppr={handleAppr} />
 
       <Snackbar
         open={formStat.stat}
@@ -130,6 +92,39 @@ export default function ListReqStat() {
           {formStat.message}
         </Alert>
       </Snackbar>
+      <Dialog
+        open={openValid}
+        onClose={() => {
+          setOpenval(false);
+        }}
+      >
+        <Box
+          sx={{
+            width: 400,
+            height: 200,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography variant="h4">Are you sure want to {apprType} ?</Typography>
+          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+            <Button sx={{ width: 50 }} variant="contained">
+              <Typography>Yes</Typography>
+            </Button>
+            <Button
+              sx={{ width: 50 }}
+              variant="contained"
+              onClick={() => {
+                setOpenval(false);
+              }}
+            >
+              <Typography>No</Typography>
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
     </>
   );
 }
