@@ -62,6 +62,8 @@ module.exports = {
     "react/function-component-definition": 0,
     "react/jsx-no-constructed-context-values": 0,
     "react/display-name": "off",
+    "react/prop-types": 0,
+    "no-unused-expressions": "off",
     "no-unused-vars": [
       1,
       {
