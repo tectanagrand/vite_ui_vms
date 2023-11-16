@@ -1,42 +1,77 @@
-import { KeyboardArrowDown, KeyboardArrowUp, Check, DoDisturb } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, Check, DoDisturb, Edit } from '@mui/icons-material';
 import { TableRow, TableCell, IconButton, Collapse, Typography, TextField, Tooltip } from '@mui/material';
 import { useState } from 'react';
 
-export default function Row({ row, length, button, setApprov }) {
+export default function Row({ row, length, button, setAction }) {
   const [open, setOpen] = useState(false);
   const clickDetails = () => {
     setOpen(!open);
   };
-  const changeOnAppr = (item) => {
-    setApprov(item);
+  const changeOnAction = (action, id) => {
+    setAction(action, id);
   };
+  let x = 0;
   return (
     <>
       <TableRow>
-        <TableCell>
-          <IconButton onClick={clickDetails}>{open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}</IconButton>
-        </TableCell>
+        {'details' in row && (
+          <TableCell>
+            <IconButton onClick={clickDetails}>{open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}</IconButton>
+          </TableCell>
+        )}
         {Object.keys(row).map((key) => {
           if (key != 'details' && key != 'id') {
-            return <TableCell align="left">{row[key]}</TableCell>;
+            return (
+              <TableCell key={`${x++}-cell`} align="left">
+                {row[key]}
+              </TableCell>
+            );
           }
         })}
         <TableCell>
           {button.length != 0 &&
-            button.map((item) => {
-              switch (item) {
+            button.map((action) => {
+              switch (action) {
                 case 'accept':
                   return (
-                    <Tooltip title={<Typography>{item}</Typography>}>
-                      <IconButton sx={{ backgroundColor: '#4ef542', mx: 1 }} onClick={() => changeOnAppr(item)}>
+                    <Tooltip key={`${action}-${x++}`} title={<Typography>{action}</Typography>}>
+                      <IconButton
+                        sx={{ backgroundColor: '#4ef542', mx: 1 }}
+                        onClick={() => changeOnAction(action, row.id)}
+                      >
                         <Check></Check>
                       </IconButton>
                     </Tooltip>
                   );
                 case 'reject':
                   return (
-                    <Tooltip title={<Typography>{item}</Typography>}>
-                      <IconButton sx={{ backgroundColor: '#f2573f', mx: 1 }} onClick={() => changeOnAppr(item)}>
+                    <Tooltip key={`${action}-${x++}`} title={<Typography>{action}</Typography>}>
+                      <IconButton
+                        sx={{ backgroundColor: '#f2573f', mx: 1 }}
+                        onClick={() => changeOnAction(action, row.id)}
+                      >
+                        <DoDisturb></DoDisturb>
+                      </IconButton>
+                    </Tooltip>
+                  );
+                case 'edit':
+                  return (
+                    <Tooltip key={`${action}-${x++}`} title={<Typography>{action}</Typography>}>
+                      <IconButton
+                        sx={{ backgroundColor: 'primary.light', mx: 1 }}
+                        onClick={() => changeOnAction(action, row.id)}
+                      >
+                        <Edit></Edit>
+                      </IconButton>
+                    </Tooltip>
+                  );
+                case 'deactive':
+                  return (
+                    <Tooltip key={`${action}-${x++}`} title={<Typography>{action}</Typography>}>
+                      <IconButton
+                        sx={{ backgroundColor: '#f2573f', mx: 1 }}
+                        onClick={() => changeOnAction(action, row.id)}
+                      >
                         <DoDisturb></DoDisturb>
                       </IconButton>
                     </Tooltip>
