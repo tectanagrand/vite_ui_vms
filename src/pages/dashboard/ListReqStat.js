@@ -1,46 +1,33 @@
-import { FormControl, Select, MenuItem, Snackbar, Alert, Dialog, Box, Button, Typography } from '@mui/material';
+import {
+  FormControl,
+  Select,
+  MenuItem,
+  Snackbar,
+  Alert,
+  Dialog,
+  Box,
+  Button,
+  Typography,
+  Skeleton,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSession } from 'src/provider/sessionProvider';
 import TableLayout from 'src/components/common/TableLayout';
-
-const ticketReq = [
-  {
-    id: 'asjdasdaskdaslkdn',
-    'Ticket Number': 'SVE2312312',
-    Date: '01/01/2022',
-    Requestor: 'skdalsdk@gmail.com',
-    Request: '1',
-    'Vendor Code': 'LN0012312',
-    'Vendor Name': 'PT KACANG GARUDA',
-    details: 'aksdlaksd alskdmasdma laksmdasmd',
-  },
-  {
-    id: 'jsdfposiadfiwne',
-    ticket_num: 'SVE182312',
-    date: '01/01/2020',
-    requestor: 'jskdiq@gmail.com',
-    request: '0',
-    ven_code: 'LN0012312',
-    ven_name: 'PT ASDASD ASDAS',
-    details: 'aksdlaksd alskdmasdma laksmdasmd',
-  },
-];
+import axios from 'axios';
 
 export default function ListReqStat() {
+  const columns = ['Ticket Number', 'Date', 'Requestor', 'Request', 'Vendor Code', 'Vendor Name'];
   const { session } = useSession();
+  const [reload, setReload] = useState(true);
   const [openValid, setOpenval] = useState(false);
   const [apprType, setAppr] = useState('');
-  // const overrides = {
-  //   '& .MuiDataGrid-main': {
-  //     width: 0,
-  //     minWidth: '95%',
-  //   },
-  // };
+  const [venData, setVendata] = useState({});
+  const [ticket, setTicket] = useState();
   const [colLength, setColLength] = useState(0);
   const [filterAct, setFilteract] = useState('');
   const [formStat, setFormstat] = useState({
     stat: false,
-    type: '',
+    type: 'success',
     message: '',
   });
 
@@ -51,9 +38,34 @@ export default function ListReqStat() {
     setFormstat({ ...formStat, stat: false });
   };
 
-  const handleAppr = (type) => {
+  const handleAppr = (type, id) => {
     setOpenval(true);
     setAppr(type);
+    setVendata(ticket.find((item) => item.id === id));
+  };
+
+  const handleProcessReq = async (action, id) => {
+    try {
+      const jsonSend = {
+        ticketid: id,
+        session: session.user_id,
+        action: action,
+      };
+      const processReq = await axios.post(`${process.env.REACT_APP_URL_LOC}/reqstat/process`, jsonSend);
+      setFormstat({
+        stat: true,
+        type: 'success',
+        message: processReq.data.message,
+      });
+      setOpenval(false);
+      setReload(!reload);
+    } catch (error) {
+      setFormstat({
+        stat: true,
+        type: 'error',
+        message: error,
+      });
+    }
   };
 
   useEffect(() => {
@@ -61,8 +73,16 @@ export default function ListReqStat() {
   }, []);
 
   useEffect(() => {
-    setColLength(Object.entries(ticketReq[0]).length + 1);
-  });
+    const getTicket = async () => {
+      const fetchTicket = await axios.get(`${process.env.REACT_APP_URL_LOC}/reqstat/show`);
+      setTicket(fetchTicket.data.data);
+    };
+    getTicket();
+  }, [reload]);
+
+  useEffect(() => {
+    setColLength(columns.length + 1);
+  }, [ticket]);
 
   return (
     <>
@@ -80,7 +100,23 @@ export default function ListReqStat() {
         </Select>
       </FormControl>
 
-      <TableLayout data={ticketReq} buttons={['accept', 'reject']} lengthRow={colLength} onAppr={handleAppr} />
+      {ticket != undefined ? (
+        <TableLayout
+          data={ticket}
+          buttons={['accept', 'reject']}
+          lengthRow={colLength}
+          onAction={handleAppr}
+          header={columns}
+        />
+      ) : (
+        <Box>
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+          <Skeleton animation="wave" height={100} />
+        </Box>
+      )}
 
       <Snackbar
         open={formStat.stat}
@@ -109,8 +145,13 @@ export default function ListReqStat() {
           }}
         >
           <Typography variant="h4">Are you sure want to {apprType} ?</Typography>
+          {venData['Request'] == 1 && <Typography variant="h5">Reactivation Request</Typography>}
+          {venData['Request'] == 0 && <Typography variant="h5">Deactivation Request</Typography>}
+          <Typography variant="h6">
+            {venData['Vendor Name']} - {venData['Vendor Code']}{' '}
+          </Typography>
           <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-            <Button sx={{ width: 50 }} variant="contained">
+            <Button sx={{ width: 50 }} variant="contained" onClick={(e) => handleProcessReq(apprType, venData['id'])}>
               <Typography>Yes</Typography>
             </Button>
             <Button
