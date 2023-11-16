@@ -18,6 +18,6 @@ export const Menu = [
     key: '3',
     text: 'User',
     icon: 'SupervisedUserCircle',
-    children: [{ key: '31', text: 'User', url: '#' }],
+    children: [{ key: '31', text: 'User', url: '/dashboard/users' }],
   },
 ];
