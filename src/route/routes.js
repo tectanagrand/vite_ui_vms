@@ -10,6 +10,7 @@ import { ListTicket, loaderTicket } from 'src/pages/dashboard/ListTicket';
 import ListVendor from 'src/pages/dashboard/ListVendor';
 import NavSection from 'src/components/nav/NavSection';
 import ListReqStat from 'src/pages/dashboard/ListReqStat';
+import User from 'src/pages/dashboard/User';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
@@ -84,6 +85,10 @@ export const routes = createBrowserRouter([
       {
         path: 'ticketreqstat',
         element: <ListReqStat />,
+      },
+      {
+        path: 'users',
+        element: <User />,
       },
     ],
   },
