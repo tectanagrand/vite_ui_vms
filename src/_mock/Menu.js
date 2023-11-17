@@ -16,8 +16,11 @@ export const Menu = [
   },
   {
     key: '3',
-    text: 'User',
+    text: 'Security Matrix',
     icon: 'SupervisedUserCircle',
-    children: [{ key: '31', text: 'User', url: '/dashboard/users' }],
+    children: [
+      { key: '31', text: 'User', url: '/dashboard/users' },
+      { key: '32', text: 'Access Menu', url: '/dashboard/securitygroup' },
+    ],
   },
 ];
