@@ -62,7 +62,12 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', margin: 1 }}>
-        <SearchBar value={searched} onChange={requestSearch} onCancelResearch={cancelSearch} onSearch={requestSearch} />
+        <SearchBar
+          value={searched}
+          onChange={requestSearch}
+          onCancelResearch={cancelSearch}
+          onSearch={(search) => setSearched(search)}
+        />
       </Box>
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="sticky table">
