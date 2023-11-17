@@ -10,7 +10,9 @@ import { ListTicket, loaderTicket } from 'src/pages/dashboard/ListTicket';
 import ListVendor from 'src/pages/dashboard/ListVendor';
 import NavSection from 'src/components/nav/NavSection';
 import ListReqStat from 'src/pages/dashboard/ListReqStat';
+import FormUserPage from 'src/pages/FormUserPage';
 import User from 'src/pages/dashboard/User';
+import MenuAccessPage from 'src/pages/MenuAccessPage';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
@@ -46,15 +48,8 @@ export const routes = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: 'ticket',
-    loader: loaderTicket,
-    element: <ListTicket />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: 'vendor',
-    element: <ListVendor />,
-    errorElement: <ErrorPage />,
+    path: 'user',
+    element: <FormUserPage />,
   },
   {
     path: 'dashboard',
@@ -90,6 +85,14 @@ export const routes = createBrowserRouter([
         path: 'users',
         element: <User />,
       },
+      {
+        path: 'users/create',
+        element: <FormUserPage />,
+      },
+      {
+        path: 'securitygroup',
+        element: <MenuAccessPage />,
+      },
     ],
   },
   {
@@ -99,6 +102,10 @@ export const routes = createBrowserRouter([
   {
     path: '/nav',
     element: <NavSection />,
+  },
+  {
+    path: '/accessmenu',
+    element: <MenuAccessPage />,
   },
 ]);
 

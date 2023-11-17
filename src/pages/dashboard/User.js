@@ -21,6 +21,8 @@ const usersMock = [
   },
 ];
 
+const header = ['Full Name', 'Username', 'Email', 'Department', 'Role'];
+
 export default function User() {
   const [colLen, setCollen] = useState(0);
 
@@ -44,6 +46,7 @@ export default function User() {
         buttons={['edit', 'deactive']}
         lengthRow={colLen}
         onAction={buttonAction}
+        header={header}
       ></TableLayout>
     </>
   );
