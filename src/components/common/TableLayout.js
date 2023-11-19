@@ -80,9 +80,9 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
               {buttons.length != 0 && <TableCell key="buttons"></TableCell>}
             </TableRow>
           </TableHead>
-          {data.length != 0 && (
-            <TableBody>
-              {(rowsPerPage > 0 ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : rows).map(
+          <TableBody>
+            {data.length != 0 &&
+              (rowsPerPage > 0 ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : rows).map(
                 (item) => (
                   <TableRows
                     key={`${idx++}`}
@@ -93,39 +93,44 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
                   />
                 )
               )}
-              {empty > 0 && (
-                <TableRow style={{ height: 74.5 * empty }}>
-                  <TableCell colSpan={lengthRow} />
-                </TableRow>
-              )}
-            </TableBody>
-          )}
-          {data.length == 0 && (
-            <TableRow style={{ height: 74.5 * empty }}>
-              <TableCell colSpan={lengthRow}>
-                <Typography variant="h5" sx={{ textAlign: 'center' }}>
-                  Empty Data
-                </Typography>
-              </TableCell>
-            </TableRow>
-          )}
+            {empty > 0 && (
+              <TableRow style={{ height: 74.5 * empty }}>
+                <TableCell colSpan={lengthRow} />
+              </TableRow>
+            )}
+            {data.length == 0 && (
+              <TableRow style={{ height: 74.5 * empty }}>
+                <TableCell colSpan={lengthRow}>
+                  <Typography variant="h5" sx={{ textAlign: 'center' }}>
+                    Empty Data
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </TableContainer>
       <Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-          colSpan={lengthRow}
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          SelectProps={{
-            inputProps: {
-              'aria-label': 'rows per page',
-            },
-            native: true,
-          }}
-          onPageChange={handleChangePage}
-        />
+        <TableHead></TableHead>
+        <TableBody></TableBody>
+        <TableFooter>
+          <TableRow>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+              colSpan={lengthRow}
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              SelectProps={{
+                inputProps: {
+                  'aria-label': 'rows per page',
+                },
+                native: true,
+              }}
+              onPageChange={handleChangePage}
+            />
+          </TableRow>
+        </TableFooter>
       </Table>
     </>
   );
