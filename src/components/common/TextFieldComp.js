@@ -1,13 +1,14 @@
 import { TextField } from '@mui/material';
 import { Controller } from 'react-hook-form';
 
-export const TextFieldComp = ({ control, label, name, rules }) => {
+export const TextFieldComp = ({ control, label, name, rules, valueovr }) => {
   return (
     <>
       <Controller
         name={name}
         control={control}
         rules={rules}
+        defaultValue={valueovr}
         render={({ field: { onChange, value }, fieldState: { error } }) => (
           <TextField
             helperText={error ? error.message : null}

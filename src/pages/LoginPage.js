@@ -7,7 +7,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
 import CircularProgress from '@mui/material/CircularProgress';
-import { PasswordFieldComp } from 'src/components/common/PasswordFieldComp';
+import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
 const defaultValue = {
   Username: '',
   Password: '',
@@ -79,7 +79,7 @@ export default function LoginPage() {
               <TextFieldComp name={'Username'} control={control} label={'Username'} rules={{ required: true }} />
             )}
             {dirForm.state === 'login' && (
-              <PasswordFieldComp name={'Password'} control={control} label={'Password'} rules={{ required: true }} />
+              <PasswordWithEyes name={'Password'} control={control} label={'Password'} rules={{ required: true }} />
             )}
             {dirForm.state === 'form' && (
               <TextFieldComp name={'FormToken'} control={control} label={'Token Form'} rules={{ required: true }} />
