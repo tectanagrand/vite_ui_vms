@@ -1,6 +1,7 @@
 import TableLayout from 'src/components/common/TableLayout';
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router';
 
 const usersMock = [
   {
@@ -26,8 +27,13 @@ const header = ['Full Name', 'Username', 'Email', 'Department', 'Role'];
 export default function User() {
   const [colLen, setCollen] = useState(0);
 
+  const navigate = useNavigate();
+
+  const buttonNewUser = () => {
+    navigate('./create');
+  };
   useEffect(() => {
-    setCollen(Object.entries(usersMock[0]));
+    setCollen(Object.entries(usersMock[0]).length);
   }, []);
 
   const buttonAction = (action) => {
@@ -37,7 +43,7 @@ export default function User() {
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button sx={{ width: 200, heigth: 50, margin: 2 }} variant="contained">
+        <Button sx={{ width: 200, heigth: 50, margin: 2 }} variant="contained" onClick={buttonNewUser}>
           <Typography>Create New User</Typography>
         </Button>
       </Box>
