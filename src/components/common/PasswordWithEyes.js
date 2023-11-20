@@ -26,6 +26,7 @@ export const PasswordWithEyes = ({ control, label, name, rules }) => {
               onChange={onChange}
               value={value}
               error={error}
+              inputProps={{ autoComplete: 'new-password' }}
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
