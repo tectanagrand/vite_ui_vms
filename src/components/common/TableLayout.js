@@ -43,6 +43,10 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
     const filteredRows = data.filter((row) => {
       let check = false;
       Object.values(row).map((item) => {
+        console.log(item);
+        if (item === null) {
+          return;
+        }
         if (item.toString().toLowerCase().includes(searchedVal.toString().toLowerCase())) {
           check = true;
           return;
@@ -93,7 +97,7 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
                   />
                 )
               )}
-            {empty > 0 && (
+            {empty > 0 && data.length != 0 && (
               <TableRow style={{ height: 74.5 * empty }}>
                 <TableCell colSpan={lengthRow} />
               </TableRow>

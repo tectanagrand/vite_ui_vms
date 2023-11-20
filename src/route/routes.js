@@ -13,6 +13,7 @@ import ListReqStat from 'src/pages/dashboard/ListReqStat';
 import FormUserPage from 'src/pages/FormUserPage';
 import User from 'src/pages/dashboard/User';
 import MenuAccessPage from 'src/pages/MenuAccessPage';
+import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
@@ -91,6 +92,10 @@ export const routes = createBrowserRouter([
       },
       {
         path: 'securitygroup',
+        element: <ListUserGroup />,
+      },
+      {
+        path: 'securitygroup/create',
         element: <MenuAccessPage />,
       },
     ],
