@@ -13,11 +13,20 @@ const SessionProvider = ({ children }) => {
     user_id: Cookies.get('user_id'),
     role: Cookies.get('role'),
   });
-  const setSession = ({ fullname, username, email, token, id, role }) => {
-    setSession_({ fullname: fullname, username: username, email: email, jwttoken: token, user_id: id, role: role });
+  const setSession = ({ fullname, username, email, token, id, role, permission }) => {
+    setSession_({
+      fullname: fullname,
+      username: username,
+      email: email,
+      jwttoken: token,
+      user_id: id,
+      role: role,
+      permission: permission,
+    });
   };
   const logOut = () => {
     setSession_({});
+    sessionStorage.clear();
   };
   useEffect(() => {
     if (session.jwttoken) {
@@ -28,6 +37,7 @@ const SessionProvider = ({ children }) => {
       Cookies.set('username', session.username);
       Cookies.set('user_id', session.user_id);
       Cookies.set('role', session.role);
+      sessionStorage.setItem('permission', JSON.stringify(session.permission));
     } else {
       Cookies.remove('jwttoken');
       Cookies.remove('fullname');
