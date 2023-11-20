@@ -2,6 +2,7 @@ import TableLayout from 'src/components/common/TableLayout';
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
 
 const usersMock = [
   {
@@ -22,22 +23,35 @@ const usersMock = [
   },
 ];
 
-const header = ['Full Name', 'Username', 'Email', 'Department', 'Role'];
+const header = ['Full Name', 'Username', 'Email', 'User Group', 'Role', 'Date Created', 'Date Expired'];
 
 export default function User() {
   const [colLen, setCollen] = useState(0);
+  const [allUserDt, setAllUsr] = useState();
 
   const navigate = useNavigate();
 
   const buttonNewUser = () => {
     navigate('./create');
   };
+
   useEffect(() => {
-    setCollen(Object.entries(usersMock[0]).length);
+    const getAllDataUser = async () => {
+      const getUser = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/`);
+      console.log(getUser.data.data);
+      setAllUsr(getUser.data.data);
+      setCollen(Object.entries(getUser.data.data[0]).length);
+    };
+    getAllDataUser();
   }, []);
 
-  const buttonAction = (action) => {
-    console.log(action);
+  const buttonAction = (action, id) => {
+    if (action === 'edit') {
+      navigate({
+        pathname: './create',
+        search: `?iduser=${id}`,
+      });
+    }
   };
 
   return (
@@ -47,13 +61,17 @@ export default function User() {
           <Typography>Create New User</Typography>
         </Button>
       </Box>
-      <TableLayout
-        data={usersMock}
-        buttons={['edit', 'deactive']}
-        lengthRow={colLen}
-        onAction={buttonAction}
-        header={header}
-      ></TableLayout>
+      {allUserDt != undefined ? (
+        <TableLayout
+          data={allUserDt}
+          buttons={['edit', 'deactive']}
+          lengthRow={colLen}
+          onAction={buttonAction}
+          header={header}
+        ></TableLayout>
+      ) : (
+        <></>
+      )}
     </>
   );
 }

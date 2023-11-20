@@ -1,4 +1,4 @@
-import { Container, Typography, Grid, Box, Button, accordionSummaryClasses } from '@mui/material';
+import { Container, Typography, Grid, Box, Button } from '@mui/material';
 import SelectComp from 'src/components/common/SelectComp';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
@@ -7,24 +7,59 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import DatePickerComp from 'src/components/common/DatePickerComp';
-import { useSearchParams } from 'react-router-dom';
-const defaultValue = {
-  username: '',
-  password: '',
-  fullname: '',
-  email: '',
-  usergroup: '',
-};
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 export default function FormUserPage() {
   const [searchParams] = useSearchParams();
-  const { handleSubmit, control } = useForm({ defaultValues: defaultValue });
+  const [userId, setUserid] = useState('');
+  const navigate = useNavigate();
+  const {
+    handleSubmit,
+    control,
+    reset,
+    getFieldState,
+    formState: { isDirty },
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      manager: '',
+      fullname: '',
+      username: '',
+      usergroup: '',
+      email: '',
+      password: '',
+      role: '',
+      datecreated: dayjs().format('MM/DD/YYYY'),
+      expireddate: dayjs().format('MM/DD/YYYY'),
+    },
+    resetOptions: {
+      keepDirtyValues: true, // user-interacted input will be retained
+      keepErrors: true, // input errors will be retained with value update
+    },
+  });
+
+  const getUserData = async (iduser) => {
+    const userDt = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/show/?iduser=${iduser}`);
+    const data = userDt.data.data;
+    if (data != undefined) {
+      setUserid(data.user_id);
+      reset({
+        manager: data.mgr_id,
+        fullname: data.fullname,
+        username: data.username,
+        usergroup: data.usergroup,
+        email: data.email,
+        role: data.role,
+        datecreated: dayjs(data.datecreated).format('MM/DD/YYYY'),
+        expireddate: dayjs(data.expireddate).format('MM/DD/YYYY'),
+      });
+    }
+  };
+
   const [userGroup, setuserGroup] = useState([{ value: '', label: '' }]);
   const [roles, setRoles] = useState([{ value: '', label: '' }]);
   const [manager, setManager] = useState([{ value: '', label: '' }]);
-  let userDt;
   const onRoleChange = (data) => {
-    console.log(data);
     if (data !== 'MGR') {
       setisMgr(false);
     } else {
@@ -32,11 +67,6 @@ export default function FormUserPage() {
     }
   };
   const [isMgr, setisMgr] = useState(false);
-
-  const getUserData = async (iduser) => {
-    const userDt = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/show/?iduser=${iduser}`);
-    return userDt.data.data;
-  };
 
   useEffect(() => {
     const getUsergrp = async () => {
@@ -85,26 +115,30 @@ export default function FormUserPage() {
 
   useEffect(() => {
     const userid = searchParams.get('iduser');
-    userDt = getUserData(userid);
-    console.log(userDt);
+    getUserData(userid);
   }, []);
 
   const submitUser = async (data) => {
     const mgr_id = isMgr ? '' : data.manager;
-    const subUserDt = {
+    let subUserDt = {
+      user_id: userId,
       mgr_id: mgr_id,
       fullname: data.fullname,
       username: data.username,
       usergroup: data.usergroup,
       email: data.email,
-      password: data.password,
       role: data.role,
       createddate: dayjs(data.datecreated).format('MM/DD/YYYY'),
       expireddate: dayjs(data.expireddate).format('MM/DD/YYYY'),
     };
+    if (getFieldState('password').isDirty) {
+      subUserDt.password = data.password;
+    }
+    // console.log(subUserDt);
     try {
       const submitDatauser = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/submit`, subUserDt);
-      alert(submitDatauser.message);
+      alert(submitDatauser.data.message);
+      navigate('../users');
     } catch (error) {
       alert(error);
     }
@@ -129,7 +163,12 @@ export default function FormUserPage() {
               <TextFieldComp name="username" control={control} label="Username" rules={{ required: true }} />
             </Grid>
             <Grid item xs>
-              <PasswordWithEyes name="password" control={control} label="Password" rules={{ required: true }} />
+              <PasswordWithEyes
+                name="password"
+                control={control}
+                label="Password"
+                rules={{ required: userId != '' ? false : true }}
+              />
             </Grid>
           </Grid>
           <Grid container spacing={2}>
