@@ -1,4 +1,5 @@
 import { DatePicker } from '@mui/x-date-pickers';
+import dayjs from 'dayjs';
 import { Controller } from 'react-hook-form';
 
 export default function DatePickerComp({ name, label, control, rules }) {
@@ -7,11 +8,11 @@ export default function DatePickerComp({ name, label, control, rules }) {
       control={control}
       name={name}
       rules={rules}
-      defaultValue={''}
-      render={({ field, fieldState: { error } }) => (
+      render={({ field: { onChange, value }, fieldState: { error } }) => (
         <DatePicker
           sx={{ width: '100%' }}
-          {...field}
+          onChange={onChange}
+          value={dayjs(value)}
           label={label}
           slotProps={{ textField: { error: !!error, helperText: error?.message } }}
         />
