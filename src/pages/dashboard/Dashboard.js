@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -15,6 +15,8 @@ import AvatarComp from 'src/components/common/AvatarComp';
 import { Outlet, Link, useLocation, useOutlet } from 'react-router-dom';
 import NavSection from 'src/components/nav/NavSection';
 import { Menu } from 'src/_mock/Menu';
+import { useSession } from 'src/provider/sessionProvider';
+import axios from 'axios';
 
 const drawerWidth = 240;
 
@@ -79,12 +81,24 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 export default function MiniDrawer() {
   const theme = useTheme();
   const location = useLocation();
+  const { session, setSession } = useSession();
+
   const [open, setOpen] = useState(false);
   const [navCol, setNavcol] = useState({
     head: '',
     state: false,
   });
   const [navMenu, setNavmenu] = useState('');
+
+  useEffect(() => {
+    const getAuthorization = async () => {
+      const getAuth = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/authorization`, {
+        group_id: session.groupid,
+      });
+      setSession({ ...session, ['permission']: getAuth.data });
+    };
+    getAuthorization();
+  }, []);
 
   const handleDrawerOpen = () => {
     setOpen(true);
