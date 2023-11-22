@@ -15,7 +15,6 @@ export default function VenFileTable({ initData, upTable, isallow }) {
   const [sbarOpen, setSbarOpen] = useState(false);
   const [loaderOpen, setLoaderopen] = useState(false);
   const [fetchStat, setFetchStat] = useState({});
-  // console.log(initData);
 
   useEffect(() => {
     setFile_ven(initData);
@@ -73,7 +72,6 @@ export default function VenFileTable({ initData, upTable, isallow }) {
               body: JSON.stringify({ id: id }),
             });
             const response = await deletedFile.json();
-            console.log(response);
             if (response.status == 200) {
               setFetchStat({
                 stat: 'success',

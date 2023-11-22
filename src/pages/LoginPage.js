@@ -28,6 +28,7 @@ export default function LoginPage() {
           username: data.Username,
           password: data.Password,
         });
+        console.log(logindata.data);
         setSession(logindata.data);
         alert('Successfull login');
         setOpenload(true);

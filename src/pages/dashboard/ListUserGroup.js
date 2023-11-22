@@ -35,8 +35,6 @@ export default function ListUserGroup() {
     setFormstat({ ...formStat, stat: false });
   };
 
-  console.log(secGroup);
-
   useEffect(() => {
     const getSecurityGroup = async () => {
       const dataSec = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/lssecmtx`);
