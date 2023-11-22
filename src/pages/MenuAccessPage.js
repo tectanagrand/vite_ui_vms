@@ -5,10 +5,12 @@ import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSession } from 'src/provider/sessionProvider';
 
 export default function MenuAccessPage() {
   let dtAccess = [];
   const [searchParams] = useSearchParams();
+  const { session, setSession } = useSession();
   const defaultValues = {
     groupname: '',
   };
@@ -19,9 +21,15 @@ export default function MenuAccessPage() {
       groupid: groupid ? groupid : '',
       accessmtx: dtAccess,
     };
-    console.log(insertedDt);
+    const getAuthorization = async () => {
+      const getAuth = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/authorization`, {
+        group_id: groupid,
+      });
+      setSession({ ...session, ['permission']: getAuth.data });
+    };
     try {
       const submission = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/secmtx/submit`, insertedDt);
+      getAuthorization();
       alert(submission);
     } catch (error) {
       alert(error);
@@ -38,7 +46,6 @@ export default function MenuAccessPage() {
       const secMtx = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/secmtx`, {
         groupid: groupid ? groupid : '',
       });
-      console.log(secMtx);
       reset({ groupname: secMtx.data.name });
       setdtMenu(secMtx.data.data);
     };
