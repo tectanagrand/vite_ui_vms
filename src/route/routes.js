@@ -14,26 +14,110 @@ import FormUserPage from 'src/pages/FormUserPage';
 import User from 'src/pages/dashboard/User';
 import MenuAccessPage from 'src/pages/MenuAccessPage';
 import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
+import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
-    'Bearer ' + (Cookies.get('jwttoken') === undefined ? '' : Cookies.get('jwttoken'));
+    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
-  return response;
+  const data = response.data.data;
+  console.log(data);
+  const valueForm = {
+    emailRequestor: data.email_proc ? data.email_proc : '',
+    deptRequestor: data.dep_proc ? data.dep_proc : '',
+    titlecomp: data.title ? data.title : '',
+    localovs: data.local_ovs ? data.local_ovs : '',
+    name1: data['name_1'] ? data['name_1'] : '',
+    country: data.country ? data.country : '',
+    street: data.street ? data.street : '',
+    postal: data.postal ? data.postal : '',
+    city: data.city ? data.city : '',
+    telf: data.telf1 ? data.telf1 : '',
+    fax: data.fax ? data.fax : '',
+    email: data.email ? data.email : '',
+    ispkp: data.is_pkp ? data.is_pkp : false,
+    npwp: data.npwp ? data.npwp : '',
+    paymthd: data.pay_mthd ? data.pay_mthd : '',
+    payterm: data.pay_term ? data.pay_term : '',
+    company: data.company ? data.company : '',
+    purchorg: data.purch_org ? data.purch_org : '',
+    vengroup: data.ven_group ? data.ven_group : '',
+    venacc: data.ven_acc ? data.ven_acc : '',
+    ventype: data.type ? data.type : '',
+    currency: data.lim_curr ? data.lim_curr : '',
+    description: data.description ? data.description : '',
+    is_tender: data.is_tender ? data.is_tender : false,
+    vendorcode: data.ven_code ? data.ven_code : '',
+    remarks: data.remarks ? data.remarks : '',
+    limit: data.limit_vendor ? data.limit_vendor : '',
+  };
+  return {
+    ticket_id: data.ticket_id,
+    ticket_num: data.ticket_num,
+    ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+    ticketState: data.ticket_state,
+    data: valueForm,
+  };
 }
 
 async function newformLoader({ token }) {
+  axios.defaults.headers.common.Authorization =
+    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/newform/${token}`);
-  return response;
+  const data = response.data.data;
+  let perm;
+  console.log(data);
+  const valueForm = {
+    emailRequestor: data.email_proc ? data.email_proc : '',
+    deptRequestor: data.dep_proc ? data.dep_proc : '',
+    titlecomp: data.title ? data.title : '',
+    localovs: data.local_ovs ? data.local_ovs : '',
+    name1: data['name_1'] ? data['name_1'] : '',
+    country: data.country ? data.country : '',
+    street: data.street ? data.street : '',
+    postal: data.postal ? data.postal : '',
+    city: data.city ? data.city : '',
+    telf: data.telf1 ? data.telf1 : '',
+    fax: data.fax ? data.fax : '',
+    email: data.email ? data.email : '',
+    ispkp: data.is_pkp ? data.is_pkp : false,
+    npwp: data.npwp ? data.npwp : '',
+    paymthd: data.pay_mthd ? data.pay_mthd : '',
+    payterm: data.pay_term ? data.pay_term : '',
+    company: data.company ? data.company : '',
+    purchorg: data.purch_org ? data.purch_org : '',
+    vengroup: data.ven_group ? data.ven_group : '',
+    venacc: data.ven_acc ? data.ven_acc : '',
+    ventype: data.type ? data.type : '',
+    currency: data.lim_curr ? data.lim_curr : '',
+    description: data.description ? data.description : '',
+    is_tender: data.is_tender ? data.is_tender : false,
+    vendorcode: data.ven_code ? data.ven_code : '',
+    remarks: data.remarks ? data.remarks : '',
+    limit: data.limit_vendor ? data.limit_vendor : '',
+  };
+  if (data.ticket_state === 'INIT') {
+    perm = { create: false, read: false, update: true, delete: false };
+  } else {
+    perm = { create: false, read: false, update: false, delete: false };
+  }
+  return {
+    ticket_id: data.ticket_id,
+    ticket_num: data.ticket_num,
+    ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+    ticketState: data.ticket_state,
+    data: valueForm,
+    permission: perm,
+  };
 }
 
 export const routes = createBrowserRouter([
   {
     path: 'frm/:formtype/:token',
-    element: <FormVendorPage />,
+    element: <RefactorFormVendorPage />,
     loader: async ({ params }) => {
       const response = await newformLoader(params);
-      return { ...response.data, role: 'VENDOR', section: 'VENDOR' };
+      return response;
     },
     errorElement: <ErrorPage />,
   },
@@ -59,14 +143,18 @@ export const routes = createBrowserRouter([
     children: [
       {
         path: 'form/:token',
-        element: <FormVendorPage />,
+        element: <RefactorFormVendorPage />,
+        // loader: async ({ params }) => {
+        //   const response = await formLoader(params);
+        //   if (response.data.data.cur_pos === 'VENDOR' || response.data.data.cur_pos === 'PROC') {
+        //     return { ...response.data, role: '', section: 'VENDOR' };
+        //   } else {
+        //     return { ...response.data, role: '', section: 'MDM' };
+        //   }
+        // },
         loader: async ({ params }) => {
-          const response = await formLoader(params);
-          if (response.data.data.cur_pos === 'VENDOR' || response.data.data.cur_pos === 'PROC') {
-            return { ...response.data, role: '', section: 'VENDOR' };
-          } else {
-            return { ...response.data, role: '', section: 'MDM' };
-          }
+          const loader = await formLoader(params);
+          return loader;
         },
       },
       {
@@ -111,6 +199,14 @@ export const routes = createBrowserRouter([
   {
     path: '/accessmenu',
     element: <MenuAccessPage />,
+  },
+  {
+    path: '/refactor',
+    element: <RefactorFormVendorPage />,
+    loader: async () => {
+      const loader = await formLoader({ token: '6c7a753f-2881-4c41-afd2-bb3696b3d306' });
+      return loader;
+    },
   },
 ]);
 
