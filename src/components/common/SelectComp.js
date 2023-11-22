@@ -1,8 +1,17 @@
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, FormHelperText } from '@mui/material';
 import { Controller } from 'react-hook-form';
-import { useState, useEffect } from 'react';
 
-export default function SelectComp({ name, control, label, options, onChangeovr, rules, disabled, valueovr }) {
+export default function SelectComp({
+  name,
+  control,
+  label,
+  options,
+  onChangeovr,
+  rules,
+  disabled,
+  readOnly,
+  valueovr,
+}) {
   const generateSingleOptions = () => {
     return options.map((item) => {
       return (
@@ -21,12 +30,15 @@ export default function SelectComp({ name, control, label, options, onChangeovr,
           }
           return (
             <>
-              <InputLabel error={!!error}>{label}</InputLabel>
+              <InputLabel error={error}>{label}</InputLabel>
               <Select
                 fullWidth
-                error={!!error}
+                error={error}
                 label={label}
                 value={value}
+                inputProps={{
+                  readOnly: readOnly,
+                }}
                 onChange={(e) => {
                   onChange(e);
                   if (onChangeovr != undefined) {
@@ -36,6 +48,7 @@ export default function SelectComp({ name, control, label, options, onChangeovr,
               >
                 {generateSingleOptions()}
               </Select>
+              <FormHelperText error={error}>{error?.message}</FormHelperText>
             </>
           );
         }}

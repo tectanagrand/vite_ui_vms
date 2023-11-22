@@ -1,7 +1,7 @@
 import { TextField } from '@mui/material';
 import { Controller } from 'react-hook-form';
 
-export const TextFieldComp = ({ control, label, name, rules, valueovr }) => {
+export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly }) => {
   return (
     <>
       <Controller
@@ -17,6 +17,7 @@ export const TextFieldComp = ({ control, label, name, rules, valueovr }) => {
             value={value}
             label={label}
             variant="outlined"
+            inputProps={{ readOnly: readOnly }}
             fullWidth
             sx={{ mt: 2, mb: 2 }}
           />
