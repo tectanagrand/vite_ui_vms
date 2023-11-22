@@ -22,7 +22,7 @@ import ProgressStat from 'src/components/common/ProgressStat';
 
 export async function loaderTicket() {
   axios.defaults.headers.common.Authorization =
-    'Bearer ' + (Cookies.get('jwttoken') === undefined ? '' : Cookies.get('jwttoken'));
+    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/`);
   return response.data.data;
 }
@@ -47,6 +47,7 @@ const loadTicket = async () => {
       status_ticket: item.status_ticket,
       vendor_name: item.name_1,
       vendor_code: item.ven_code,
+      ticket_state: item.ticket_state,
     });
   });
   return ticket_load;
@@ -54,8 +55,9 @@ const loadTicket = async () => {
 
 export function ListTicket() {
   // const load = useLoaderData();
-  const { session } = useSession();
-  const [ticket, setTicket] = useState([]);
+  const { session, getPermission } = useSession();
+  const [perm, setPerm] = useState();
+  const [ticket, setTicket] = useState();
   const [openModal, setOpenmodal] = useState(false);
   const [url, setUrl] = useState('');
   const [btnTicket, setBtn] = useState(false);
@@ -63,10 +65,6 @@ export function ListTicket() {
   const [anchorEl, setAnchorel] = useState(null);
   const [loader, setLoader] = useState(false);
   const navigate = useNavigate();
-  // const [updateTable, setUpdateTable_] = useState(true);
-  // const setUpdatetable = () => {
-  //   setUpdateTable_((prev) =>)
-  // }
   const urlSetFunc = (urlitem) => {
     setUrl(urlitem);
   };
@@ -77,12 +75,23 @@ export function ListTicket() {
     };
     tickets();
   }, [url]);
+
   useEffect(() => {
     const interval = setInterval(async () => {
       const tickets = await loadTicket();
       setTicket(tickets);
     }, 1000 * 10);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let permission = {};
+    permission['Table'] = getPermission('Ticket Request');
+    permission['INIT'] = getPermission('Initial Form');
+    permission['CREA'] = getPermission('Creation Form');
+    permission['FINA'] = getPermission('Final Form');
+    console.log(permission);
+    setPerm(permission);
   }, []);
 
   const handleOnClose = () => {
@@ -182,43 +191,75 @@ export function ListTicket() {
       flex: 0.1,
       type: 'actions',
       renderCell: (item) => {
-        if (item.row.cur_pos === 'VENDOR') {
-          return (
-            <>
+        let Buttons = [];
+        if (item.row.ticket_state == 'INIT') {
+          if (perm.INIT.create) {
+            Buttons.push(
               <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
                 <Link />
               </IconButton>
-            </>
-          );
-        } else if (item.row.cur_pos !== session.role) {
-          return (
-            <>
-              <IconButton onClick={handleButtonAction('View', item.row)}>
+            );
+          }
+          if (perm.INIT.read) {
+            Buttons.push(
+              <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
                 <Visibility />
               </IconButton>
-            </>
-          );
-        } else {
-          return (
-            <>
-              <IconButton onClick={handleButtonAction('Link', item.row)}>
-                <Link />
-              </IconButton>
+            );
+          }
+        }
+        if (item.row.ticket_state == 'CREA') {
+          if (perm.CREA.update) {
+            Buttons.push(
               <IconButton onClick={handleButtonAction('Edit', item.row)}>
                 <Edit />
               </IconButton>
-            </>
-          );
+            );
+          }
+          if (perm.CREA.read) {
+            Buttons.push(
+              <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
+                <Link />
+              </IconButton>
+            );
+          }
         }
+        return Buttons;
+        // if (perm.create) {
+        //   return (
+        //     <>
+
+        //     </>
+        //   );
+        // } else if (item.row.cur_pos !== session.role) {
+        //   return (
+        //     <>
+        //       <IconButton onClick={handleButtonAction('View', item.row)}>
+        //         <Visibility />
+        //       </IconButton>
+        //     </>
+        //   );
+        // } else {
+        //   return (
+        //     <>
+        //       <IconButton onClick={handleButtonAction('Link', item.row)}>
+        //         <Link />
+        //       </IconButton>
+        //       <IconButton onClick={handleButtonAction('Edit', item.row)}>
+        //         <Edit />
+        //       </IconButton>
+        //     </>
+        //   );
+        // }
       },
     },
   ];
 
   return (
     <>
-      {ticket.length !== 0 ? (
+      {ticket !== undefined ? (
         <>
-          {session.role === 'PROC' && (
+          {perm.Table.create && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"
