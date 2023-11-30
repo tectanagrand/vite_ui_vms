@@ -11,8 +11,8 @@ export default function ErrorPage() {
     <>
       <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Stack sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <h1>Error {error.response.status}</h1>
-          <h2> {error.response.data.message}</h2>
+          <h1>Error {error.response?.status || error?.status}</h1>
+          <h2> {error?.response?.data?.message || error?.statusText}</h2>
         </Stack>
       </Box>
     </>
