@@ -12,15 +12,15 @@ import {
   Typography,
 } from '@mui/material';
 import TableRows from './TableRows';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SearchBar from '@mkyy/mui-search-bar';
 
 export default function TableLayout({ data, header, buttons, lengthRow, onAction }) {
   const changeOnAction = (item, id) => {
     onAction(item, id);
   };
-
   const [rows, setRow] = useState(data);
+  console.log(data);
   const [searched, setSearched] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -36,9 +36,14 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
     });
   };
 
-  useState(() => {
+  useEffect(() => {
     setEmpty(Math.max(0, rowsPerPage - rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length));
   }, []);
+
+  useEffect(() => {
+    setRow(data);
+    setEmpty(Math.max(0, rowsPerPage - data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length));
+  }, [data]);
   const requestSearch = (searchedVal) => {
     const filteredRows = data.filter((row) => {
       let check = false;
