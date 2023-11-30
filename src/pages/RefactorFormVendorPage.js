@@ -14,6 +14,7 @@ import {
   Backdrop,
   Dialog,
   Skeleton,
+  Link,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -55,12 +56,11 @@ const ventypeList = {
 
 export default function RefactorFormVendorPage() {
   const loader_data = useLoaderData();
-
   const params = useParams();
   const [chgCountry, setChgCty] = useState(loader_data.data.country);
-  const [chgVengrp, setVengrp] = useState('');
-  const [chgVenacc, setVenacc] = useState('');
-  const [chgCurr, setChgCurr] = useState('');
+  const [chgVengrp, setVengrp] = useState(loader_data.data.vengroup);
+  const [chgVenacc, setVenacc] = useState(loader_data.data.venacc);
+  const [chgCurr, setChgCurr] = useState(loader_data.data.currency);
   const defaultValue = {
     emailRequestor: '',
     deptRequestor: '',
@@ -105,21 +105,29 @@ export default function RefactorFormVendorPage() {
     setChgCurr(item);
   };
 
-  const { handleSubmit, control } = useForm({ defaultValues: loader_data.data });
+  const { handleSubmit, control, getValues } = useForm({ defaultValues: loader_data.data });
   const navigate = useNavigate();
   const { session, getPermission } = useSession();
   const ticketState = loader_data.ticketState;
-  const ttoken = params.token;
-  const initialForm = useRef({});
+  const is_active = loader_data.data.is_active;
   const countrycode = useRef(loader_data.data.country);
 
   let permissions = {};
-  if (loader_data.permission != undefined) {
-    permissions = loader_data.permission;
+  console.log(is_active);
+  if (is_active) {
+    if (loader_data.permission != undefined) {
+      permissions = loader_data.permission;
+    } else {
+      permissions.INIT = getPermission('Initial Form');
+      permissions.CREA = getPermission('Creation Form');
+      permissions.FINA = getPermission('Final Form');
+    }
   } else {
-    permissions.INIT = getPermission('Initial Form');
-    permissions.CREA = getPermission('Creation Form');
-    permissions.FINA = getPermission('Final Form');
+    permissions = {
+      INIT: { create: false, read: false, update: false, delete: false },
+      CREA: { create: false, read: false, update: false, delete: false },
+      FINA: { create: false, read: false, update: false, delete: false },
+    };
   }
   console.log(permissions);
   const UPDATE = {
@@ -131,13 +139,16 @@ export default function RefactorFormVendorPage() {
   const countries = useRef([{ value: '', label: '' }]);
   const currencies = useRef([{ value: '', label: '' }]);
   // const cities = useRef([{ value: '', label: '' }]);
-  const banks = useRef([]);
+  const banks = useRef([{ value: '', label: '' }]);
+  const payterm = useRef([{ value: '', label: '' }]);
   const comps = useRef([{ value: '', label: '' }]);
   const initDataBank = useRef({});
   const initDataFile = useRef({});
 
   const [cities, setCities] = useState([{ value: '', label: '' }]);
-  const [is_draft, setDraft] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const is_draft = useRef(false);
+  const [is_reject, setReject] = useState(false);
 
   const vengroups = [
     { value: '3RD_PARTY', label: '3RD Party' },
@@ -285,12 +296,26 @@ export default function RefactorFormVendorPage() {
         alert(error.stack);
       }
     };
+
+    const getPayterm = async () => {
+      try {
+        const paytermData = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/payterm`);
+        const data = paytermData.data.data;
+        payterm.current = data.map((item) => ({
+          value: item.term_code,
+          label: item.term_name,
+        }));
+      } catch (error) {
+        alert(error.stack);
+      }
+    };
     dynaCountry();
     getCurr();
     getBanks();
     getInitDataBank();
     getInitDataFile();
     getCompany();
+    getPayterm();
   }, []);
 
   const setVen_bankFromChild = (newItem) => {
@@ -352,25 +377,30 @@ export default function RefactorFormVendorPage() {
     setFormStat({ ...formStat, stat: false });
   };
 
-  const handleReject = async () => {
-    setLoader(true);
-    // try {
-    //   const rejectParams = {
-    //     ticket_id: initialForm.current.ticket_id,
-    //     remarks: remarks.current.value,
-    //   };
-    //   const resultReject = await axios.patch(`${process.env.REACT_APP_URL_LOC}/ticket/reject`, rejectParams);
-    //   const response = resultReject.data;
-    //   setFormStat({ stat: true, type: 'success', message: response.message });
-    //   setLoader(false);
-    //   navigate(0);
-    // } catch (error) {
-    //   setLoader(false);
-    //   alert(error);
-    // }
+  const handleReject = async (value) => {
+    setLoading(true);
+    try {
+      const rejectParams = {
+        ticket_id: loader_data.ticket_id,
+        remarks: value.remarks,
+      };
+      const resultReject = await axios.patch(`${process.env.REACT_APP_URL_LOC}/ticket/reject`, rejectParams);
+      const response = resultReject.data;
+      setFormStat({ stat: true, type: 'success', message: response.message });
+      setLoading(false);
+      navigate(0);
+    } catch (error) {
+      setLoading(false);
+      alert(error);
+    }
   };
 
   const submitForm = async (value) => {
+    if (is_reject === true) {
+      await handleReject(value);
+      return;
+    }
+    setLoading(true);
     const ven_detail = {
       ven_id: loader_data.ven_id,
       ticket_num: loader_data.ticket_num,
@@ -389,16 +419,29 @@ export default function RefactorFormVendorPage() {
       npwp: value.npwp.trim(),
       pay_mthd: value.paymthd,
       pay_term: value.payterm,
+      company: value.company,
+      purch_org: value.purchorg,
+      ven_acc: value.venacc,
+      ven_group: value.vengroup,
+      ven_type: value.ventype,
+      description: value.description,
+      limit_vendor: value.limit.toString().match(/\d+/g)?.join(''),
+      lim_curr: value.currency,
+      ven_code: value.vendorcode,
     };
     const jsonSend = {
       role: session.role === undefined ? 'VENDOR' : session.role,
-      is_draft: is_draft,
+      is_draft: is_draft.current,
       ticket_id: loader_data.ticket_id,
       remarks: value.remarks,
+      ticket_state: ticketState,
       ven_detail: ven_detail,
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
+    if (loader_data.data.reject_by !== '') {
+      jsonSend.remarks = '';
+    }
     try {
       let submit;
       if (session.role === undefined) {
@@ -408,8 +451,8 @@ export default function RefactorFormVendorPage() {
       }
       const response = submit.data;
       setFormStat({ stat: true, type: 'success', message: response.message });
-      setLoader(false);
-      if (!is_draft) {
+      setLoading(false);
+      if (!is_draft.current) {
         setTimeout(() => {
           window.location.reload();
         }, 3000);
@@ -418,7 +461,7 @@ export default function RefactorFormVendorPage() {
       console.log(err.stack);
       alert(err.stack);
       setFormStat({ stat: true, type: 'error', message: 'error submitting' });
-      setLoader(false);
+      setLoading(false);
     }
   };
 
@@ -482,7 +525,7 @@ export default function RefactorFormVendorPage() {
                       name="titlecomp"
                       label="Title"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       options={title}
                       rules={{ required: 'Please insert this field' }}
                     />
@@ -492,7 +535,7 @@ export default function RefactorFormVendorPage() {
                       name="localovs"
                       label="Local / Overseas"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       options={localoverseas}
                       rules={{ required: 'Please insert this field' }}
                     />
@@ -502,7 +545,7 @@ export default function RefactorFormVendorPage() {
                       name="name1"
                       label="Company Name"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 300, message: 'Max 300 Character' },
@@ -535,7 +578,7 @@ export default function RefactorFormVendorPage() {
                       name="country"
                       label="Country"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       options={countries.current}
                       onChangeovr={funChgCountry}
                       rules={{
@@ -548,7 +591,7 @@ export default function RefactorFormVendorPage() {
                       name="street"
                       label="Address"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 300, message: 'Max 300 Character' },
@@ -560,7 +603,7 @@ export default function RefactorFormVendorPage() {
                       name="postal"
                       label="Postal Code"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 300, message: 'Max 300 Character' },
@@ -572,7 +615,7 @@ export default function RefactorFormVendorPage() {
                       name="city"
                       label="City"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       options={cities}
                       rules={{
                         required: 'Please insert this field',
@@ -585,7 +628,7 @@ export default function RefactorFormVendorPage() {
                       name="telf"
                       label="Telephone Number"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -596,7 +639,7 @@ export default function RefactorFormVendorPage() {
                       name="fax"
                       label="Fax"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -607,7 +650,7 @@ export default function RefactorFormVendorPage() {
                       name="email"
                       label="Email"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -638,7 +681,7 @@ export default function RefactorFormVendorPage() {
                       name="ispkp"
                       label="Pengusaha Kena Pajak (PKP)"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                     />
                   </Grid>
                   <Grid item xs={9}></Grid>
@@ -647,7 +690,7 @@ export default function RefactorFormVendorPage() {
                       name="npwp"
                       label="Tax Number"
                       control={control}
-                      readOnly={!UPDATE.INIT}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{ required: 'Please insert this field' }}
                     />
                   </Grid>
@@ -656,8 +699,12 @@ export default function RefactorFormVendorPage() {
                       name="paymthd"
                       label="Payment Method"
                       control={control}
-                      options={[{ value: 'bank', label: 'Bank' }]}
-                      readOnly={!UPDATE.INIT}
+                      options={[
+                        { value: 'bank', label: 'Bank' },
+                        { value: 'cash', label: 'Cash' },
+                        { value: 'Giro', label: 'Giro' },
+                      ]}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -668,8 +715,8 @@ export default function RefactorFormVendorPage() {
                       name="payterm"
                       label="Payment Term"
                       control={control}
-                      options={[{ value: '30', label: '30' }]}
-                      readOnly={!UPDATE.INIT}
+                      options={payterm.current}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -678,7 +725,7 @@ export default function RefactorFormVendorPage() {
                 </Grid>
               </AccordionDetails>
             </Accordion>
-            {(ticketState === 'CREA' || ticketState === 'FINA') && (
+            {(ticketState === 'CREA' || ticketState === 'FINA' || ticketState === 'END') && (
               <Accordion expanded={expanded.panelVendetail} onChange={handleExpanded('panelVendetail')}>
                 <AccordionSummary
                   sx={{
@@ -702,7 +749,7 @@ export default function RefactorFormVendorPage() {
                         label="Company"
                         control={control}
                         options={comps.current}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -713,7 +760,7 @@ export default function RefactorFormVendorPage() {
                         name="purchorg"
                         label="Purchasing Organization"
                         control={control}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                           maxLength: { value: 20, message: 'Max 20 Character' },
@@ -728,7 +775,7 @@ export default function RefactorFormVendorPage() {
                         control={control}
                         options={vengroups}
                         onChangeovr={funChgVgrp}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -744,7 +791,7 @@ export default function RefactorFormVendorPage() {
                           { value: 'NON_TRADE', label: 'Non Trade' },
                         ]}
                         onChangeovr={funChgVacc}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -755,8 +802,8 @@ export default function RefactorFormVendorPage() {
                         name="ventype"
                         label="Vendor Type"
                         control={control}
-                        options={chgVenacc === 'TRADE' ? ventypeList[chgVengrp] : [{ value: 'X', label: 'X' }]}
-                        readOnly={!UPDATE.CREA}
+                        options={chgVenacc === 'NON_TRADE' ? ventypeList[chgVengrp] : [{ value: 'X', label: 'X' }]}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -770,7 +817,7 @@ export default function RefactorFormVendorPage() {
                         control={control}
                         options={currencies.current}
                         onChangeovr={funChgCurr}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -783,7 +830,7 @@ export default function RefactorFormVendorPage() {
                         control={control}
                         format={['thousandSeparator']}
                         currency={chgCurr}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -791,14 +838,19 @@ export default function RefactorFormVendorPage() {
                     </Grid>
                     <Grid item xs={4}></Grid>
                     <Grid item xs={12}>
-                      <TextFieldComp name="description" label="Description" control={control} readOnly={!UPDATE} />
+                      <TextFieldComp
+                        name="description"
+                        label="Description"
+                        control={control}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
+                      />
                     </Grid>
                     <Grid item xs={5}>
                       <CheckboxComp
                         name="is_tender"
                         label="Tender Participation Above One Billion"
                         control={control}
-                        readOnly={!UPDATE.CREA}
+                        readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
                         }}
@@ -830,7 +882,7 @@ export default function RefactorFormVendorPage() {
                   initData={initDataBank.current}
                   idParent={loader_data.ven_id}
                   banks={banks.current}
-                  isallow={UPDATE.INIT}
+                  isallow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
                 />
               </AccordionDetails>
             </Accordion>
@@ -858,11 +910,11 @@ export default function RefactorFormVendorPage() {
                   iniData={initDataFile.current}
                   idParent={loader_data.ven_id}
                   onChildDataChange={setVen_fileFromChild}
-                  allow={UPDATE.INIT}
+                  allow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
                 />
               </AccordionDetails>
             </Accordion>
-            {ticketState === 'FINA' && (
+            {(ticketState === 'FINA' || ticketState === 'END') && (
               <Accordion expanded={expanded.panelApproval} onChange={handleExpanded('panelApproval')}>
                 <AccordionSummary
                   sx={{ pointerEvents: 'none' }}
@@ -873,12 +925,20 @@ export default function RefactorFormVendorPage() {
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <TextFieldComp name="vendorcode" label="Vendor Code" control={control} readOnly={!UPDATE} />
+                      <TextFieldComp
+                        name="vendorcode"
+                        label="Vendor Code"
+                        control={control}
+                        readOnly={!(ticketState === 'FINA' && UPDATE.FINA)}
+                      />
                     </Grid>
                   </Grid>
                 </AccordionDetails>
               </Accordion>
             )}
+            <Link href={`${process.env.REACT_APP_URL_LOC}/master/file/Kode_Etik_Supplier_Vendor_dan_Kontraktor.doc`}>
+              File Pakta Integritas
+            </Link>
             <Box sx={{ my: 5 }}>
               <TextFieldComp name="remarks" label="Remarks" control={control} />
             </Box>
@@ -899,36 +959,39 @@ export default function RefactorFormVendorPage() {
                 )}
               </Box>
               <Box>
-                {ticketState === 'CREA' && UPDATE.CREA && (
+                {((ticketState === 'CREA' && UPDATE.CREA) || (ticketState === 'FINA' && UPDATE.FINA)) && (
                   <Button
                     sx={{ height: 50, width: 100, margin: 2 }}
                     color="error"
                     variant="contained"
-                    onClick={handleReject}
+                    type="submit"
+                    onClick={() => {
+                      setReject(true);
+                    }}
                   >
                     Reject
                   </Button>
                 )}
-                {(UPDATE.INIT || UPDATE.CREA || UPDATE.FINA) && (
+                {UPDATE[ticketState] && (
                   <Button
                     sx={{ height: 50, width: 120, margin: 2 }}
                     color="warning"
                     variant="contained"
-                    type="submit"
                     onClick={() => {
-                      setDraft(true);
+                      is_draft.current = true;
+                      submitForm(getValues());
                     }}
                   >
                     Save Draft
                   </Button>
                 )}
-                {(UPDATE.INIT || UPDATE.CREA || UPDATE.FINA) && (
+                {UPDATE[ticketState] && (
                   <Button
                     sx={{ height: 50, width: 100, margin: 2 }}
                     variant="contained"
                     type="submit"
                     onClick={() => {
-                      setDraft(false);
+                      is_draft.current = false;
                     }}
                   >
                     Submit
@@ -954,10 +1017,10 @@ export default function RefactorFormVendorPage() {
             {`Ticket Number  has already submitted`}
           </Alert>
         </Snackbar>
-        <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }} open={false}>
+        <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }} open={loading}>
           <CircularProgress color="inherit" />
         </Backdrop>
-        <Dialog open={formStat.type === 'success'}>
+        <Dialog open={formStat.type === 'success' && is_draft.current == false}>
           <Box
             sx={{
               width: 500,
