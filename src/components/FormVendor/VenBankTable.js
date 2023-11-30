@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
+import AutoCompleteCustom from '../common/AutoCompleteCustom';
 
 function EditToolbar(props) {
   const { setVen_bank, setRowModesModel, idParent, isallow } = props;
@@ -53,8 +54,6 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
   const banksData = banks?.map((item) => ({ value: item.bank_id, label: item.bank_name }));
-  const bank_data = useRef();
-  bank_data.current = banksData;
 
   const DataGridBank = styled(DataGrid, { shouldForwardProp: (prop) => prop !== 'sx' })(() => ({
     '& .row-idle': {
@@ -77,7 +76,13 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   useEffect(() => {
     if (Object.keys(initData).length != 0) {
       initData.map((item) => {
-        covtData.push({ ...item, isDb: true, isNew: false, method: '' });
+        covtData.push({
+          ...item,
+          bank_id: { value: item.bank_id, label: item.bank_name },
+          isDb: true,
+          isNew: false,
+          method: '',
+        });
       });
       setVen_bank(covtData);
     }
@@ -88,7 +93,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       let items = [];
       ven_bank.map((item) => {
         if (item.method !== '') {
-          let temp = { ...item, bankv_id: item.id };
+          let temp = { ...item, bank_id: item.bank_id.value, bankv_id: item.id };
           delete temp.isDb;
           delete temp.isNew;
           delete temp.id;
@@ -106,8 +111,8 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       event.defaultMuiPrevented = true;
     }
   };
-  const handleEditClick = (id) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+  const handleEditClick = (row) => () => {
+    setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.Edit } });
   };
   const handleSaveClick = (row) => () => {
     setRowModesModel({ ...rowModesModel, [row.id]: { mode: GridRowModes.View } });
@@ -177,15 +182,17 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   const columns = [
     {
       field: 'bank_id',
-      type: 'singleSelect',
+      // type: 'singleSelect',
       headerName: 'Bank Name',
-      valueOptions: bank_data.current,
-      editable: true,
+      // valueOptions: banksData,
+      editable: isallow,
+      valueFormatter: ({ value }) => value?.label,
+      renderEditCell: (params) => <AutoCompleteCustom {...params} options={banksData} />,
       width: 300,
     },
-    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 200, editable: true },
-    { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 200, editable: true },
-    { field: 'acc_name', type: 'string', headerName: 'Account Name', width: 200, editable: true },
+    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 200, editable: isallow },
+    { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 200, editable: isallow },
+    { field: 'acc_name', type: 'string', headerName: 'Account Name', width: 200, editable: isallow },
     {
       field: 'action',
       type: 'actions',
@@ -193,6 +200,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
       width: 100,
       cellClassName: 'actions',
       getActions: (row) => {
+        console.log(row);
         let id = row.id;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isallow) {
