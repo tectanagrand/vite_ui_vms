@@ -22,6 +22,7 @@ import {
   Backdrop,
   Dialog,
   Skeleton,
+  Link,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NumericFormat } from 'react-number-format';
@@ -1444,6 +1445,9 @@ export default function FormVendorPage() {
                 multiline
                 inputProps={{ readOnly: loader_data.data.cur_pos === 'VENDOR' }}
               />
+              <Link href={`${process.env.REACT_APP_URL_LOC}/file/Kode_Etik_Supplier_Vendor_dan_Kontraktor.doc`}>
+                File Pakta Integritas
+              </Link>
             </Box>
           )}
           {/* <Box fullWidth sx={{ my: 5 }}>
