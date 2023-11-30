@@ -9,13 +9,13 @@ const SessionProvider = ({ children }) => {
     fullname: Cookies.get('fullname'),
     username: Cookies.get('username'),
     email: Cookies.get('email'),
-    accessToken: Cookies.get('accesstoken'),
-    refreshToken: Cookies.get('refreshtoken'),
+    accessToken: Cookies.get('accessToken'),
     user_id: Cookies.get('user_id'),
     role: Cookies.get('role'),
     permission: JSON.parse(sessionStorage.getItem('permission')),
     groupid: Cookies.get('groupid'),
   });
+
   const setSession = (data) => {
     setSession_({
       fullname: data.fullname,
@@ -29,10 +29,15 @@ const SessionProvider = ({ children }) => {
       groupid: data.groupid,
     });
   };
+
+  const setAccessToken = (act) => {
+    setSession_((prev) => ({ ...prev, accessToken: act }));
+  };
   const logOut = () => {
     setSession_({});
     sessionStorage.clear();
   };
+
   const getPermission = (page) => {
     if (sessionStorage.getItem('permission') === null) {
       return '';
@@ -45,9 +50,8 @@ const SessionProvider = ({ children }) => {
   useEffect(() => {
     const addSession = setTimeout(() => {
       if (session.accessToken) {
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.refreshToken;
-        Cookies.set('refreshtoken', session.refreshToken);
-        Cookies.set('accesstoken', session.accessToken);
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.accessToken;
+        Cookies.set('accessToken', session.accessToken);
         Cookies.set('fullname', session.fullname);
         Cookies.set('email', session.email);
         Cookies.set('username', session.username);
@@ -61,8 +65,7 @@ const SessionProvider = ({ children }) => {
         Cookies.remove('username');
         Cookies.remove('user_id');
         Cookies.remove('role');
-        Cookies.remove('accesstoken');
-        Cookies.remove('refreshtoken');
+        Cookies.remove('accessToken');
         Cookies.remove('groupid');
         sessionStorage.clear();
       }
@@ -76,7 +79,7 @@ const SessionProvider = ({ children }) => {
     };
   }, [session]);
 
-  const contextValue = useMemo(() => ({ session, setSession, logOut, getPermission }), [session]);
+  const contextValue = useMemo(() => ({ session, setSession, logOut, getPermission, setAccessToken }), [session]);
 
   return <SessionContext.Provider value={contextValue}>{children}</SessionContext.Provider>;
 };
