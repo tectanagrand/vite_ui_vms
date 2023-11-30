@@ -18,13 +18,14 @@ import axios from 'axios';
 export default function ListReqStat() {
   const columns = ['Ticket Number', 'Date', 'Requestor', 'Request', 'Vendor Code', 'Vendor Name'];
   const { session } = useSession();
+  const [btnState, setBtn] = useState(['accept', 'reject']);
   const [reload, setReload] = useState(true);
   const [openValid, setOpenval] = useState(false);
   const [apprType, setAppr] = useState('');
   const [venData, setVendata] = useState({});
   const [ticket, setTicket] = useState();
   const [colLength, setColLength] = useState(0);
-  const [filterAct, setFilteract] = useState('');
+  const [filterAct, setFilteract] = useState(true);
   const [formStat, setFormstat] = useState({
     stat: false,
     type: 'success',
@@ -69,16 +70,17 @@ export default function ListReqStat() {
   };
 
   useEffect(() => {
-    setFilteract(true);
-  }, []);
-
-  useEffect(() => {
     const getTicket = async () => {
-      const fetchTicket = await axios.get(`${process.env.REACT_APP_URL_LOC}/reqstat/show`);
+      const fetchTicket = await axios.get(`${process.env.REACT_APP_URL_LOC}/reqstat/show?is_active=${filterAct}`);
       setTicket(fetchTicket.data.data);
     };
+    if (filterAct === false) {
+      setBtn([]);
+    } else {
+      setBtn(['accept', 'reject']);
+    }
     getTicket();
-  }, [reload]);
+  }, [reload, filterAct]);
 
   useEffect(() => {
     setColLength(columns.length + 1);
@@ -91,8 +93,8 @@ export default function ListReqStat() {
           sx={{ width: '10em' }}
           id={'filterAct'}
           value={filterAct}
-          onChange={(e) => {
-            setFilteract(e.target.value);
+          onChange={() => {
+            setFilteract(!filterAct);
           }}
         >
           <MenuItem value={true}>Active</MenuItem>
@@ -101,13 +103,7 @@ export default function ListReqStat() {
       </FormControl>
 
       {ticket != undefined ? (
-        <TableLayout
-          data={ticket}
-          buttons={['accept', 'reject']}
-          lengthRow={colLength}
-          onAction={handleAppr}
-          header={columns}
-        />
+        <TableLayout data={ticket} buttons={btnState} lengthRow={colLength} onAction={handleAppr} header={columns} />
       ) : (
         <Box>
           <Skeleton animation="wave" height={100} />
@@ -145,8 +141,8 @@ export default function ListReqStat() {
           }}
         >
           <Typography variant="h4">Are you sure want to {apprType} ?</Typography>
-          {venData['Request'] == 1 && <Typography variant="h5">Reactivation Request</Typography>}
-          {venData['Request'] == 0 && <Typography variant="h5">Deactivation Request</Typography>}
+          {venData['RequestDesc'] == 'Reactivation' && <Typography variant="h5">Reactivation Request</Typography>}
+          {venData['RequestDesc'] == 'Deactivation' && <Typography variant="h5">Deactivation Request</Typography>}
           <Typography variant="h6">
             {venData['Vendor Name']} - {venData['Vendor Code']}{' '}
           </Typography>
