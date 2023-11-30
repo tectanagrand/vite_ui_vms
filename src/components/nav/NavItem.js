@@ -1,11 +1,10 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { ListItemButton, ListItemText, ListItem } from '@mui/material';
+import { ListItemButton, ListItemText } from '@mui/material';
 
 NavItem.propTypes = {
   keynav: PropTypes.string,
   text: PropTypes.string,
-  icon: PropTypes.string,
 };
 
 export default function NavItem({ keynav, text, url, upNavMenu, curstate }) {

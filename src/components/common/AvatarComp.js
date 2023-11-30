@@ -15,7 +15,6 @@ export default function AvatarComp() {
     setAnchorel(null);
   };
   const handleLogout = () => {
-    console.log('test');
     logOut();
     setLoader(true);
     setTimeout(() => {

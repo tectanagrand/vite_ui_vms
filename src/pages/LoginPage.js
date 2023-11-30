@@ -1,13 +1,15 @@
-import { Paper, Box, Button, Link, Backdrop } from '@mui/material';
+import { Paper, Box, Button, Link, Backdrop, SvgIcon } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { Typography } from '@mui/material';
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
 import CircularProgress from '@mui/material/CircularProgress';
 import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
+import imgbg from '../images/gama-tower.jpg';
+import Logo from '../images/kpn-logo.png';
 const defaultValue = {
   Username: '',
   Password: '',
@@ -20,6 +22,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { setSession } = useSession();
   const onSubmit = async (data) => {
+    setOpenload(true);
     if (dirForm.state === 'form') {
       navigate(`/frm/newform/${data.FormToken}`);
     } else {
@@ -28,15 +31,30 @@ export default function LoginPage() {
           username: data.Username,
           password: data.Password,
         });
-        console.log(logindata.data);
-        setSession(logindata.data);
+        // var headers = new Headers();
+        // headers.append('Content-Type', 'application/json');
+        // headers.append('Accept', 'application/json');
+        // const login = await fetch(`${process.env.REACT_APP_URL_LOC}/user/login`, {
+        //   method: 'POST',
+        //   redirect: 'follow',
+        //   credentials: 'include',
+        //   headers: headers,
+        //   body: JSON.stringify({
+        //     username: data.Username,
+        //     password: data.Password,
+        //   }),
+        // });
+        console.log(logindata);
+        const response = logindata.data;
+        setSession(response);
         alert('Successfull login');
-        setOpenload(true);
         setTimeout(() => {
           navigate('/dashboard/ticket');
         }, 1000);
       } catch (err) {
-        alert(err.stack);
+        setOpenload(false);
+        console.log(err);
+        alert(err);
       }
     }
   };
@@ -58,6 +76,9 @@ export default function LoginPage() {
           justifyContent: 'center',
           height: '100%',
           flexDirection: 'column',
+          backgroundImage: `url(${imgbg})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
         }}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -73,6 +94,11 @@ export default function LoginPage() {
             }}
             elevation={3}
           >
+            {/* <Box>
+              <SvgIcon>
+                <Logo />
+              </SvgIcon>
+            </Box> */}
             <Typography variant="h3" sx={{ mt: 2 }}>
               Vendor Management System KPN
             </Typography>

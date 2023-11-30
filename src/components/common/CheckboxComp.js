@@ -13,9 +13,7 @@ export default function CheckboxComp({ name, control, label, readOnly }) {
               <Checkbox
                 {...props}
                 checked={props.value}
-                inputProps={{
-                  readOnly: readOnly,
-                }}
+                disabled={readOnly}
                 onChange={(e) => props.onChange(e.target.checked)}
               />
             )}
