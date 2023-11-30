@@ -15,13 +15,14 @@ import User from 'src/pages/dashboard/User';
 import MenuAccessPage from 'src/pages/MenuAccessPage';
 import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
 import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
+import QRPage from 'src/pages/QRPage';
+import TestPage from 'src/pages/TestPage';
 
 async function formLoader({ token }) {
   axios.defaults.headers.common.Authorization =
-    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
+    'Bearer ' + (Cookies.get('accessToken') === undefined ? '' : Cookies.get('accessToken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/form/${token}`);
   const data = response.data.data;
-  console.log(data);
   const valueForm = {
     emailRequestor: data.email_proc ? data.email_proc : '',
     deptRequestor: data.dep_proc ? data.dep_proc : '',
@@ -43,14 +44,17 @@ async function formLoader({ token }) {
     purchorg: data.purch_org ? data.purch_org : '',
     vengroup: data.ven_group ? data.ven_group : '',
     venacc: data.ven_acc ? data.ven_acc : '',
-    ventype: data.type ? data.type : '',
+    ventype: data.ven_type ? data.ven_type : '',
     currency: data.lim_curr ? data.lim_curr : '',
     description: data.description ? data.description : '',
     is_tender: data.is_tender ? data.is_tender : false,
-    vendorcode: data.ven_code ? data.ven_code : '',
+    vendorcode: data.ven_code ? data.ven_code : data.header,
     remarks: data.remarks ? data.remarks : '',
     limit: data.limit_vendor ? data.limit_vendor : '',
+    reject_by: data.reject_by ? data.reject_by : '',
+    is_active: data.ticket_stat,
   };
+  console.log(data);
   return {
     ticket_id: data.ticket_id,
     ticket_num: data.ticket_num,
@@ -62,11 +66,12 @@ async function formLoader({ token }) {
 
 async function newformLoader({ token }) {
   axios.defaults.headers.common.Authorization =
-    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
+    'Bearer ' + (Cookies.get('accessToken') === undefined ? '' : Cookies.get('accessToken'));
   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/newform/${token}`);
   const data = response.data.data;
-  let perm;
-  console.log(data);
+  if (data === undefined) {
+    throw new Response('Not Found', { status: 404, statusText: 'Not Found' });
+  }
   const valueForm = {
     emailRequestor: data.email_proc ? data.email_proc : '',
     deptRequestor: data.dep_proc ? data.dep_proc : '',
@@ -88,19 +93,38 @@ async function newformLoader({ token }) {
     purchorg: data.purch_org ? data.purch_org : '',
     vengroup: data.ven_group ? data.ven_group : '',
     venacc: data.ven_acc ? data.ven_acc : '',
-    ventype: data.type ? data.type : '',
+    ventype: data.ven_type ? data.ven_type : '',
     currency: data.lim_curr ? data.lim_curr : '',
     description: data.description ? data.description : '',
     is_tender: data.is_tender ? data.is_tender : false,
-    vendorcode: data.ven_code ? data.ven_code : '',
+    vendorcode: data.ven_code ? data.ven_code : data.header,
     remarks: data.remarks ? data.remarks : '',
     limit: data.limit_vendor ? data.limit_vendor : '',
+    reject_by: data.reject_by ? data.reject_by : '',
+    is_active: data.ticket_stat,
   };
-  if (data.ticket_state === 'INIT') {
-    perm = { create: false, read: false, update: true, delete: false };
-  } else {
-    perm = { create: false, read: false, update: false, delete: false };
-  }
+
+  const perm = {
+    INIT: {
+      create: false,
+      read: false,
+      update: true,
+      delete: false,
+    },
+    CREA: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
+    FINA: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
+  };
+
   return {
     ticket_id: data.ticket_id,
     ticket_num: data.ticket_num,
@@ -144,6 +168,9 @@ export const routes = createBrowserRouter([
       {
         path: 'form/:token',
         element: <RefactorFormVendorPage />,
+        loader: async ({ params }) => {
+          return await formLoader(params);
+        },
         // loader: async ({ params }) => {
         //   const response = await formLoader(params);
         //   if (response.data.data.cur_pos === 'VENDOR' || response.data.data.cur_pos === 'PROC') {
@@ -152,15 +179,10 @@ export const routes = createBrowserRouter([
         //     return { ...response.data, role: '', section: 'MDM' };
         //   }
         // },
-        loader: async ({ params }) => {
-          const loader = await formLoader(params);
-          return loader;
-        },
       },
       {
         path: 'ticket',
         element: <ListTicket />,
-        loader: loaderTicket,
       },
       {
         path: 'vendor',
@@ -190,7 +212,7 @@ export const routes = createBrowserRouter([
   },
   {
     path: '*',
-    element: <Navigate to="/404" />,
+    element: <Navigate to="login" />,
   },
   {
     path: '/nav',
@@ -207,6 +229,14 @@ export const routes = createBrowserRouter([
       const loader = await formLoader({ token: '6c7a753f-2881-4c41-afd2-bb3696b3d306' });
       return loader;
     },
+  },
+  {
+    path: '/qr',
+    element: <QRPage />,
+  },
+  {
+    path: 'testpage',
+    element: <TestPage />,
   },
 ]);
 
