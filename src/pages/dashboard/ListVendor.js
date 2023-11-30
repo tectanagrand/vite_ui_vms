@@ -18,8 +18,8 @@ import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
 
 export default function ListVendor() {
-  const { session } = useSession();
-
+  const { session, getPermission } = useSession();
+  const perm = getPermission('Vendor');
   const overrides = {
     '& .MuiDataGrid-main': {
       width: 0,
@@ -27,7 +27,7 @@ export default function ListVendor() {
     },
   };
 
-  const [filterAct, setFilteract] = useState('');
+  const [filterAct, setFilteract] = useState(true);
   const [formStat, setFormstat] = useState({
     stat: false,
     type: '',
@@ -111,16 +111,12 @@ export default function ListVendor() {
   };
 
   useEffect(() => {
-    setFilteract(true);
-  }, []);
-
-  useEffect(() => {
     const response = async () => {
       const items = await getData();
       setData(items.data);
     };
     response();
-  }, [filterAct]);
+  }, [filterAct, formStat]);
 
   const columns = [
     {
@@ -136,7 +132,7 @@ export default function ListVendor() {
       flex: 0.124,
     },
     {
-      field: 'act_remark',
+      field: 'remarks',
       type: 'string',
       headerName: 'Reason',
       flex: 0.124,
@@ -146,18 +142,22 @@ export default function ListVendor() {
       type: 'actions',
       flex: 0.1,
       renderCell: (item) => {
-        if (item.row.is_active == true) {
-          return (
-            <Button variant="contained" color="error" onClick={handleBtnAct(item.row)}>
-              <Typography>Deactivate</Typography>
-            </Button>
-          );
-        } else {
-          return (
-            <Button variant="contained" color="success" onClick={handleBtnAct(item.row)}>
-              <Typography>Activate</Typography>
-            </Button>
-          );
+        if (perm.create) {
+          if (item.row.ticket_id == null) {
+            if (item.row.is_active == true) {
+              return (
+                <Button variant="contained" color="error" onClick={handleBtnAct(item.row)}>
+                  <Typography>Deactivate</Typography>
+                </Button>
+              );
+            } else {
+              return (
+                <Button variant="contained" color="success" onClick={handleBtnAct(item.row)}>
+                  <Typography>Activate</Typography>
+                </Button>
+              );
+            }
+          }
         }
       },
     },
