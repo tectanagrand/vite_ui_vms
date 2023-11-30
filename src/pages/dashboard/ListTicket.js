@@ -10,22 +10,26 @@ import {
   Backdrop,
   CircularProgress,
   Skeleton,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useEffect, useState } from 'react';
-import { Edit, Link, Visibility } from '@mui/icons-material';
+import { Edit, Link, Visibility, Delete } from '@mui/icons-material';
 import Cookies from 'js-cookie';
 import ModalCreateTicket from 'src/components/common/ModalCreateTicket';
 import { useSession } from 'src/provider/sessionProvider';
 import { useNavigate } from 'react-router-dom';
 import ProgressStat from 'src/components/common/ProgressStat';
 
-export async function loaderTicket() {
-  axios.defaults.headers.common.Authorization =
-    'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
-  const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/`);
-  return response.data.data;
-}
+// function loaderTicket(filterAct) {
+//   axios.defaults.headers.common.Authorization =
+//     'Bearer ' + (Cookies.get('refreshtoken') === undefined ? '' : Cookies.get('refreshtoken'));
+//   const response = await axios.get(`${process.env.REACT_APP_URL_LOC}/ticket/?is_active=${filterAct}`);
+//   return response.data.data;
+// }
 
 const overrides = {
   '& .MuiDataGrid-main': {
@@ -34,28 +38,27 @@ const overrides = {
   },
 };
 
-const loadTicket = async () => {
-  const load = await loaderTicket();
-  let ticket_load = [];
-  load.data.map((item) => {
-    ticket_load.push({
-      id: item.token,
-      ticket_num: item.ticket_id,
-      date_ticket: new Date(item.created_at),
-      assignee: item.email,
-      cur_pos: item.cur_pos,
-      status_ticket: item.status_ticket,
-      vendor_name: item.name_1,
-      vendor_code: item.ven_code,
-      ticket_state: item.ticket_state,
-    });
-  });
-  return ticket_load;
-};
+// const loadTicket = async (filterAct) => {
+//   let ticket_load = [];
+//   load.data.map((item) => {
+//     ticket_load.push({
+//       id: item.token,
+//       ticket_num: item.ticket_id,
+//       date_ticket: new Date(item.created_at),
+//       assignee: item.email,
+//       cur_pos: item.cur_pos,
+//       status_ticket: item.status_ticket,
+//       vendor_name: item.name_1,
+//       vendor_code: item.ven_code,
+//       ticket_state: item.ticket_state,
+//     });
+//   });
+//   return ticket_load;
+// };
 
 export function ListTicket() {
   // const load = useLoaderData();
-  const { session, getPermission } = useSession();
+  const { session, getPermission, logOut } = useSession();
   const [perm, setPerm] = useState();
   const [ticket, setTicket] = useState();
   const [openModal, setOpenmodal] = useState(false);
@@ -64,25 +67,59 @@ export function ListTicket() {
   const [grow, setGrow] = useState(false);
   const [anchorEl, setAnchorel] = useState(null);
   const [loader, setLoader] = useState(false);
+  const [filterAct, setFilteract] = useState(true);
+  const [deleted, setDelete] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   const urlSetFunc = (urlitem) => {
     setUrl(urlitem);
   };
-  useEffect(() => {
-    const tickets = async () => {
-      const item = await loadTicket();
-      setTicket(item);
-    };
-    tickets();
-  }, [url]);
+  const tickets = async (controller) => {
+    try {
+      // axios.defaults.headers.common.Authorization =
+      //   'Bearer ' + (Cookies.get('accessToken') === undefined ? '' : Cookies.get('accessToken'));
+      const response = await axiosPrivate.get(`/ticket/?is_active=${filterAct}`, {
+        signal: controller.signal,
+      });
+      const result = response.data.data;
+      const load = result.data.map((item) => ({
+        id: item.token,
+        is_active: item.is_active,
+        ticket_num: item.ticket_id,
+        date_ticket: new Date(item.created_at),
+        assignee: item.email,
+        cur_pos: item.cur_pos,
+        status_ticket: item.status_ticket,
+        vendor_name: item.name_1,
+        vendor_code: item.ven_code,
+        ticket_state: item.ticket_state,
+      }));
+      setTicket(load);
+    } catch (error) {
+      console.error(error);
+      logOut();
+    }
+  };
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const tickets = await loadTicket();
-      setTicket(tickets);
-    }, 1000 * 10);
-    return () => clearInterval(interval);
+    const controller = new AbortController();
+    tickets(controller);
+  }, [url, filterAct, deleted]);
+
+  useEffect(() => {
+    const refresh = async () => {
+      await axios.get(`${process.env.REACT_APP_URL_LOC}/user/refresh`, {
+        withCredentials: true,
+      });
+    };
+    refresh();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const interval = setInterval(async () => await tickets(controller), 1000 * 10);
+    return () => clearInterval(interval);
+  }, [filterAct]);
 
   useEffect(() => {
     let permission = {};
@@ -90,7 +127,6 @@ export function ListTicket() {
     permission['INIT'] = getPermission('Initial Form');
     permission['CREA'] = getPermission('Creation Form');
     permission['FINA'] = getPermission('Final Form');
-    console.log(permission);
     setPerm(permission);
   }, []);
 
@@ -103,20 +139,62 @@ export function ListTicket() {
     setBtn(false);
   };
 
-  const handleButtonAction = (type, row) => (e) => {
+  const copyToClipboard = async (textToCopy) => {
+    console.log(textToCopy);
+    // Navigator clipboard api needs a secure context (https)
+    // Use the 'out of viewport hidden text area' trick
+    const textArea = document.createElement('textarea');
+    textArea.value = textToCopy.toString();
+
+    // Move textarea out of the viewport so it's not visible
+    textArea.style.position = 'absolute';
+    textArea.style.left = '-999999px';
+    textArea.tabIndex = '-1';
+
+    document.body.prepend(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const hey = document.execCommand('copy');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      textArea.remove();
+    }
+  };
+
+  const handleButtonAction = (type, row) => async (e) => {
     if (type === 'Link') {
-      navigator.clipboard.writeText(`http://localhost:3000/frm/newform/${row.id}`);
-      setAnchorel(e.currentTarget);
+      if (navigator.clipboard === undefined) {
+        await copyToClipboard(`${process.env.REACT_APP_URL}/frm/newform/${row.id}`);
+      } else {
+        navigator.clipboard.writeText(`${process.env.REACT_APP_URL}/frm/newform/${row.id}`);
+      }
+      setAnchorel(e.target);
       setBtn(true);
       setGrow(true);
       setTimeout(() => {
         setBtn(false);
       }, 1000);
+    } else if (type === 'Delete') {
+      const deleteTicket = await axios.delete(`${process.env.REACT_APP_URL_LOC}/ticket/${row.id}`);
+      setDelete(!deleted);
+      alert(deleteTicket.data.data);
     } else {
       // <Navigate to={`/form/${row.id}`} />;
       navigate(`../form/${row.id}`, { relative: 'path' });
       setLoader(true);
     }
+  };
+
+  const popUpFeedback = (e) => {
+    setAnchorel(e.target);
+    setBtn(true);
+    setGrow(true);
+    setTimeout(() => {
+      setBtn(false);
+    }, 1000);
   };
 
   const columnTable = [
@@ -192,65 +270,70 @@ export function ListTicket() {
       type: 'actions',
       renderCell: (item) => {
         let Buttons = [];
-        if (item.row.ticket_state == 'INIT') {
-          if (perm.INIT.create) {
-            Buttons.push(
-              <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
-                <Link />
-              </IconButton>
-            );
+        if (item.row.is_active == true) {
+          if (item.row.ticket_state == 'INIT') {
+            if (perm.INIT.create) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
+                  <Link />
+                </IconButton>
+              );
+            }
+            if (perm.INIT.read) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                  <Visibility />
+                </IconButton>
+              );
+            }
+            if (perm.INIT.delete) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('Delete', item.row)} onClose={handleOnBtnClose}>
+                  <Delete />
+                </IconButton>
+              );
+            }
           }
-          if (perm.INIT.read) {
-            Buttons.push(
-              <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
-                <Visibility />
-              </IconButton>
-            );
+          if (item.row.ticket_state == 'CREA') {
+            if (perm.CREA.update) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('Edit', item.row)}>
+                  <Edit />
+                </IconButton>
+              );
+            }
+            if (perm.CREA.read) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                  <Visibility />
+                </IconButton>
+              );
+            }
           }
-        }
-        if (item.row.ticket_state == 'CREA') {
-          if (perm.CREA.update) {
-            Buttons.push(
-              <IconButton onClick={handleButtonAction('Edit', item.row)}>
-                <Edit />
-              </IconButton>
-            );
+          if (item.row.ticket_state == 'FINA') {
+            if (perm.FINA.update) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('Edit', item.row)}>
+                  <Edit />
+                </IconButton>
+              );
+            }
+            if (perm.FINA.read) {
+              Buttons.push(
+                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                  <Visibility />
+                </IconButton>
+              );
+            }
           }
-          if (perm.CREA.read) {
-            Buttons.push(
-              <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
-                <Link />
-              </IconButton>
-            );
-          }
+        } else {
+          Buttons.push(
+            <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+              <Visibility />
+            </IconButton>
+          );
         }
         return Buttons;
-        // if (perm.create) {
-        //   return (
-        //     <>
-
-        //     </>
-        //   );
-        // } else if (item.row.cur_pos !== session.role) {
-        //   return (
-        //     <>
-        //       <IconButton onClick={handleButtonAction('View', item.row)}>
-        //         <Visibility />
-        //       </IconButton>
-        //     </>
-        //   );
-        // } else {
-        //   return (
-        //     <>
-        //       <IconButton onClick={handleButtonAction('Link', item.row)}>
-        //         <Link />
-        //       </IconButton>
-        //       <IconButton onClick={handleButtonAction('Edit', item.row)}>
-        //         <Edit />
-        //       </IconButton>
-        //     </>
-        //   );
-        // }
       },
     },
   ];
@@ -259,8 +342,21 @@ export function ListTicket() {
     <>
       {ticket !== undefined ? (
         <>
-          {perm.Table.create && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <FormControl>
+              <Select
+                sx={{ width: '10em' }}
+                id={'filterAct'}
+                value={filterAct}
+                onChange={(e) => {
+                  setFilteract(!filterAct);
+                }}
+              >
+                <MenuItem value={true}>Active</MenuItem>
+                <MenuItem value={false}>Inactive</MenuItem>
+              </Select>
+            </FormControl>
+            {perm.Table.create && (
               <Button
                 variant="contained"
                 sx={{ width: 180, height: 50, my: 2 }}
@@ -270,8 +366,8 @@ export function ListTicket() {
               >
                 Create New Vendor
               </Button>
-            </Box>
-          )}
+            )}
+          </Box>
           <DataGrid
             sx={overrides}
             rows={ticket}
@@ -299,8 +395,15 @@ export function ListTicket() {
         </Box>
       )}
 
-      <ModalCreateTicket open={openModal} onClose={handleOnClose} linkUrl={url} urlSet={urlSetFunc} />
-      <Popper open={btnTicket} anchorEl={anchorEl} transition>
+      <ModalCreateTicket
+        open={openModal}
+        onClose={handleOnClose}
+        linkUrl={url}
+        urlSet={urlSetFunc}
+        popUp={popUpFeedback}
+        onClick={copyToClipboard}
+      />
+      <Popper open={btnTicket} anchorEl={anchorEl} transition sx={{ zIndex: 3000 }}>
         {({ TransitionProps }) => {
           return (
             <Grow {...TransitionProps} in={btnTicket} timeout={350}>
