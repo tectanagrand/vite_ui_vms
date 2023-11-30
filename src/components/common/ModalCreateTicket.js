@@ -11,12 +11,28 @@ import {
   Box,
 } from '@mui/material';
 import { Link } from '@mui/icons-material';
-import { useRef, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
-export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet }) {
+export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet, popUp, onClick }) {
   const { session } = useSession();
+  const navigate = useNavigate();
+  const [links, setLinks] = useState(linkUrl);
+
+  useEffect(() => {
+    setLinks(linkUrl);
+  }, [linkUrl]);
+
+  const handlePopUp = (e) => {
+    popUp(e);
+  };
+
+  const handleClick = (e) => {
+    onClick(links);
+  };
+
   const handlegenticket = (param) => async () => {
     try {
       const response = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/new`, {
@@ -25,18 +41,23 @@ export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet }) {
       });
       const createdTicket = response.data;
       if (param === 'VENDOR') {
-        urlSet(`http://localhost:3000/frm/newform/${createdTicket.data.token}`);
+        urlSet(`${process.env.REACT_APP_URL}/frm/newform/${createdTicket.data.token}`);
       } else {
         onClose();
-        urlSet('');
+        navigate(`../form/${createdTicket.data.token}`);
       }
       alert('success');
     } catch (err) {
       alert(err);
     }
   };
-  const handleClickLink = () => {
-    navigator.clipboard.writeText(linkUrl);
+  const handleClickLink = async (e) => {
+    if (navigator.clipboard === undefined) {
+      handleClick();
+    } else {
+      navigator.clipboard.writeText(links);
+    }
+    handlePopUp(e);
   };
 
   return (
@@ -72,7 +93,8 @@ export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet }) {
               </InputAdornment>
             }
             label="Password"
-            value={linkUrl ? linkUrl : ''}
+            value={links}
+            readOnly={true}
             onClick={handleClickLink}
           />
         </FormControl>
