@@ -15,9 +15,12 @@ import {
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useSession } from 'src/provider/sessionProvider';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 export default function ListVendor() {
+  const axiosPrivate = useAxiosPrivate();
   const { session, getPermission } = useSession();
   const perm = getPermission('Vendor');
   const overrides = {
@@ -27,6 +30,7 @@ export default function ListVendor() {
     },
   };
 
+  const [btnClicked, setBtnClicked] = useState(false);
   const [filterAct, setFilteract] = useState(true);
   const [formStat, setFormstat] = useState({
     stat: false,
@@ -52,7 +56,7 @@ export default function ListVendor() {
   };
 
   const getData = async () => {
-    const data = await axios.get(`${process.env.REACT_APP_URL_LOC}/vendor/?isactive=${filterAct}`);
+    const data = await axiosPrivate.get(`/vendor/?isactive=${filterAct}`);
     return data.data;
   };
 
@@ -75,9 +79,14 @@ export default function ListVendor() {
   };
 
   const submitReq = async () => {
+    setBtnClicked(true);
     try {
+      // console.log(request.reason);
+      if (request.reason === null || request.reason?.trim() === '') {
+        throw new Error('Reasons still empty');
+      }
       const requestType = request.is_active === true ? 0 : 1;
-      const response = await axios.post(`${process.env.REACT_APP_URL_LOC}/reqstat/new`, {
+      const response = await axiosPrivate.post(`/reqstat/new`, {
         ven_id: request.ven_id,
         remarks: request.reason,
         request: requestType,
@@ -89,12 +98,15 @@ export default function ListVendor() {
         type: 'success',
         message: message,
       });
+      setDialog(false);
+      setBtnClicked(false);
     } catch (error) {
       setFormstat({
         stat: true,
         type: 'error',
-        message: 'error',
+        message: error.message,
       });
+      setBtnClicked(false);
       console.error(error);
     }
   };
@@ -206,9 +218,15 @@ export default function ListVendor() {
           <Button sx={{ width: 120, m: 1 }} color="secondary" onClick={handleCloseMdl}>
             <Typography>Cancel</Typography>
           </Button>
-          <Button sx={{ width: 120, m: 1 }} variant="contained" color={btnState.color} onClick={submitReq}>
+          <LoadingButton
+            sx={{ width: 120, m: 1 }}
+            variant="contained"
+            color={btnState.color}
+            onClick={submitReq}
+            loading={btnClicked}
+          >
             <Typography>{btnState.text}</Typography>
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
 
