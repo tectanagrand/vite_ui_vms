@@ -22,22 +22,24 @@ export default function SelectComp({
     });
   };
   return (
-    <FormControl fullWidth sx={{ mt: 2, mb: 2 }} disabled={disabled}>
+    <FormControl fullWidth disabled={disabled}>
       <Controller
-        render={({ field: { onChange, value }, fieldState: { error } }) => {
+        render={({ field: { onChange, value, ref }, fieldState: { error } }) => {
           if (disabled) {
             value = '';
           }
           return (
             <>
-              <InputLabel error={error}>{label}</InputLabel>
+              <InputLabel error={!!error}>{label}</InputLabel>
               <Select
                 fullWidth
-                error={error}
+                error={!!error}
                 label={label}
                 value={value}
+                inputRef={ref}
                 inputProps={{
                   readOnly: readOnly,
+                  disabled: disabled,
                 }}
                 onChange={(e) => {
                   onChange(e);
@@ -48,7 +50,7 @@ export default function SelectComp({
               >
                 {generateSingleOptions()}
               </Select>
-              <FormHelperText error={error}>{error?.message}</FormHelperText>
+              <FormHelperText error={!!error}>{error?.message}</FormHelperText>
             </>
           );
         }}
