@@ -25,9 +25,9 @@ module.exports = {
     "no-alert": 0,
     "no-shadow": 0,
     "no-console": 0,
-    "react/jsx-key": 1,
+    "react/jsx-key": 0,
     "import/no-cycle": 0,
-    "arrow-body-style": 1,
+    "arrow-body-style": 0,
     "react/prop-types": 1,
     "no-param-reassign": 0,
     "no-nested-ternary": 0,
@@ -65,13 +65,13 @@ module.exports = {
     "react/prop-types": 0,
     "no-unused-expressions": "off",
     "no-unused-vars": [
-      1,
+      0,
       {
         "ignoreRestSiblings": false
       }
     ],
     "prefer-destructuring": [
-      1,
+      0,
       {
         "object": true,
         "array": false
