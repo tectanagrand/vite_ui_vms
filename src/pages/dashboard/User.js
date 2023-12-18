@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 
 const usersMock = [
   {
@@ -26,6 +27,7 @@ const usersMock = [
 const header = ['Full Name', 'Username', 'Email', 'User Group', 'Role', 'Date Created', 'Date Expired'];
 
 export default function User() {
+  const axiosPrivate = useAxiosPrivate();
   const [colLen, setCollen] = useState(0);
   const [allUserDt, setAllUsr] = useState();
 
@@ -37,8 +39,8 @@ export default function User() {
 
   useEffect(() => {
     const getAllDataUser = async () => {
-      const getUser = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/`);
-      console.log(getUser.data.data);
+      const getUser = await axiosPrivate.get(`/user/`);
+      // console.log(getUser.data.data);
       setAllUsr(getUser.data.data);
       setCollen(Object.entries(getUser.data.data[0]).length);
     };
