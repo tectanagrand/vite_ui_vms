@@ -4,7 +4,9 @@ import { Delete as DeleteIcon, Undo, Download } from '@mui/icons-material';
 import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import fileDownload from 'js-file-download';
+import { axiosPrivate } from 'src/api/axios';
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -103,6 +105,7 @@ export default function VenFileTable({ initData, upTable, isallow }) {
     () => {
       let pushData = [];
       file_ven.map((item) => {
+        // console.log(id, item.id);
         if (item.id === id) {
           pushData.push({ ...item, method: '' });
         } else {
@@ -132,11 +135,24 @@ export default function VenFileTable({ initData, upTable, isallow }) {
       renderCell: (item) => {
         const handleDownloadClick = (item) => {
           const fileName = item.row.file_name;
-          console.log(item.row);
-          const downloadFile = axios
-            .get(`${process.env.REACT_APP_URL_LOC}/master/file/${fileName}`, { responseType: 'blob' })
+
+          axiosPrivate
+            .get(`/master/file/${fileName}`, { responseType: 'blob' })
             .then((response) => {
               fileDownload(response.data, fileName);
+              setFetchStat({
+                stat: 'success',
+                message: `file downloaded`,
+              });
+              onDeleteSBar();
+            })
+            .catch((err) => {
+              console.log(err);
+              setFetchStat({
+                stat: 'error',
+                message: `error download file`,
+              });
+              onDeleteSBar();
             });
         };
         if (item.row.method == 'delete') {
@@ -145,7 +161,7 @@ export default function VenFileTable({ initData, upTable, isallow }) {
               key={`undo-${item.id}`}
               icon={<Undo />}
               label="Undo"
-              onClick={() => handleUndoClick(item)}
+              onClick={handleUndoClick(item)}
             />,
           ];
         } else {
