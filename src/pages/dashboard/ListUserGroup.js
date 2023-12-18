@@ -15,8 +15,10 @@ import { useNavigate } from 'react-router';
 import { useSession } from 'src/provider/sessionProvider';
 import TableLayout from 'src/components/common/TableLayout';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 
 export default function ListUserGroup() {
+  const axiosPrivate = useAxiosPrivate();
   const columns = ['User Group', 'Date'];
   const { session } = useSession();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export default function ListUserGroup() {
 
   useEffect(() => {
     const getSecurityGroup = async () => {
-      const dataSec = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/lssecmtx`);
+      const dataSec = await axiosPrivate.get(`/user/lssecmtx`);
       const dataView = dataSec.data.data.map((item) => ({
         id: item.user_group_id,
         user_group: item.user_group_name,
