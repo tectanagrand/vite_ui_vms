@@ -14,8 +14,12 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'src/provider/sessionProvider';
 import TableLayout from 'src/components/common/TableLayout';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
+import { LoadingButton } from '@mui/lab';
 
 export default function ListReqStat() {
+  const axiosPrivate = useAxiosPrivate();
+  const [btnClicked, setBtnclicked] = useState();
   const columns = ['Ticket Number', 'Date', 'Requestor', 'Request', 'Vendor Code', 'Vendor Name'];
   const { session } = useSession();
   const [btnState, setBtn] = useState(['accept', 'reject']);
@@ -46,13 +50,14 @@ export default function ListReqStat() {
   };
 
   const handleProcessReq = async (action, id) => {
+    setBtnclicked(true);
     try {
       const jsonSend = {
         ticketid: id,
         session: session.user_id,
         action: action,
       };
-      const processReq = await axios.post(`${process.env.REACT_APP_URL_LOC}/reqstat/process`, jsonSend);
+      const processReq = await axiosPrivate.post(`/reqstat/process`, jsonSend);
       setFormstat({
         stat: true,
         type: 'success',
@@ -60,7 +65,9 @@ export default function ListReqStat() {
       });
       setOpenval(false);
       setReload(!reload);
+      setBtnclicked(false);
     } catch (error) {
+      setBtnclicked(false);
       setFormstat({
         stat: true,
         type: 'error',
@@ -71,7 +78,7 @@ export default function ListReqStat() {
 
   useEffect(() => {
     const getTicket = async () => {
-      const fetchTicket = await axios.get(`${process.env.REACT_APP_URL_LOC}/reqstat/show?is_active=${filterAct}`);
+      const fetchTicket = await axiosPrivate.get(`/reqstat/show?is_active=${filterAct}`);
       setTicket(fetchTicket.data.data);
     };
     if (filterAct === false) {
@@ -147,9 +154,14 @@ export default function ListReqStat() {
             {venData['Vendor Name']} - {venData['Vendor Code']}{' '}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-            <Button sx={{ width: 50 }} variant="contained" onClick={(e) => handleProcessReq(apprType, venData['id'])}>
+            <LoadingButton
+              sx={{ width: 50 }}
+              variant="contained"
+              onClick={(e) => handleProcessReq(apprType, venData['id'])}
+              loading={btnClicked}
+            >
               <Typography>Yes</Typography>
-            </Button>
+            </LoadingButton>
             <Button
               sx={{ width: 50 }}
               variant="contained"
