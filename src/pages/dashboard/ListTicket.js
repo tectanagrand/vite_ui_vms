@@ -13,6 +13,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Tooltip,
 } from '@mui/material';
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
@@ -69,18 +70,39 @@ export function ListTicket() {
   const [loader, setLoader] = useState(false);
   const [filterAct, setFilteract] = useState(true);
   const [deleted, setDelete] = useState(false);
+  const [ticket_state, setTicketstate] = useState([]);
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   const urlSetFunc = (urlitem) => {
     setUrl(urlitem);
   };
   const tickets = async (controller) => {
+    let permission = {};
+    permission['INIT'] = getPermission('Initial Form');
+    permission['CREA'] = getPermission('Creation Form');
+    permission['FINA'] = getPermission('Final Form');
     try {
+      let ticketState = [];
       // axios.defaults.headers.common.Authorization =
       //   'Bearer ' + (Cookies.get('accessToken') === undefined ? '' : Cookies.get('accessToken'));
-      const response = await axiosPrivate.get(`/ticket/?is_active=${filterAct}`, {
-        signal: controller.signal,
-      });
+      if (permission.INIT?.read) {
+        ticketState.push("'INIT'");
+      }
+      if (permission.CREA?.read) {
+        ticketState.push("'CREA'");
+      }
+      if (permission.FINA?.read) {
+        ticketState.push("'FINA'");
+      }
+      setTicketstate(ticketState);
+      const response = await axiosPrivate.get(
+        `/ticket/?is_active=${filterAct}&ticket_state=${
+          ticket_state.length === 0 ? ticketState.join(',') : ticket_state.join(',')
+        }`,
+        {
+          signal: controller.signal,
+        }
+      );
       const result = response.data.data;
       const load = result.data.map((item) => ({
         id: item.token,
@@ -97,7 +119,6 @@ export function ListTicket() {
       setTicket(load);
     } catch (error) {
       console.error(error);
-      logOut();
     }
   };
 
@@ -105,15 +126,6 @@ export function ListTicket() {
     const controller = new AbortController();
     tickets(controller);
   }, [url, filterAct, deleted]);
-
-  useEffect(() => {
-    const refresh = async () => {
-      await axios.get(`${process.env.REACT_APP_URL_LOC}/user/refresh`, {
-        withCredentials: true,
-      });
-    };
-    refresh();
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -140,7 +152,6 @@ export function ListTicket() {
   };
 
   const copyToClipboard = async (textToCopy) => {
-    console.log(textToCopy);
     // Navigator clipboard api needs a secure context (https)
     // Use the 'out of viewport hidden text area' trick
     const textArea = document.createElement('textarea');
@@ -151,9 +162,9 @@ export function ListTicket() {
     textArea.style.left = '-999999px';
     textArea.tabIndex = '-1';
 
-    document.body.prepend(textArea);
-    textArea.focus();
+    document.body.appendChild(textArea);
     textArea.select();
+    textArea.focus();
 
     try {
       const hey = document.execCommand('copy');
@@ -167,9 +178,9 @@ export function ListTicket() {
   const handleButtonAction = (type, row) => async (e) => {
     if (type === 'Link') {
       if (navigator.clipboard === undefined) {
-        await copyToClipboard(`${process.env.REACT_APP_URL}/frm/newform/${row.id}`);
+        await copyToClipboard(`${location.host}/frm/newform/${row.id}`);
       } else {
-        navigator.clipboard.writeText(`${process.env.REACT_APP_URL}/frm/newform/${row.id}`);
+        navigator.clipboard.writeText(`${location.host}/frm/newform/${row.id}`);
       }
       setAnchorel(e.target);
       setBtn(true);
@@ -178,9 +189,9 @@ export function ListTicket() {
         setBtn(false);
       }, 1000);
     } else if (type === 'Delete') {
-      const deleteTicket = await axios.delete(`${process.env.REACT_APP_URL_LOC}/ticket/${row.id}`);
+      const deleteTicket = await axiosPrivate.delete(`/ticket/${row.id}`);
       setDelete(!deleted);
-      alert(deleteTicket.data.data);
+      alert(`Ticket ${deleteTicket.data.data} is deleted`);
     } else {
       // <Navigate to={`/form/${row.id}`} />;
       navigate(`../form/${row.id}`, { relative: 'path' });
@@ -274,63 +285,76 @@ export function ListTicket() {
           if (item.row.ticket_state == 'INIT') {
             if (perm.INIT.create) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
-                  <Link />
-                </IconButton>
+                <Tooltip key={item.id} title="Link">
+                  <IconButton onClick={handleButtonAction('Link', item.row)} onClose={handleOnBtnClose}>
+                    <Link />
+                  </IconButton>
+                </Tooltip>
               );
-            }
-            if (perm.INIT.read) {
+            } else if (perm.INIT.read) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
-                  <Visibility />
-                </IconButton>
+                <Tooltip key={item.id} title="View">
+                  <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                    <Visibility />
+                  </IconButton>
+                </Tooltip>
               );
             }
             if (perm.INIT.delete) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('Delete', item.row)} onClose={handleOnBtnClose}>
-                  <Delete />
-                </IconButton>
+                <Tooltip key={item.id + '_delete'} title="Delete">
+                  <IconButton onClick={handleButtonAction('Delete', item.row)} onClose={handleOnBtnClose}>
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
               );
             }
           }
           if (item.row.ticket_state == 'CREA') {
             if (perm.CREA.update) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('Edit', item.row)}>
-                  <Edit />
-                </IconButton>
+                <Tooltip key={item.id} title="Edit">
+                  <IconButton onClick={handleButtonAction('Edit', item.row)}>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
               );
-            }
-            if (perm.CREA.read) {
+            } else if (perm.CREA.read) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
-                  <Visibility />
-                </IconButton>
+                <Tooltip key={item.id} title="View">
+                  <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                    <Visibility />
+                  </IconButton>
+                </Tooltip>
               );
             }
           }
           if (item.row.ticket_state == 'FINA') {
             if (perm.FINA.update) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('Edit', item.row)}>
-                  <Edit />
-                </IconButton>
+                <Tooltip key={item.id} title="Edit">
+                  <IconButton onClick={handleButtonAction('Edit', item.row)}>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
               );
-            }
-            if (perm.FINA.read) {
+            } else if (perm.FINA.read) {
               Buttons.push(
-                <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
-                  <Visibility />
-                </IconButton>
+                <Tooltip key={item.id} title="View">
+                  <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                    <Visibility />
+                  </IconButton>
+                </Tooltip>
               );
             }
           }
         } else {
           Buttons.push(
-            <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
-              <Visibility />
-            </IconButton>
+            <Tooltip key={item.id} title="View">
+              <IconButton onClick={handleButtonAction('View', item.row)} onClose={handleOnBtnClose}>
+                <Visibility />
+              </IconButton>
+            </Tooltip>
           );
         }
         return Buttons;
