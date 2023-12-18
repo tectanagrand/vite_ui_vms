@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
+import SvgIcon from '@mui/material/SvgIcon';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
@@ -17,6 +18,9 @@ import NavSection from 'src/components/nav/NavSection';
 import { Menu } from 'src/_mock/Menu';
 import { useSession } from 'src/provider/sessionProvider';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
+import { ReactComponent as KpnLogo } from '../../images/kpn-logo-3.svg';
+import { ReactComponent as KpnNav } from '../../images/kpn-logo.svg';
 
 const drawerWidth = 240;
 
@@ -61,6 +65,7 @@ const AppBar = styled(MuiAppBar, {
       duration: theme.transitions.duration.enteringScreen,
     }),
   }),
+  backgroundColor: '#fc3d32',
 }));
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
@@ -82,6 +87,7 @@ export default function MiniDrawer() {
   const theme = useTheme();
   const location = useLocation();
   const { session, setSession } = useSession();
+  const axiosPrivate = useAxiosPrivate();
 
   const [open, setOpen] = useState(false);
   const [navCol, setNavcol] = useState({
@@ -92,7 +98,7 @@ export default function MiniDrawer() {
 
   useEffect(() => {
     const getAuthorization = async () => {
-      const getAuth = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/authorization`, {
+      const getAuth = await axiosPrivate.post(`/user/authorization`, {
         group_id: session.groupid,
       });
       setSession({ ...session, ['permission']: getAuth.data });
@@ -134,11 +140,11 @@ export default function MiniDrawer() {
             onClick={handleDrawerOpen}
             edge="start"
             sx={{
-              marginRight: 5,
+              marginRight: 2,
               ...(open && { display: 'none' }),
             }}
           >
-            <MenuIcon />
+            <SvgIcon component={KpnNav} sx={{ width: '2rem', height: '2rem' }} viewBox="0 0 5000 5000" color="white" />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Vendor Management System App
@@ -148,6 +154,7 @@ export default function MiniDrawer() {
       </AppBar>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
+          <SvgIcon sx={{ width: '10rem', height: '2rem' }} component={KpnLogo} viewBox="10 50 700 100"></SvgIcon>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
