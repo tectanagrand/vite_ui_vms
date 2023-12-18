@@ -2,26 +2,28 @@ import { Controller } from 'react-hook-form';
 import { NumericFormat } from 'react-number-format';
 import { TextField } from '@mui/material';
 
-export default function NumericFieldComp({ name, label, control, currency, format, rules, readOnly }) {
+export default function NumericFieldComp({ name, label, control, currency, format, rules, readOnly, disabled }) {
   return (
     <>
       <Controller
         control={control}
         name={name}
         rules={rules}
-        render={({ field, fieldState: { error } }) => (
+        render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
           <NumericFormat
-            value={field.value}
-            onChange={field.onChange}
-            {...format}
+            onChange={onChange}
+            value={value}
             label={label}
             thousandSeparator
+            inputRef={ref}
             customInput={TextField}
             prefix={`${currency} `}
             error={error}
             fullWidth
-            readOnly={readOnly}
-            sx={{ mt: 2, mb: 2 }}
+            inputProps={{
+              readOnly: readOnly,
+              disabled: disabled,
+            }}
           />
         )}
       />
