@@ -20,7 +20,6 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
     onAction(item, id);
   };
   const [rows, setRow] = useState(data);
-  console.log(data);
   const [searched, setSearched] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -48,7 +47,7 @@ export default function TableLayout({ data, header, buttons, lengthRow, onAction
     const filteredRows = data.filter((row) => {
       let check = false;
       Object.values(row).map((item) => {
-        console.log(item);
+        // console.log(item);
         if (item === null) {
           return;
         }
