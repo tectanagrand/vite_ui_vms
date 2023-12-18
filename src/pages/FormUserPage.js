@@ -5,11 +5,15 @@ import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import dayjs from 'dayjs';
 import DatePickerComp from 'src/components/common/DatePickerComp';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { LoadingButton } from '@mui/lab';
 
 export default function FormUserPage() {
+  const [btnClicked, setBtnclicked] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
   const [searchParams] = useSearchParams();
   const [userId, setUserid] = useState('');
   const navigate = useNavigate();
@@ -39,7 +43,7 @@ export default function FormUserPage() {
   });
 
   const getUserData = async (iduser) => {
-    const userDt = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/show/?iduser=${iduser}`);
+    const userDt = await axiosPrivate.get(`/user/show/?iduser=${iduser}`);
     const data = userDt.data.data;
     if (data != undefined) {
       setUserid(data.user_id);
@@ -71,7 +75,7 @@ export default function FormUserPage() {
   useEffect(() => {
     const getUsergrp = async () => {
       try {
-        const getUsrgrp = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/lssecmtx`);
+        const getUsrgrp = await axiosPrivate.get(`/user/lssecmtx`);
         const dataUsrgrp = getUsrgrp.data.data.map((data) => {
           return { value: data.user_group_id, label: data.user_group_name };
         });
@@ -86,7 +90,7 @@ export default function FormUserPage() {
   useEffect(() => {
     const getRole = async () => {
       try {
-        const getRole = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/roles`);
+        const getRole = await axiosPrivate.get(`/user/roles`);
         const dataRole = getRole.data.data.map((data) => {
           return { value: data.id_role, label: data.role };
         });
@@ -101,7 +105,7 @@ export default function FormUserPage() {
   useEffect(() => {
     const getMgr = async () => {
       try {
-        const getManager = await axios.get(`${process.env.REACT_APP_URL_LOC}/user/mgrs`);
+        const getManager = await axiosPrivate.get(`/user/mgrs`);
         const dataMgr = getManager.data.data.map((data) => {
           return { value: data.mgr_id, label: data.fullname };
         });
@@ -119,6 +123,7 @@ export default function FormUserPage() {
   }, []);
 
   const submitUser = async (data) => {
+    setBtnclicked(true);
     const mgr_id = isMgr ? '' : data.manager;
     let subUserDt = {
       user_id: userId,
@@ -136,17 +141,19 @@ export default function FormUserPage() {
     }
     // console.log(subUserDt);
     try {
-      const submitDatauser = await axios.post(`${process.env.REACT_APP_URL_LOC}/user/submit`, subUserDt);
+      const submitDatauser = await axiosPrivate.post(`/user/submit`, subUserDt);
+      setBtnclicked(false);
       alert(submitDatauser.data.message);
       navigate('../users');
     } catch (error) {
+      setBtnclicked(false);
       alert(error);
     }
   };
   return (
     <Container>
       <form onSubmit={handleSubmit(submitUser)}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
           <Typography variant="h4" sx={{ textAlign: 'center', pb: 5 }}>
             User Form
           </Typography>
@@ -207,9 +214,9 @@ export default function FormUserPage() {
           </Grid>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 10 }}>
-          <Button type="submit" sx={{ width: 100, height: 50 }} variant="contained">
+          <LoadingButton type="submit" sx={{ width: 100, height: 50 }} variant="contained" loading={btnClicked}>
             <Typography>Save</Typography>
-          </Button>
+          </LoadingButton>
         </Box>
       </form>
     </Container>
