@@ -14,6 +14,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useState, forwardRef, useEffect } from 'react';
 import VenFileTable from '../FormVendor/VenFileTable';
 import { useSession } from 'src/provider/sessionProvider';
+import { LoadingButton } from '@mui/lab';
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -25,6 +26,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
   const [statUpload, setStatUpload] = useState({ stat: false, type: '', message: '' });
   const [fileStaged, setFileStaged] = useState([]);
   const inTypes = [{ key: 'pleaseSelect', value: 'Please Select Item' }, ...inputTypes];
+  const [btnClicked, setBtnclick] = useState(false);
 
   const sendDataParent = (file_ven) => {
     let items = [];
@@ -35,6 +37,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
         items.push(temp);
       }
     });
+    // console.log(items);
     // console.log('from table:');
     // console.log(items);
     onChildDataChange(items);
@@ -73,6 +76,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
     }
   };
   const handleUpload = async (event) => {
+    setBtnclick(true);
     try {
       const selectedFile = [...event.target.files];
       let form = new FormData();
@@ -92,16 +96,20 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
       // console.log(items);
       if (items.status == 200) {
         const dataUploaded = items.data.map((item) => ({ ...item, id: item.file_id }));
+        console.log(dataUploaded);
         setFileStaged([...fileStaged, ...dataUploaded]);
         sendDataParent([...fileStaged, ...dataUploaded]);
         // console.log(fileStaged);
         setStatUpload({ stat: true, type: 'success', message: 'File Upload Success' });
+        setBtnclick(false);
       } else {
-        setStatUpload({ stat: true, type: 'error', message: 'File Upload Error' });
+        setStatUpload({ stat: true, type: 'error', message: items.message });
+        setBtnclick(false);
       }
       document.getElementById('fileUpload').value = null;
     } catch (err) {
-      setStatUpload({ stat: true, type: 'error', message: 'File Upload Error' });
+      setBtnclick(false);
+      setStatUpload({ stat: true, type: 'error', message: err.message });
       console.error(err);
     }
   };
@@ -114,17 +122,6 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
       <Stack spacing={2}>
         <Typography sx={{ ml: 2, mb: 2 }}>Upload File Here</Typography>
         <Box sx={{ width: 500, height: 50, display: 'flex', alignItems: 'center' }}>
-          <Button
-            component="label"
-            startIcon={<UploadFileIcon />}
-            variant="outlined"
-            sx={{ height: 50, width: 300, margin: 2 }}
-            onClick={handleValidate}
-            disabled={!allow}
-          >
-            Upload
-            <input type="file" id="fileUpload" name="fileUpload" multiple hidden onChange={handleUpload} />
-          </Button>
           <FormControl fullWidth>
             <InputLabel htmlFor="fileType" id="fileType-label">
               <Typography>Type File</Typography>
@@ -143,6 +140,18 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
               ))}
             </Select>
           </FormControl>
+          <LoadingButton
+            component="label"
+            startIcon={<UploadFileIcon />}
+            variant="outlined"
+            sx={{ height: 50, width: 300, margin: 2 }}
+            onClick={handleValidate}
+            disabled={!allow}
+            loading={btnClicked}
+          >
+            Upload
+            <input type="file" id="fileUpload" name="fileUpload" multiple hidden onChange={handleUpload} />
+          </LoadingButton>
         </Box>
         <Snackbar
           open={statUpload.stat}
