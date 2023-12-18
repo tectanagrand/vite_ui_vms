@@ -1,4 +1,4 @@
-import { Avatar, IconButton, Menu, MenuItem, Backdrop, CircularProgress } from '@mui/material';
+import { Avatar, IconButton, Menu, MenuItem, Backdrop, CircularProgress, Box, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useSession } from 'src/provider/sessionProvider';
 import { useNavigate } from 'react-router-dom';
@@ -23,9 +23,12 @@ export default function AvatarComp() {
   };
   return (
     <>
-      <IconButton onClick={handleMenu}>
-        <Avatar>{session.username?.slice(0, 2).toUpperCase()}</Avatar>
-      </IconButton>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Typography alignItems={'center'}>Welcome, {session.fullname?.split(' ')[0]}</Typography>
+        <IconButton onClick={handleMenu}>
+          <Avatar>{session.username?.slice(0, 2).toUpperCase()}</Avatar>
+        </IconButton>
+      </Box>
       <Menu
         id="avatar-appbar"
         anchorEl={anchorEl}
