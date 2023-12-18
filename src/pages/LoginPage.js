@@ -1,4 +1,6 @@
-import { Paper, Box, Button, Link, Backdrop, SvgIcon } from '@mui/material';
+import { Paper, Box, Button, Link, Backdrop } from '@mui/material';
+
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useForm } from 'react-hook-form';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { Typography } from '@mui/material';
@@ -7,21 +9,27 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
 import CircularProgress from '@mui/material/CircularProgress';
+import SvgIcon from '@mui/material/SvgIcon';
 import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
 import imgbg from '../images/gama-tower.jpg';
-import Logo from '../images/kpn-logo.png';
+import { ReactComponent as KpnNav } from '../images/kpn-logo.svg';
+import { LoadingButton } from '@mui/lab';
+
 const defaultValue = {
   Username: '',
   Password: '',
   FormToken: '',
 };
 export default function LoginPage() {
+  const matches = useMediaQuery('(max-width:400px)');
+  const [btnClicked, setBtnclicked] = useState();
   const { handleSubmit, control } = useForm({ defaultValues: defaultValue });
   const [openLoad, setOpenload] = useState(false);
   const [dirForm, setDirform] = useState({ state: 'login', html: 'User with form link ?' });
   const navigate = useNavigate();
   const { setSession } = useSession();
   const onSubmit = async (data) => {
+    setBtnclicked(true);
     setOpenload(true);
     if (dirForm.state === 'form') {
       navigate(`/frm/newform/${data.FormToken}`);
@@ -31,30 +39,18 @@ export default function LoginPage() {
           username: data.Username,
           password: data.Password,
         });
-        // var headers = new Headers();
-        // headers.append('Content-Type', 'application/json');
-        // headers.append('Accept', 'application/json');
-        // const login = await fetch(`${process.env.REACT_APP_URL_LOC}/user/login`, {
-        //   method: 'POST',
-        //   redirect: 'follow',
-        //   credentials: 'include',
-        //   headers: headers,
-        //   body: JSON.stringify({
-        //     username: data.Username,
-        //     password: data.Password,
-        //   }),
-        // });
-        console.log(logindata);
         const response = logindata.data;
         setSession(response);
         alert('Successfull login');
         setTimeout(() => {
           navigate('/dashboard/ticket');
         }, 1000);
+        setBtnclicked(false);
       } catch (err) {
         setOpenload(false);
+        setBtnclicked(false);
         console.log(err);
-        alert(err);
+        alert(err.response.data.message);
       }
     }
   };
@@ -75,7 +71,7 @@ export default function LoginPage() {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',
-          flexDirection: 'column',
+          width: '100%',
           backgroundImage: `url(${imgbg})`,
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
@@ -85,8 +81,8 @@ export default function LoginPage() {
           <Paper
             sx={{
               display: 'flex',
-              width: 600,
-              height: 300,
+              width: matches ? '18.75rem' : '37.5rem',
+              height: matches ? '37.5rem' : '18.75rem',
               p: 3,
               flexDirection: 'column',
               alignItems: 'center',
@@ -99,27 +95,57 @@ export default function LoginPage() {
                 <Logo />
               </SvgIcon>
             </Box> */}
-            <Typography variant="h3" sx={{ mt: 2 }}>
-              Vendor Management System KPN
-            </Typography>
-            {dirForm.state === 'login' && (
-              <TextFieldComp name={'Username'} control={control} label={'Username'} rules={{ required: true }} />
-            )}
-            {dirForm.state === 'login' && (
-              <PasswordWithEyes name={'Password'} control={control} label={'Password'} rules={{ required: true }} />
-            )}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <SvgIcon
+                component={KpnNav}
+                sx={{ width: '2rem', height: '2rem', mt: '0.1rem' }}
+                viewBox="0 0 5000 5000"
+                color="white"
+              />
+              <Typography variant="h4" sx={{ mb: matches ? '5rem' : '2rem', pb: '0.5rem' }}>
+                Vendor Management System KPN
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
+              {dirForm.state === 'login' && (
+                <TextFieldComp
+                  name={'Username'}
+                  control={control}
+                  label={'Username'}
+                  rules={{ required: true }}
+                  sx={{ m: 1 }}
+                />
+              )}
+              {dirForm.state === 'login' && (
+                <PasswordWithEyes
+                  name={'Password'}
+                  control={control}
+                  label={'Password'}
+                  rules={{ required: true }}
+                  sx={{ m: 1 }}
+                />
+              )}
+            </Box>
             {dirForm.state === 'form' && (
               <TextFieldComp name={'FormToken'} control={control} label={'Token Form'} rules={{ required: true }} />
             )}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 100, width: 600 }}>
-              <Link onClick={onFormClick}>{dirForm.html}</Link>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                height: matches ? '3.125rem' : '6.25rem',
+                width: matches ? '18.75rem' : '37.5rem',
+              }}
+            >
+              {/* <Link onClick={onFormClick}>{dirForm.html}</Link> */}
               {dirForm.state === 'login' && (
-                <Button type="submit" sx={{ height: 50, m: 1, width: 100 }}>
+                <LoadingButton type="submit" sx={{ height: '3.125rem', m: 1, width: '6.25rem' }} loading={btnClicked}>
                   Login
-                </Button>
+                </LoadingButton>
               )}
               {dirForm.state === 'form' && (
-                <Button type="submit" sx={{ height: 50, m: 1, width: 100 }}>
+                <Button type="submit" sx={{ height: '3.125rem', m: 1, width: '6.25rem' }}>
                   Open
                 </Button>
               )}
