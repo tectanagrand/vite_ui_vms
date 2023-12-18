@@ -1,7 +1,10 @@
 import { DataGrid } from '@mui/x-data-grid';
 import SearchBar from '@mkyy/mui-search-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
+import axios from 'axios';
+import AutoCompleteSelect from 'src/components/common/AutoCompleteSelect';
+import LoadingButton from '@mui/lab/LoadingButton';
 import {
   Box,
   Button,
@@ -22,6 +25,13 @@ export default function ListMasterBank() {
   const { control, handleSubmit, clearErrors, reset } = useForm();
   const axiosPrivate = useAxiosPrivate();
   const column = [
+    {
+      field: 'country',
+      type: 'string',
+      headerName: 'Country',
+      flex: 0.1,
+      sortable: false,
+    },
     {
       field: 'bank_key',
       type: 'string',
@@ -82,7 +92,7 @@ export default function ListMasterBank() {
 
   const [rows, setRows] = useState({
     isLoading: false,
-    rows: [{ id: '', bank_key: '', bank_code: '', bank_name: '' }],
+    rows: [{ id: '', bank_key: '', bank_code: '', bank_name: '', country: '' }],
   });
   const [typepost, setType] = useState('');
 
@@ -93,6 +103,9 @@ export default function ListMasterBank() {
   });
 
   const [modalOpen, setModalopen] = useState(false);
+  const [btnClicked, setBtnclick] = useState(false);
+
+  const countries = useRef({ value: '', label: '' });
 
   const handleCloseModal = () => {
     setModalopen(false);
@@ -113,12 +126,13 @@ export default function ListMasterBank() {
         address1: row.address_1,
         address2: row.address_2,
         address3: row.address_3,
+        country: { value: row.country, label: `${row.country} - ${row.country_name}` },
       });
       setModalopen(true);
     } else if (type === 'Delete') {
       if (confirm('Are you sure want to delete ' + row.bank_name + '?')) {
         try {
-          const deleteBank = await axiosPrivate.post(`${process.env.REACT_APP_URL_LOC}/master/deletebank`, {
+          const deleteBank = await axiosPrivate.post(`/master/deletebank`, {
             bankcode: row.bank_code,
             bankkey: row.bank_key,
           });
@@ -134,7 +148,7 @@ export default function ListMasterBank() {
   const [totallen, setTotal] = useState(0);
   const requestSearch = (searchedVal) => {
     const getBankdt = async () => {
-      const getBankdata = await axiosPrivate.post(`${process.env.REACT_APP_URL_LOC}/master/ssrbank`, {
+      const getBankdata = await axiosPrivate.post(`/master/ssrbank`, {
         page: 0,
         maxPage: params.maxPage,
         que: searchedVal.toLowerCase(),
@@ -151,9 +165,11 @@ export default function ListMasterBank() {
   };
 
   const submitBank = async (values) => {
+    setBtnclick(true);
     try {
-      const submitForm = await axiosPrivate.post(`${process.env.REACT_APP_URL_LOC}/master/addbank`, {
+      const submitForm = await axiosPrivate.post(`/master/addbank`, {
         ...values,
+        country: values.country.value,
         type: typepost,
       });
       setFormstat({
@@ -162,6 +178,7 @@ export default function ListMasterBank() {
         message: `${submitForm.data.name} is successfully added`,
       });
       setModalopen(false);
+      setBtnclick(false);
     } catch (error) {
       setFormstat({
         stat: true,
@@ -169,18 +186,35 @@ export default function ListMasterBank() {
         message: error.message,
       });
       setModalopen(false);
+      setBtnclick(false);
     }
   };
 
   useEffect(() => {
     setRows({ ...rows, isLoading: true });
     const getBankdt = async () => {
-      const getBankdata = await axiosPrivate.post(`${process.env.REACT_APP_URL_LOC}/master/ssrbank`, params);
+      const getBankdata = await axiosPrivate.post(`/master/ssrbank`, params);
       setRows({ isLoading: false, rows: getBankdata.data.data });
       setTotal((prev) => (getBankdata.data.allrow !== undefined ? getBankdata.data.allrow : prev));
     };
     getBankdt();
   }, [params]);
+
+  useEffect(() => {
+    const dynaCountry = async () => {
+      try {
+        const country = await axios.post(`${process.env.REACT_APP_URL_LOC}/master/country`);
+        const result = country.data.data;
+        countries.current = result.data.map((item) => ({
+          value: item.country_code,
+          label: `${item.country_code} - ${item.country_name}`,
+        }));
+      } catch (err) {
+        alert(err.stack);
+      }
+    };
+    dynaCountry();
+  }, []);
 
   return (
     <>
@@ -191,6 +225,15 @@ export default function ListMasterBank() {
           onClick={() => {
             setType('insert');
             setModalopen(true);
+            reset({
+              bankcode: '',
+              bankkey: '',
+              bankname: '',
+              address1: '',
+              address2: '',
+              address3: '',
+              country: '',
+            });
           }}
         >
           + Add new bank
@@ -260,6 +303,7 @@ export default function ListMasterBank() {
               }}
             />
             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+              <AutoCompleteSelect name="country" label="Country" control={control} options={countries.current} />
               <TextFieldComp
                 name="address2"
                 label="Address 2"
@@ -285,9 +329,9 @@ export default function ListMasterBank() {
             <Button sx={{ width: 120, m: 1 }} color="secondary" onClick={handleCloseModal}>
               <Typography>Cancel</Typography>
             </Button>
-            <Button sx={{ width: 120, m: 1 }} variant="contained" type="submit">
+            <LoadingButton sx={{ width: 120, m: 1 }} variant="contained" type="submit" loading={btnClicked}>
               <Typography>Submit</Typography>
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </form>
       </Dialog>
