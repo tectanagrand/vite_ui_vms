@@ -28,6 +28,9 @@ import SelectComp from 'src/components/common/SelectComp';
 import CheckboxComp from 'src/components/common/CheckboxComp';
 import NumericFieldComp from 'src/components/common/NumericFieldComp';
 import { useForm } from 'react-hook-form';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
+import PatternFieldComp from 'src/components/common/PatternFieldComp';
+import AutoCompleteSelect from 'src/components/common/AutoCompleteSelect';
 
 const ventypeList = {
   '3RD_PARTY': [
@@ -52,15 +55,33 @@ const ventypeList = {
     { value: 'OTHER', label: 'Other' },
     { value: 'TRANSPORTER', label: 'Transporter' },
   ],
+  BANK: [{ value: 'X', label: 'X' }],
+  SHAREHOLDERS: [{ value: 'X', label: 'X' }],
+  EMPLOYEE: [{ value: 'X', label: 'X' }],
+  INTERDIVISION: [{ value: 'X', label: 'X' }],
 };
 
+const fileTypelist = [
+  { key: 'SPPKP', value: 'SPPKP' },
+  { key: 'NPWP', value: 'NPWP' },
+  { key: 'KODE ETIK / PAKTA INTEGRITAS', value: 'KODE ETIK / PAKTA INTEGRITAS' },
+  { key: 'SURAT PERNYATAAN REKENING', value: 'SURAT PERNYATAAN REKENING' },
+  { key: 'BUKU TABUNGAN', value: 'BUKU TABUNGAN' },
+  { key: 'KTP', value: 'KTP' },
+];
+
+const newFileTypelist = [
+  { key: 'A001', value: 'Account Statement Letter' },
+  { key: 'A002', value: 'Passbook' },
+  { key: 'A003', value: 'ID Card (KTP)' },
+  { key: 'A004', value: 'Integrity Pact' },
+  { key: 'A005', value: 'NPWP (Tax ID Number)' },
+  { key: 'A006', value: 'SPPKP' },
+];
+
 export default function RefactorFormVendorPage() {
-  const loader_data = useLoaderData();
-  const params = useParams();
-  const [chgCountry, setChgCty] = useState(loader_data.data.country);
-  const [chgVengrp, setVengrp] = useState(loader_data.data.vengroup);
-  const [chgVenacc, setVenacc] = useState(loader_data.data.venacc);
-  const [chgCurr, setChgCurr] = useState(loader_data.data.currency);
+  const predata = useLoaderData();
+  const axiosPrivate = useAxiosPrivate();
   const defaultValue = {
     emailRequestor: '',
     deptRequestor: '',
@@ -69,6 +90,7 @@ export default function RefactorFormVendorPage() {
     name1: '',
     country: '',
     street: '',
+    street2: '',
     postal: '',
     city: '',
     telf: '',
@@ -91,6 +113,179 @@ export default function RefactorFormVendorPage() {
     limit: '',
   };
 
+  const {
+    handleSubmit,
+    control,
+    getValues,
+    reset,
+    setFocus,
+    formState: { errors, isSubmitting },
+    clearErrors,
+  } = useForm({ defaultValues: defaultValue });
+
+  // console.log(errors);
+
+  const [loader_data, setLoaderdata] = useState({
+    ticket_id: '',
+    ticket_num: '',
+    ven_id: '',
+    ticketState: '',
+    data: '',
+    permission: '',
+  });
+  useEffect(() => {
+    const type = predata.type;
+    const tokenform = predata.token;
+    async function formLoader(token) {
+      // axios.defaults.headers.common.Authorization =
+      //   'Bearer ' + (Cookies.get('accessToken') === undefined ? '' : Cookies.get('accessToken'));
+      const controller = new AbortController();
+      const response = await axiosPrivate.get(`/ticket/form/${token}`, {
+        signal: controller.signal,
+      });
+      const data = response.data.data;
+      const valueForm = {
+        emailRequestor: data.email_proc ? data.email_proc : '',
+        deptRequestor: data.dep_proc ? data.dep_proc : '',
+        titlecomp: data.title ? data.title : '',
+        localovs: data.local_ovs ? data.local_ovs : '',
+        name1: data['name_1'] ? data['name_1'] : '',
+        country: data.country ? data.country : '',
+        street: data.street ? data.street : '',
+        street2: data.street2 ? data.street2 : '',
+        postal: data.postal ? data.postal : '',
+        city: data.city ? data.city : '',
+        telf: data.telf1 ? data.telf1 : '',
+        fax: data.fax ? data.fax : '',
+        email: data.email ? data.email : '',
+        ispkp: data.is_pkp ? data.is_pkp : false,
+        npwp: data.npwp ? data.npwp : '',
+        paymthd: data.pay_mthd ? data.pay_mthd : '',
+        payterm: data.pay_term ? data.pay_term : 'I30',
+        company: data.company ? data.company : '',
+        purchorg: data.purch_org ? data.purch_org : '',
+        vengroup: data.ven_group ? data.ven_group : '',
+        venacc: data.ven_acc ? data.ven_acc : '',
+        ventype: data.ven_type ? data.ven_type : '',
+        currency: data.lim_curr ? data.lim_curr : '',
+        description: data.description ? data.description : '',
+        is_tender: data.is_tender ? data.is_tender : false,
+        vendorcode: data.ven_code ? data.ven_code : data.header,
+        remarks: data.remarks ? data.remarks : '',
+        limit: data.limit_vendor ? data.limit_vendor : '',
+        reject_by: data.reject_by ? data.reject_by : '',
+        is_active: data.ticket_stat,
+      };
+
+      setLoaderdata({
+        ticket_id: data.ticket_id,
+        ticket_num: data.ticket_num,
+        ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+        ticketState: data.ticket_state,
+        ticket_type: data.t_type,
+        data: valueForm,
+      });
+
+      return {
+        ticket_id: data.ticket_id,
+        ticket_num: data.ticket_num,
+        ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+        ticketState: data.ticket_state,
+        data: valueForm,
+      };
+    }
+
+    async function newformLoader(token) {
+      const response = await axiosPrivate.get(`/ticket/newform/${token}`);
+      const data = response.data.data;
+      const valueForm = {
+        emailRequestor: data.email_proc ? data.email_proc : '',
+        deptRequestor: data.dep_proc ? data.dep_proc : '',
+        titlecomp: data.title ? data.title : '',
+        localovs: data.local_ovs ? data.local_ovs : '',
+        name1: data['name_1'] ? data['name_1'] : '',
+        country: data.country ? data.country : '',
+        street: data.street ? data.street : '',
+        street2: data.street2 ? data.street2 : '',
+        postal: data.postal ? data.postal : '',
+        city: data.city ? data.city : '',
+        telf: data.telf1 ? data.telf1 : '',
+        fax: data.fax ? data.fax : '',
+        email: data.email ? data.email : '',
+        ispkp: data.is_pkp ? data.is_pkp : false,
+        npwp: data.npwp ? data.npwp : '',
+        paymthd: data.pay_mthd ? data.pay_mthd : '',
+        payterm: data.pay_term ? data.pay_term : 'I30',
+        company: data.company ? data.company : '',
+        purchorg: data.purch_org ? data.purch_org : '',
+        vengroup: data.ven_group ? data.ven_group : '',
+        venacc: data.ven_acc ? data.ven_acc : '',
+        ventype: data.ven_type ? data.ven_type : '',
+        currency: data.lim_curr ? data.lim_curr : '',
+        description: data.description ? data.description : '',
+        is_tender: data.is_tender ? data.is_tender : false,
+        vendorcode: data.ven_code ? data.ven_code : data.header,
+        remarks: data.remarks ? data.remarks : '',
+        limit: data.limit_vendor ? data.limit_vendor : '',
+        reject_by: data.reject_by ? data.reject_by : '',
+        is_active: data.ticket_stat,
+      };
+
+      const perm = {
+        INIT: {
+          create: false,
+          read: false,
+          update: true,
+          delete: false,
+        },
+        CREA: {
+          create: false,
+          read: false,
+          update: false,
+          delete: false,
+        },
+        FINA: {
+          create: false,
+          read: false,
+          update: false,
+          delete: false,
+        },
+      };
+
+      setLoaderdata({
+        ticket_id: data.ticket_id,
+        ticket_num: data.ticket_num,
+        ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+        ticketState: data.ticket_state,
+        ticket_type: data.t_type,
+        data: valueForm,
+        permission: perm,
+      });
+
+      return {
+        ticket_id: data.ticket_id,
+        ticket_num: data.ticket_num,
+        ven_id: data.ven_id === null ? data.ticket_ven_id : data.ven_id,
+        ticketState: data.ticket_state,
+        data: valueForm,
+        permission: perm,
+      };
+    }
+
+    if (type === 'form') {
+      formLoader(tokenform);
+    } else {
+      newformLoader(tokenform);
+    }
+  }, []);
+  const params = useParams();
+  const [chgCountry, setChgCty] = useState(loader_data.data?.country);
+  const [chgVengrp, setVengrp] = useState(loader_data.data?.vengroup);
+  const [chgVenacc, setVenacc] = useState(loader_data.data?.venacc);
+  const [chgCurr, setChgCurr] = useState(loader_data.data?.currency);
+  const [isTender, setTender] = useState(loader_data.data?.is_tender);
+  const [btnClicked, setBtnclick] = useState(false);
+
   const funChgCountry = (item) => {
     setChgCty(item);
     countrycode.current = item;
@@ -100,20 +295,47 @@ export default function RefactorFormVendorPage() {
   };
   const funChgVacc = (item) => {
     setVenacc(item);
+    if (item !== 'TRADE') {
+      clearErrors('currency');
+      clearErrors('limit');
+    }
   };
   const funChgCurr = (item) => {
     setChgCurr(item);
   };
+  const funChgTdr = (item) => {
+    setTender(item);
+    if (!item) {
+      clearErrors('description');
+    }
+  };
 
-  const { handleSubmit, control, getValues } = useForm({ defaultValues: loader_data.data });
+  useEffect(() => {
+    reset(loader_data.data);
+    setChgCty(loader_data.data?.country);
+    setVengrp(loader_data.data?.vengroup);
+    setVenacc(loader_data.data?.venacc);
+    setChgCurr(loader_data.data?.currency);
+    setTender(loader_data.data?.is_tender);
+  }, [loader_data]);
+
+  useEffect(() => {
+    const firstError = Object.keys(errors).reduce((field, a) => {
+      return errors[field] ? field : a;
+    }, null);
+    if (firstError) {
+      // console.log(firstError);
+      setFocus(firstError);
+    }
+  }, [errors, setFocus]);
+
   const navigate = useNavigate();
   const { session, getPermission } = useSession();
-  const ticketState = loader_data.ticketState;
-  const is_active = loader_data.data.is_active;
-  const countrycode = useRef(loader_data.data.country);
+  const ticketState = loader_data?.ticketState;
+  const is_active = loader_data.data?.is_active;
+  const countrycode = useRef(loader_data.data?.country);
 
   let permissions = {};
-  console.log(is_active);
   if (is_active) {
     if (loader_data.permission != undefined) {
       permissions = loader_data.permission;
@@ -129,7 +351,6 @@ export default function RefactorFormVendorPage() {
       FINA: { create: false, read: false, update: false, delete: false },
     };
   }
-  console.log(permissions);
   const UPDATE = {
     INIT: permissions.INIT.update,
     CREA: permissions.CREA.update,
@@ -142,13 +363,25 @@ export default function RefactorFormVendorPage() {
   const banks = useRef([{ value: '', label: '' }]);
   const payterm = useRef([{ value: '', label: '' }]);
   const comps = useRef([{ value: '', label: '' }]);
-  const initDataBank = useRef({});
-  const initDataFile = useRef({});
+  const bank_valid = useRef(true);
+  const file_valid = useRef(true);
+  const initDataBank = useRef([]);
+  const initDataFile = useRef([]);
+  const [isFileload, setFileLoad] = useState(false);
+  const [isBankload, setBankLoad] = useState(false);
 
   const [cities, setCities] = useState([{ value: '', label: '' }]);
   const [loading, setLoading] = useState(false);
   const is_draft = useRef(false);
   const [is_reject, setReject] = useState(false);
+
+  const [loadingCountry, setLoadCountry] = useState(false);
+  const [loadingCurr, setLoadCurr] = useState(false);
+  const [loadingBanks, setLoadBanks] = useState(false);
+  const [loadingInitBank, setLoadInitBank] = useState(false);
+  const [loadingInitFile, setLoadInitFile] = useState(false);
+  const [loadingComp, setLoadComp] = useState(false);
+  const [loadingPayterm, setLoadPayterm] = useState(false);
 
   const vengroups = [
     { value: '3RD_PARTY', label: '3RD Party' },
@@ -157,6 +390,7 @@ export default function RefactorFormVendorPage() {
     { value: 'EMPLOYEE', label: 'Employee' },
     { value: 'INTERDIVISION', label: 'Interdivision' },
     { value: 'RELATED', label: 'Related' },
+    { value: 'INTERCO', label: 'Interco' },
   ];
 
   const title = [
@@ -189,26 +423,19 @@ export default function RefactorFormVendorPage() {
     panelVendetail: true,
     panelApproval: true,
   });
-
-  const [loader, setLoader] = useState(true);
-  const [fileLoad, setFileLoad] = useState(false);
-  const [bankLoad, setBankLoad] = useState(false);
-  const [banksLoad, setBanksLoad] = useState(false);
-  const [currLoad, setCurrLoad] = useState(false);
-  const [countryLoad, setCountryLoad] = useState(false);
-
   useMemo(() => ({ cities, countries, currencies }), [cities, countries, currencies]);
   //set active section
 
   useEffect(() => {
     const dynaCity = async () => {
+      countrycode.current = loader_data.data?.country;
       try {
-        const getcities = await axios.post(`${process.env.REACT_APP_URL_LOC}/master/city`, {
-          countryId: countrycode.current,
+        const getcities = await axiosPrivate.post(`/master/city`, {
+          countryId: chgCountry,
         });
         const result = getcities.data.data;
         const convcity = result.data.map((item) => ({
-          value: item.code,
+          value: item.city,
           label: item.city,
         }));
         setCities(convcity);
@@ -217,106 +444,129 @@ export default function RefactorFormVendorPage() {
       }
     };
     dynaCity();
-  }, [chgCountry]);
+  }, [chgCountry, loader_data]);
 
   useEffect(() => {
+    setLoading(true);
     const dynaCountry = async () => {
+      setLoadCountry(true);
       try {
-        const country = await axios.post(`${process.env.REACT_APP_URL_LOC}/master/country`);
+        const country = await axiosPrivate.post(`/master/country`);
         const result = country.data.data;
         countries.current = result.data.map((item) => ({
           value: item.country_code,
           label: item.country_name,
         }));
-        setCountryLoad(true);
+        setLoadCountry(false);
       } catch (err) {
+        setLoadCountry(false);
         alert(err.stack);
       }
     };
 
     const getCurr = async () => {
+      setLoadCurr(true);
       try {
-        const curr = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/curr`);
+        setLoadCurr(false);
+        const curr = await axiosPrivate.get(`/master/curr`);
         const response = curr.data;
         const result = response.data;
         currencies.current = result.data.map((item) => ({
-          value: item.code,
-          label: item.code,
+          value: item.code === null ? '' : item.code,
+          label: item.code === null ? '' : item.code,
         }));
-        setCurrLoad(true);
       } catch (err) {
+        setLoadCurr(false);
         alert(err.stack);
       }
     };
 
     const getBanks = async () => {
+      setLoadBanks(true);
       try {
-        const banksData = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/bank`);
+        setLoadBanks(false);
+        const banksData = await axiosPrivate.get(`/master/banksap`);
         const response = banksData.data;
         const result = response.data;
-        banks.current = result.data;
-        setBanksLoad(true);
+        banks.current = result;
       } catch (error) {
+        setLoadBanks(false);
+        console.log(error);
         alert(error.stack);
       }
     };
 
     const getInitDataBank = async () => {
+      setLoadInitBank(true);
       try {
-        const bankInit = await axios.get(`${process.env.REACT_APP_URL_LOC}/vendor/bank/${loader_data.ven_id}`);
+        const bankInit = await axiosPrivate.get(`/vendor/bank/${loader_data.ven_id}`);
         const result = bankInit.data.data;
         initDataBank.current = result.data;
-        setBankLoad(true);
+        setLoadInitBank(false);
       } catch (err) {
+        setLoadInitBank(false);
+        console.log(err);
         alert(err.stack);
       }
     };
 
     const getInitDataFile = async () => {
+      setLoadInitFile(true);
       try {
-        const fileInit = await axios.get(`${process.env.REACT_APP_URL_LOC}/vendor/file/${loader_data.ven_id}`);
+        const fileInit = await axiosPrivate.get(`/vendor/file/${loader_data.ven_id}`);
         const result = fileInit.data.data;
         initDataFile.current = result.data;
-        setFileLoad(true);
+        setLoadInitFile(false);
       } catch (err) {
+        setLoadInitFile(false);
         alert(err.stack);
       }
     };
 
     const getCompany = async () => {
+      setLoadComp(true);
       try {
-        const compsData = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/company`);
+        const compsData = await axiosPrivate.get(`/master/company`);
         const response = compsData.data;
         const result = response.data;
         comps.current = result.data.map((item) => ({
           value: item.comp_id,
           label: item.code + ' - ' + item.name,
         }));
+        setLoadComp(false);
       } catch (error) {
+        setLoadComp(false);
         alert(error.stack);
       }
     };
 
     const getPayterm = async () => {
+      setLoadPayterm(true);
       try {
-        const paytermData = await axios.get(`${process.env.REACT_APP_URL_LOC}/master/payterm`);
+        const paytermData = await axiosPrivate.get(`/master/payterm`);
         const data = paytermData.data.data;
         payterm.current = data.map((item) => ({
           value: item.term_code,
-          label: item.term_name,
+          label: `${item.term_code}-${item.term_name}`,
         }));
+        setLoadPayterm(false);
       } catch (error) {
+        setLoadPayterm(false);
         alert(error.stack);
       }
     };
-    dynaCountry();
-    getCurr();
-    getBanks();
-    getInitDataBank();
-    getInitDataFile();
-    getCompany();
-    getPayterm();
-  }, []);
+
+    if (loader_data.ven_id !== '') {
+      dynaCountry();
+      getCurr();
+      getBanks();
+      getInitDataBank();
+      getInitDataFile();
+      getCompany();
+      getPayterm();
+      setLoading(false);
+    }
+  }, [loader_data]);
 
   const setVen_bankFromChild = (newItem) => {
     setVen_bank(newItem);
@@ -378,29 +628,94 @@ export default function RefactorFormVendorPage() {
   };
 
   const handleReject = async (value) => {
+    const controller = new AbortController();
     setLoading(true);
     try {
       const rejectParams = {
         ticket_id: loader_data.ticket_id,
         remarks: value.remarks,
       };
-      const resultReject = await axios.patch(`${process.env.REACT_APP_URL_LOC}/ticket/reject`, rejectParams);
+      const resultReject = await axiosPrivate.patch(`/ticket/reject`, rejectParams);
       const response = resultReject.data;
       setFormStat({ stat: true, type: 'success', message: response.message });
       setLoading(false);
-      navigate(0);
+      setTimeout(() => {
+        navigate('../../dashboard/ticket');
+      }, 2000);
     } catch (error) {
       setLoading(false);
       alert(error);
     }
   };
 
+  useEffect(() => {
+    if (!is_draft.current) {
+      if (isFileload || isBankload) {
+        // console.log(initDataFile.current);
+        bank_valid.current = true;
+        file_valid.current = true;
+        let fileData = [...initDataFile.current, ...ven_file];
+        let bankData = [...ven_bank];
+        let checkFileExist = {
+          A001: 0,
+          A002: 0,
+          A003: 0,
+          A004: 0,
+          A005: 0,
+          A006: 0,
+        };
+        let filenames = {
+          A001: 'Account Statement Letter',
+          A002: 'Passbook',
+          A003: 'ID Card (KTP)',
+          A004: 'Integrity Pact',
+          A005: 'NPWP (Tax ID Number)',
+          A006: 'SPPKP',
+        };
+        let fileremain = [];
+        //check if file or banks is already submitted
+        if (initDataBank.current.length === 0 && ven_bank.length === 0) {
+          setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
+          bank_valid.current = false;
+        }
+        bankData.forEach((item) => {
+          console.log(item);
+          Object.values(item).map((value) => {
+            if (value === '' || value === null) {
+              setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
+              bank_valid.current = false;
+            }
+          });
+        });
+        if (fileData.length === 0) {
+          setFormStat({ stat: true, type: 'error', message: 'Attachment not filled yet | Lampiran belum dilengkapi' });
+          file_valid.current = false;
+        }
+        fileData.forEach((item) => {
+          checkFileExist[item.file_type] = checkFileExist[item.file_type] + 1;
+        });
+        Object.keys(checkFileExist).map((keys) => {
+          if (checkFileExist[keys] === 0) {
+            fileremain.push(filenames[keys]);
+          }
+        });
+        if (fileremain.length > 0) {
+          file_valid.current = false;
+          setFormStat({ stat: true, type: 'error', message: `Surat berikut belum lengkap : ${fileremain.join(', ')}` });
+        }
+      } else {
+        setFileLoad(true);
+        setBankLoad(true);
+      }
+    }
+    setBtnclick(false);
+  }, [isSubmitting]);
   const submitForm = async (value) => {
+    setBtnclick(true);
     if (is_reject === true) {
       await handleReject(value);
       return;
     }
-    setLoading(true);
     const ven_detail = {
       ven_id: loader_data.ven_id,
       ticket_num: loader_data.ticket_num,
@@ -411,6 +726,7 @@ export default function RefactorFormVendorPage() {
       country: value.country,
       city: value.city,
       street: value.street,
+      street2: value.street2,
       telf1: value.telf,
       fax: value.fax,
       email: value.email,
@@ -439,27 +755,46 @@ export default function RefactorFormVendorPage() {
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
+    console.log(jsonSend);
     if (loader_data.data.reject_by !== '') {
       jsonSend.remarks = '';
     }
+    if (UPDATE.FINA) {
+      jsonSend.mdm_id = session.user_id;
+    }
     try {
+      if (!(bank_valid.current && file_valid.current)) {
+        if (!is_draft.current) {
+          return;
+        }
+      }
+      setLoading(true);
       let submit;
-      if (session.role === undefined) {
+      if (session.role === undefined || predata.type !== 'form') {
         submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/newform/submit`, jsonSend);
+        // console.log('submitting...');
       } else {
-        submit = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/form/submit`, jsonSend);
+        submit = await axiosPrivate.post(`/ticket/form/submit`, jsonSend);
+        // console.log('submitting...');
       }
       const response = submit.data;
       setFormStat({ stat: true, type: 'success', message: response.message });
       setLoading(false);
+      setBtnclick(false);
       if (!is_draft.current) {
         setTimeout(() => {
-          window.location.reload();
+          if (UPDATE.INIT) {
+            navigate(0);
+          } else {
+            navigate('../../dashboard/ticket');
+          }
         }, 3000);
+        // console.log('reloading...');
       }
     } catch (err) {
+      setBtnclick(false);
       console.log(err.stack);
-      alert(err.stack);
+      // alert(err.stack);
       setFormStat({ stat: true, type: 'error', message: 'error submitting' });
       setLoading(false);
     }
@@ -470,11 +805,21 @@ export default function RefactorFormVendorPage() {
       <Container maxWidth="xl">
         <Box sx={{ height: 120, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Typography variant="h4" gutterBottom>
-            {`Form Vendor Registration `}
+            {`Form Vendor Registration ${loader_data.ticket_num}`}
           </Typography>
         </Box>
-        <form onSubmit={handleSubmit(submitForm)}>
-          <Container>
+        <Container>
+          <form key={1} onSubmit={handleSubmit(submitForm)}>
+            <Alert severity="warning" variant="filled" sx={{ width: '45rem', mt: '1rem', mb: '1rem' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                Please download file Pakta Integritas below before submitting
+                <Link
+                  href={`${process.env.REACT_APP_URL_LOC}/master/file/Kode_Etik_Supplier_Vendor_dan_Kontraktor.doc`}
+                >
+                  Link Download File Pakta Integritas
+                </Link>
+              </Box>
+            </Alert>
             <Accordion expanded={expanded.panelReqDet} onChange={handleExpanded('panelReqDet')}>
               <AccordionSummary
                 sx={{
@@ -573,6 +918,32 @@ export default function RefactorFormVendorPage() {
               </AccordionSummary>
               <AccordionDetails>
                 <Grid container spacing={2}>
+                  <Grid item xs={9}>
+                    <TextFieldComp
+                      name="street"
+                      label="Address"
+                      control={control}
+                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      rules={{
+                        required: 'Please insert this field',
+                        maxLength: { value: 200, message: 'Max 200 Character' },
+                      }}
+                    />
+                  </Grid>
+                  {(ticketState === 'CREA' || ticketState === 'FINA') && (
+                    <Grid item xs={9}>
+                      <TextFieldComp
+                        name="street2"
+                        label="Address 2"
+                        control={control}
+                        readOnly={!((UPDATE.CREA && ticketState === 'CREA') || (UPDATE.FINA && ticketState === 'FINA'))}
+                        rules={{
+                          maxLength: { value: 160, message: 'Max 160 Character' },
+                        }}
+                      />
+                    </Grid>
+                  )}
+                  <Grid item xs={3}></Grid>
                   <Grid item xs={3}>
                     <SelectComp
                       name="country"
@@ -586,32 +957,21 @@ export default function RefactorFormVendorPage() {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={9}>
-                    <TextFieldComp
-                      name="street"
-                      label="Address"
-                      control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
-                      rules={{
-                        required: 'Please insert this field',
-                        maxLength: { value: 300, message: 'Max 300 Character' },
-                      }}
-                    />
-                  </Grid>
                   <Grid item xs={3}>
-                    <TextFieldComp
+                    <PatternFieldComp
                       name="postal"
                       label="Postal Code"
                       control={control}
                       readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
                       rules={{
                         required: 'Please insert this field',
-                        maxLength: { value: 300, message: 'Max 300 Character' },
                       }}
+                      format="################"
+                      isNumString={false}
                     />
                   </Grid>
                   <Grid item xs={3}>
-                    <SelectComp
+                    <AutoCompleteSelect
                       name="city"
                       label="City"
                       control={control}
@@ -620,18 +980,17 @@ export default function RefactorFormVendorPage() {
                       rules={{
                         required: 'Please insert this field',
                       }}
+                      freeSolo={true}
                     />
                   </Grid>
-                  <Grid item xs={6}></Grid>
                   <Grid item xs={3}>
-                    <TextFieldComp
+                    <PatternFieldComp
                       name="telf"
                       label="Telephone Number"
                       control={control}
                       readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
-                      rules={{
-                        required: 'Please insert this field',
-                      }}
+                      format="################"
+                      isNumString={false}
                     />
                   </Grid>
                   <Grid item xs={3}>
@@ -640,9 +999,6 @@ export default function RefactorFormVendorPage() {
                       label="Fax"
                       control={control}
                       readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
-                      rules={{
-                        required: 'Please insert this field',
-                      }}
                     />
                   </Grid>
                   <Grid item xs={3}>
@@ -685,13 +1041,18 @@ export default function RefactorFormVendorPage() {
                     />
                   </Grid>
                   <Grid item xs={9}></Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={4}>
                     <TextFieldComp
                       name="npwp"
                       label="Tax Number"
                       control={control}
                       readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
-                      rules={{ required: 'Please insert this field' }}
+                      rules={{
+                        pattern: {
+                          value: /^[0-9.-]+$/,
+                          message: 'format not matched. only numbers (0-9), point (.), and hyphen (-)',
+                        },
+                      }}
                     />
                   </Grid>
                   <Grid item xs={3}>
@@ -710,7 +1071,7 @@ export default function RefactorFormVendorPage() {
                       }}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid item xs={4}>
                     <SelectComp
                       name="payterm"
                       label="Payment Term"
@@ -802,7 +1163,13 @@ export default function RefactorFormVendorPage() {
                         name="ventype"
                         label="Vendor Type"
                         control={control}
-                        options={chgVenacc === 'NON_TRADE' ? ventypeList[chgVengrp] : [{ value: 'X', label: 'X' }]}
+                        options={
+                          chgVenacc !== 'NON_TRADE'
+                            ? [{ value: 'X', label: 'X' }]
+                            : ventypeList[chgVengrp]
+                            ? ventypeList[chgVengrp]
+                            : [{ value: 'X', label: 'X' }]
+                        }
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         rules={{
                           required: 'Please insert this field',
@@ -817,10 +1184,9 @@ export default function RefactorFormVendorPage() {
                         control={control}
                         options={currencies.current}
                         onChangeovr={funChgCurr}
+                        disabled={chgVenacc === 'NON_TRADE'}
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
-                        rules={{
-                          required: 'Please insert this field',
-                        }}
+                        rules={{ required: chgVenacc === 'TRADE' ? 'Please insert this field' : false }}
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -830,10 +1196,9 @@ export default function RefactorFormVendorPage() {
                         control={control}
                         format={['thousandSeparator']}
                         currency={chgCurr}
+                        disabled={chgVenacc === 'NON_TRADE'}
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
-                        rules={{
-                          required: 'Please insert this field',
-                        }}
+                        rules={{ required: chgVenacc === 'TRADE' ? 'Please insert this field' : false }}
                       />
                     </Grid>
                     <Grid item xs={4}></Grid>
@@ -843,6 +1208,7 @@ export default function RefactorFormVendorPage() {
                         label="Description"
                         control={control}
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
+                        rules={{ required: isTender ? 'Please insert this field' : false }}
                       />
                     </Grid>
                     <Grid item xs={5}>
@@ -851,156 +1217,164 @@ export default function RefactorFormVendorPage() {
                         label="Tender Participation Above One Billion"
                         control={control}
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
-                        rules={{
-                          required: 'Please insert this field',
-                        }}
+                        onChangeovr={funChgTdr}
                       />
                     </Grid>
                   </Grid>
                 </AccordionDetails>
               </Accordion>
             )}
+          </form>
+          <Accordion expanded={expanded.panelBank} onChange={handleExpanded('panelBank')}>
+            <AccordionSummary
+              sx={{
+                pointerEvents: 'none',
+              }}
+              expandIcon={
+                <ExpandMoreIcon
+                  sx={{
+                    pointerEvents: 'auto',
+                  }}
+                />
+              }
+            >
+              <Typography>Bank Information</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <VenBankTable
+                onChildDataChange={setVen_bankFromChild}
+                initData={initDataBank.current}
+                idParent={loader_data.ven_id}
+                banks={banks.current}
+                currencies={currencies.current}
+                countries={countries.current}
+                isallow={(UPDATE.INIT || UPDATE.CREA) && (ticketState === 'INIT' || loader_data.ticket_type === 'PROC')}
+              />
+            </AccordionDetails>
+          </Accordion>
+          <Accordion expanded={expanded.panelFile} onChange={handleExpanded('panelFile')}>
+            <AccordionSummary
+              sx={{
+                pointerEvents: 'none',
+              }}
+              expandIcon={
+                <ExpandMoreIcon
+                  sx={{
+                    pointerEvents: 'auto',
+                  }}
+                />
+              }
+            >
+              <Typography>File Upload</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <UploadButton
+                inputTypes={newFileTypelist}
+                iniData={initDataFile.current}
+                idParent={loader_data.ven_id}
+                onChildDataChange={setVen_fileFromChild}
+                allow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
+              />
+            </AccordionDetails>
+          </Accordion>
+          {(ticketState === 'FINA' || ticketState === 'END') && (
+            <Accordion expanded={expanded.panelApproval} onChange={handleExpanded('panelApproval')}>
+              <AccordionSummary
+                sx={{ pointerEvents: 'none' }}
+                expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
+              >
+                <Typography>Approval</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextFieldComp
+                      name="vendorcode"
+                      label="Vendor Code"
+                      control={control}
+                      readOnly={!(ticketState === 'FINA' && UPDATE.FINA)}
+                      rules={{
+                        required: 'Please insert this field',
+                        maxLength: {
+                          value: 10,
+                          message: 'Max character is 10',
+                        },
+                        minLength: {
+                          value: 10,
+                          message: 'Min character is 10',
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          )}
+          <Box sx={{ my: 5 }}>
+            <TextFieldComp name="remarks" label="Remarks" control={control} />
+          </Box>
 
-            <Accordion expanded={expanded.panelBank} onChange={handleExpanded('panelBank')}>
-              <AccordionSummary
-                sx={{
-                  pointerEvents: 'none',
-                }}
-                expandIcon={
-                  <ExpandMoreIcon
-                    sx={{
-                      pointerEvents: 'auto',
-                    }}
-                  />
-                }
-              >
-                <Typography>Bank Information</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <VenBankTable
-                  onChildDataChange={setVen_bankFromChild}
-                  initData={initDataBank.current}
-                  idParent={loader_data.ven_id}
-                  banks={banks.current}
-                  isallow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
-                />
-              </AccordionDetails>
-            </Accordion>
-            <Accordion expanded={expanded.panelFile} onChange={handleExpanded('panelFile')}>
-              <AccordionSummary
-                sx={{
-                  pointerEvents: 'none',
-                }}
-                expandIcon={
-                  <ExpandMoreIcon
-                    sx={{
-                      pointerEvents: 'auto',
-                    }}
-                  />
-                }
-              >
-                <Typography>File Upload</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <UploadButton
-                  inputTypes={[
-                    { key: 'SPPKP', value: 'SPPKP' },
-                    { key: 'KTP', value: 'KTP' },
-                  ]}
-                  iniData={initDataFile.current}
-                  idParent={loader_data.ven_id}
-                  onChildDataChange={setVen_fileFromChild}
-                  allow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
-                />
-              </AccordionDetails>
-            </Accordion>
-            {(ticketState === 'FINA' || ticketState === 'END') && (
-              <Accordion expanded={expanded.panelApproval} onChange={handleExpanded('panelApproval')}>
-                <AccordionSummary
-                  sx={{ pointerEvents: 'none' }}
-                  expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+            <Box>
+              {loader_data.permission === undefined && (
+                <Button
+                  sx={{ height: 50, width: 100, margin: 2 }}
+                  color="error"
+                  variant="text"
+                  onClick={() => {
+                    navigate('../ticket');
+                  }}
                 >
-                  <Typography>Approval</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <TextFieldComp
-                        name="vendorcode"
-                        label="Vendor Code"
-                        control={control}
-                        readOnly={!(ticketState === 'FINA' && UPDATE.FINA)}
-                      />
-                    </Grid>
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-            )}
-            <Link href={`${process.env.REACT_APP_URL_LOC}/master/file/Kode_Etik_Supplier_Vendor_dan_Kontraktor.doc`}>
-              File Pakta Integritas
-            </Link>
-            <Box sx={{ my: 5 }}>
-              <TextFieldComp name="remarks" label="Remarks" control={control} />
+                  Back
+                </Button>
+              )}
             </Box>
-
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-              <Box>
-                {loader_data.permission === undefined && (
-                  <Button
-                    sx={{ height: 50, width: 100, margin: 2 }}
-                    color="error"
-                    variant="text"
-                    onClick={() => {
-                      navigate('../ticket');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                )}
-              </Box>
-              <Box>
-                {((ticketState === 'CREA' && UPDATE.CREA) || (ticketState === 'FINA' && UPDATE.FINA)) && (
-                  <Button
-                    sx={{ height: 50, width: 100, margin: 2 }}
-                    color="error"
-                    variant="contained"
-                    type="submit"
-                    onClick={() => {
-                      setReject(true);
-                    }}
-                  >
-                    Reject
-                  </Button>
-                )}
-                {UPDATE[ticketState] && (
-                  <Button
-                    sx={{ height: 50, width: 120, margin: 2 }}
-                    color="warning"
-                    variant="contained"
-                    onClick={() => {
-                      is_draft.current = true;
-                      submitForm(getValues());
-                    }}
-                  >
-                    Save Draft
-                  </Button>
-                )}
-                {UPDATE[ticketState] && (
-                  <Button
-                    sx={{ height: 50, width: 100, margin: 2 }}
-                    variant="contained"
-                    type="submit"
-                    onClick={() => {
-                      is_draft.current = false;
-                    }}
-                  >
-                    Submit
-                  </Button>
-                )}
-              </Box>
+            <Box>
+              {((ticketState === 'CREA' && UPDATE.CREA && loader_data.ticket_type !== 'PROC') ||
+                (ticketState === 'FINA' && UPDATE.FINA)) && (
+                <Button
+                  sx={{ height: 50, width: 100, margin: 2 }}
+                  color="error"
+                  variant="contained"
+                  onClick={() => {
+                    handleReject(getValues());
+                  }}
+                >
+                  Reject
+                </Button>
+              )}
+              {UPDATE[ticketState] && (
+                <Button
+                  sx={{ height: 50, width: 120, margin: 2 }}
+                  color="warning"
+                  variant="contained"
+                  onClick={() => {
+                    is_draft.current = true;
+                    submitForm(getValues());
+                  }}
+                  disabled={btnClicked}
+                >
+                  Save Draft
+                </Button>
+              )}
+              {UPDATE[ticketState] && (
+                <Button
+                  sx={{ height: 50, width: 100, margin: 2 }}
+                  variant="contained"
+                  type="submit"
+                  onClick={handleSubmit((value) => {
+                    console.log(value);
+                    is_draft.current = false;
+                    submitForm(value);
+                  })}
+                  disabled={btnClicked}
+                >
+                  Submit
+                </Button>
+              )}
             </Box>
-          </Container>
-        </form>
+          </Box>
+        </Container>
 
         <Snackbar
           open={formStat.stat}
@@ -1012,12 +1386,27 @@ export default function RefactorFormVendorPage() {
             {formStat.message}
           </Alert>
         </Snackbar>
-        <Snackbar open={false} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+        <Snackbar
+          open={loader_data.ticketState !== 'INIT' && UPDATE.INIT}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
           <Alert severity="success" variant="filled">
-            {`Ticket Number  has already submitted`}
+            {`Ticket Number ${loader_data.ticket_num} has already submitted`}
           </Alert>
         </Snackbar>
-        <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }} open={loading}>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }}
+          open={
+            loading ||
+            (loadingCountry &&
+              loadingCurr &&
+              loadingBanks &&
+              loadingInitBank &&
+              loadingInitFile &&
+              loadingComp &&
+              loadingPayterm)
+          }
+        >
           <CircularProgress color="inherit" />
         </Backdrop>
         <Dialog open={formStat.type === 'success' && is_draft.current == false}>
