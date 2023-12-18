@@ -18,7 +18,7 @@ export const PasswordWithEyes = ({ control, label, name, rules }) => {
         control={control}
         rules={rules}
         render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
+          <FormControl fullWidth variant="outlined">
             <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
             <OutlinedInput
               id="outlined-adornment-password"
