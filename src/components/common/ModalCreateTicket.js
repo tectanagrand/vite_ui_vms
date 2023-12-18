@@ -12,14 +12,18 @@ import {
 } from '@mui/material';
 import { Link } from '@mui/icons-material';
 import axios from 'axios';
+import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useSession } from 'src/provider/sessionProvider';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { LoadingButton } from '@mui/lab';
 
 export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet, popUp, onClick }) {
+  const axiosPrivate = useAxiosPrivate();
   const { session } = useSession();
   const navigate = useNavigate();
   const [links, setLinks] = useState(linkUrl);
+  const [btnClicked, setBtnclicked] = useState(false);
 
   useEffect(() => {
     setLinks(linkUrl);
@@ -34,20 +38,23 @@ export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet, popU
   };
 
   const handlegenticket = (param) => async () => {
+    setBtnclicked(true);
     try {
-      const response = await axios.post(`${process.env.REACT_APP_URL_LOC}/ticket/new`, {
+      const response = await axiosPrivate.post(`/ticket/new`, {
         user_id: session.user_id,
         to_who: param,
       });
       const createdTicket = response.data;
       if (param === 'VENDOR') {
-        urlSet(`${process.env.REACT_APP_URL}/frm/newform/${createdTicket.data.token}`);
+        urlSet(`${location.host}/${createdTicket.data.link}`);
       } else {
         onClose();
         navigate(`../form/${createdTicket.data.token}`);
       }
       alert('success');
+      setBtnclicked(false);
     } catch (err) {
+      setBtnclicked(false);
       alert(err);
     }
   };
@@ -75,12 +82,12 @@ export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet, popU
         <Typography sx={{ mb: 7 }} variant="h5">
           Create New Form Request Ticket
         </Typography>
-        <Button sx={{ height: 80, width: 400, mb: 2 }} onClick={handlegenticket('VENDOR')}>
+        <LoadingButton sx={{ height: 80, width: 400, mb: 2 }} onClick={handlegenticket('VENDOR')} loading={btnClicked}>
           By Vendor
-        </Button>
-        <Button sx={{ height: 80, width: 400, my: 2 }} onClick={handlegenticket('PROC')}>
+        </LoadingButton>
+        <LoadingButton sx={{ height: 80, width: 400, my: 2 }} onClick={handlegenticket('PROC')} loading={btnClicked}>
           By User
-        </Button>
+        </LoadingButton>
         <FormControl sx={{ mt: 5, mb: 1, width: 780 }} variant="outlined">
           <InputLabel htmlFor="link-url-form-label">Link Form</InputLabel>
           <OutlinedInput
