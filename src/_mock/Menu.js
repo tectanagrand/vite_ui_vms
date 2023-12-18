@@ -12,7 +12,10 @@ export const Menu = [
     key: '2',
     text: 'Master',
     icon: 'TurnedIn',
-    children: [{ key: '21', text: 'Vendor', url: '/dashboard/vendor' }],
+    children: [
+      { key: '21', text: 'Vendor', url: '/dashboard/vendor' },
+      { key: '22', text: 'Bank', url: '/dashboard/banks' },
+    ],
   },
   {
     key: '3',
