@@ -2,6 +2,7 @@ import { axiosPrivate } from 'src/api/axios';
 import { useEffect } from 'react';
 import useRefreshToken from './useRefreshToken';
 import { useSession } from 'src/provider/sessionProvider';
+import Cookies from 'js-cookie';
 
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken();
@@ -11,7 +12,7 @@ const useAxiosPrivate = () => {
     const requestIntercept = axiosPrivate.interceptors.request.use(
       (config) => {
         if (!config.headers['Authorization']) {
-          config.headers['Authorization'] = `Bearer ${session?.accessToken}`;
+          config.headers['Authorization'] = `Bearer ${session.accessToken}`;
         }
         return config;
       },
