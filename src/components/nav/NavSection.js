@@ -13,7 +13,7 @@ export default function NavSection({ menu, collapsemen, navmen, onUpNavCol, onUp
   return (
     <List>
       {menu.map((item) => {
-        if (getPermission(item.text).read === true) {
+        if (getPermission(item.text)?.read === true) {
           return (
             <div key={`div-${item.key}`}>
               <NavHead
@@ -34,7 +34,7 @@ export default function NavSection({ menu, collapsemen, navmen, onUpNavCol, onUp
               <NavCollapse parent={item.key} curstate={collapsemen}>
                 <List>
                   {item.children.map((child) => {
-                    if (getPermission(child.text).read)
+                    if (getPermission(child.text)?.read)
                       return (
                         <NavItem
                           key={child.key}
