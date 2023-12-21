@@ -78,7 +78,7 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
   useEffect(() => {
     if (Object.keys(initData).length != 0) {
       initData.map((item) => {
-        console.log(item);
+        // console.log(item);
         covtData.push({
           id: item.id,
           acc_hold: item.acc_hold,
