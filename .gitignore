@@ -20,6 +20,7 @@
 .env.production
 .env
 .env.development
+ssl
 
 
 npm-debug.log*
