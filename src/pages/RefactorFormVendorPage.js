@@ -31,6 +31,7 @@ import { useForm } from 'react-hook-form';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import PatternFieldComp from 'src/components/common/PatternFieldComp';
 import AutoCompleteSelect from 'src/components/common/AutoCompleteSelect';
+import { LoadingButton } from '@mui/lab';
 
 const ventypeList = {
   '3RD_PARTY': [
@@ -111,6 +112,7 @@ export default function RefactorFormVendorPage() {
     vendorcode: '',
     remarks: '',
     limit: '',
+    search_term: '',
   };
 
   const {
@@ -132,6 +134,7 @@ export default function RefactorFormVendorPage() {
     ticketState: '',
     data: '',
     permission: '',
+    cur_pos: '',
   });
   useEffect(() => {
     const type = predata.type;
@@ -174,8 +177,35 @@ export default function RefactorFormVendorPage() {
         remarks: data.remarks ? data.remarks : '',
         limit: data.limit_vendor ? data.limit_vendor : '',
         reject_by: data.reject_by ? data.reject_by : '',
+        search_term: data.search_term ? data.search_term : '',
         is_active: data.ticket_stat,
       };
+
+      if (valueForm.name1 === '') {
+        setCheckex(true);
+        setExpanded({
+          panelReqDet: true,
+          panelCompDet: true,
+          panelAddr: false,
+          panelTax: false,
+          panelBank: false,
+          panelFile: false,
+          panelVendetail: false,
+          panelApproval: false,
+        });
+      } else {
+        setCheckex(false);
+        setExpanded({
+          panelReqDet: true,
+          panelCompDet: true,
+          panelAddr: true,
+          panelTax: true,
+          panelBank: true,
+          panelFile: true,
+          panelVendetail: true,
+          panelApproval: true,
+        });
+      }
 
       setLoaderdata({
         ticket_id: data.ticket_id,
@@ -184,6 +214,7 @@ export default function RefactorFormVendorPage() {
         ticketState: data.ticket_state,
         ticket_type: data.t_type,
         data: valueForm,
+        cur_pos: data.cur_pos,
       });
 
       return {
@@ -197,6 +228,16 @@ export default function RefactorFormVendorPage() {
 
     async function newformLoader(token) {
       const response = await axiosPrivate.get(`/ticket/newform/${token}`);
+      setExpanded({
+        panelReqDet: true,
+        panelCompDet: true,
+        panelAddr: false,
+        panelTax: false,
+        panelBank: false,
+        panelFile: false,
+        panelVendetail: false,
+        panelApproval: false,
+      });
       const data = response.data.data;
       const valueForm = {
         emailRequestor: data.email_proc ? data.email_proc : '',
@@ -229,6 +270,7 @@ export default function RefactorFormVendorPage() {
         limit: data.limit_vendor ? data.limit_vendor : '',
         reject_by: data.reject_by ? data.reject_by : '',
         is_active: data.ticket_stat,
+        search_term: data.search_term ? data.search_term : '',
       };
 
       const perm = {
@@ -252,6 +294,32 @@ export default function RefactorFormVendorPage() {
         },
       };
 
+      if (valueForm.name1 === '') {
+        setCheckex(true);
+        setExpanded({
+          panelReqDet: true,
+          panelCompDet: true,
+          panelAddr: false,
+          panelTax: false,
+          panelBank: false,
+          panelFile: false,
+          panelVendetail: false,
+          panelApproval: false,
+        });
+      } else {
+        setCheckex(false);
+        setExpanded({
+          panelReqDet: true,
+          panelCompDet: true,
+          panelAddr: true,
+          panelTax: true,
+          panelBank: true,
+          panelFile: true,
+          panelVendetail: true,
+          panelApproval: true,
+        });
+      }
+
       setLoaderdata({
         ticket_id: data.ticket_id,
         ticket_num: data.ticket_num,
@@ -260,6 +328,7 @@ export default function RefactorFormVendorPage() {
         ticket_type: data.t_type,
         data: valueForm,
         permission: perm,
+        cur_pos: data.cur_pos,
       });
 
       return {
@@ -283,6 +352,11 @@ export default function RefactorFormVendorPage() {
   const [chgVengrp, setVengrp] = useState(loader_data.data?.vengroup);
   const [chgVenacc, setVenacc] = useState(loader_data.data?.venacc);
   const [chgCurr, setChgCurr] = useState(loader_data.data?.currency);
+  const [chgIsPTKP, setIsPTKP] = useState(false);
+  const [chgLocal, setLocal] = useState('');
+  const [compTitle, setComptitle] = useState(loader_data.data?.titlecomp);
+  const [compName, setCompname] = useState();
+  const [checkIsExist, setCheckex] = useState(true);
   const [isTender, setTender] = useState(loader_data.data?.is_tender);
   const [btnClicked, setBtnclick] = useState(false);
 
@@ -300,13 +374,90 @@ export default function RefactorFormVendorPage() {
       clearErrors('limit');
     }
   };
+  const funChgIsPTKP = (item) => {
+    setIsPTKP(item);
+  };
+
+  const checkExist = async (item) => {
+    setLoadex(true);
+    try {
+      const checkExt = await axiosPrivate.get(`/vendor/checkven?name=${item}`);
+      // console.log(checkExt);
+      setCheckex(false);
+      setExpanded({
+        panelReqDet: true,
+        panelCompDet: true,
+        panelAddr: true,
+        panelTax: true,
+        panelBank: true,
+        panelFile: true,
+        panelVendetail: true,
+        panelApproval: true,
+      });
+      setLoadex(false);
+      setBtnclick(false);
+    } catch (error) {
+      console.log(error);
+      setExpanded({
+        panelReqDet: true,
+        panelCompDet: true,
+        panelAddr: false,
+        panelTax: false,
+        panelBank: false,
+        panelFile: false,
+        panelVendetail: false,
+        panelApproval: false,
+      });
+      setLoadex(false);
+    }
+  };
+
   const funChgCurr = (item) => {
     setChgCurr(item);
   };
+
+  const funChgLoc = (item) => {
+    setLocal(item);
+  };
+
   const funChgTdr = (item) => {
     setTender(item);
     if (!item) {
       clearErrors('description');
+    }
+  };
+
+  const funChgTitle = (item) => {
+    setComptitle(item);
+  };
+
+  const funChgname = (item) => {
+    if (item != compName && item !== '') {
+      setCheckex(true);
+      setExpanded({
+        panelReqDet: true,
+        panelCompDet: true,
+        panelAddr: false,
+        panelTax: false,
+        panelBank: false,
+        panelFile: false,
+        panelVendetail: false,
+        panelApproval: false,
+      });
+      setBtnclick(true);
+    } else if (compName != '') {
+      setCheckex(false);
+      setExpanded({
+        panelReqDet: true,
+        panelCompDet: true,
+        panelAddr: true,
+        panelTax: true,
+        panelBank: true,
+        panelFile: true,
+        panelVendetail: true,
+        panelApproval: true,
+      });
+      setBtnclick(false);
     }
   };
 
@@ -317,6 +468,9 @@ export default function RefactorFormVendorPage() {
     setVenacc(loader_data.data?.venacc);
     setChgCurr(loader_data.data?.currency);
     setTender(loader_data.data?.is_tender);
+    setComptitle(loader_data.data?.titlecomp);
+    setCompname(loader_data.data?.name1);
+    setLocal(loader_data.data?.localovs);
   }, [loader_data]);
 
   useEffect(() => {
@@ -351,6 +505,7 @@ export default function RefactorFormVendorPage() {
       FINA: { create: false, read: false, update: false, delete: false },
     };
   }
+
   const UPDATE = {
     INIT: permissions.INIT.update,
     CREA: permissions.CREA.update,
@@ -372,6 +527,7 @@ export default function RefactorFormVendorPage() {
 
   const [cities, setCities] = useState([{ value: '', label: '' }]);
   const [loading, setLoading] = useState(false);
+  const [loadingEx, setLoadex] = useState(false);
   const is_draft = useRef(false);
   const [is_reject, setReject] = useState(false);
 
@@ -587,36 +743,39 @@ export default function RefactorFormVendorPage() {
         ...expanded,
         panelCompDet: expanded.panelCompDet ? false : true,
       });
-    } else if (panel === 'panelAddr') {
-      setExpanded({
-        ...expanded,
-        panelAddr: expanded.panelAddr ? false : true,
-      });
-    } else if (panel === 'panelTax') {
-      setExpanded({
-        ...expanded,
-        panelTax: expanded.panelTax ? false : true,
-      });
-    } else if (panel === 'panelBank') {
-      setExpanded({
-        ...expanded,
-        panelBank: expanded.panelBank ? false : true,
-      });
-    } else if (panel === 'panelFile') {
-      setExpanded({
-        ...expanded,
-        panelFile: expanded.panelFile ? false : true,
-      });
-    } else if (panel === 'panelVendetail') {
-      setExpanded({
-        ...expanded,
-        panelVendetail: expanded.panelVendetail ? false : true,
-      });
-    } else if (panel === 'panelApproval') {
-      setExpanded({
-        ...expanded,
-        panelApproval: expanded.panelApproval ? false : true,
-      });
+    }
+    if (!checkIsExist) {
+      if (panel === 'panelAddr') {
+        setExpanded({
+          ...expanded,
+          panelAddr: expanded.panelAddr ? false : true,
+        });
+      } else if (panel === 'panelTax') {
+        setExpanded({
+          ...expanded,
+          panelTax: expanded.panelTax ? false : true,
+        });
+      } else if (panel === 'panelBank') {
+        setExpanded({
+          ...expanded,
+          panelBank: expanded.panelBank ? false : true,
+        });
+      } else if (panel === 'panelFile') {
+        setExpanded({
+          ...expanded,
+          panelFile: expanded.panelFile ? false : true,
+        });
+      } else if (panel === 'panelVendetail') {
+        setExpanded({
+          ...expanded,
+          panelVendetail: expanded.panelVendetail ? false : true,
+        });
+      } else if (panel === 'panelApproval') {
+        setExpanded({
+          ...expanded,
+          panelApproval: expanded.panelApproval ? false : true,
+        });
+      }
     }
   };
 
@@ -664,6 +823,29 @@ export default function RefactorFormVendorPage() {
           A005: 0,
           A006: 0,
         };
+        if (compTitle === 'COMPANY') {
+          checkFileExist = {
+            A001: 0,
+            A002: 0,
+            A004: 0,
+            A005: 0,
+            A006: 0,
+          };
+        } else if (compTitle === 'PERSONAL') {
+          checkFileExist = {
+            A001: 0,
+            A002: 0,
+            A003: 0,
+            A004: 0,
+          };
+        }
+        if (chgLocal === 'OVS') {
+          delete checkFileExist.A005;
+          delete checkFileExist.A006;
+        }
+        if (!chgIsPTKP) {
+          delete checkFileExist.A006;
+        }
         let filenames = {
           A001: 'Account Statement Letter',
           A002: 'Passbook',
@@ -679,7 +861,7 @@ export default function RefactorFormVendorPage() {
           bank_valid.current = false;
         }
         bankData.forEach((item) => {
-          console.log(item);
+          // console.log(item);
           Object.values(item).map((value) => {
             if (value === '' || value === null) {
               setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
@@ -744,6 +926,7 @@ export default function RefactorFormVendorPage() {
       limit_vendor: value.limit.toString().match(/\d+/g)?.join(''),
       lim_curr: value.currency,
       ven_code: value.vendorcode,
+      search_term: value.search_term,
     };
     const jsonSend = {
       role: session.role === undefined ? 'VENDOR' : session.role,
@@ -755,7 +938,8 @@ export default function RefactorFormVendorPage() {
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
-    console.log(jsonSend);
+    setVen_bank((prev) => prev.map((item) => ({ ...item, method: 'update' })));
+    // console.log(jsonSend);
     if (loader_data.data.reject_by !== '') {
       jsonSend.remarks = '';
     }
@@ -870,7 +1054,13 @@ export default function RefactorFormVendorPage() {
                       name="titlecomp"
                       label="Title"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
+                      onChangeovr={funChgTitle}
                       options={title}
                       rules={{ required: 'Please insert this field' }}
                     />
@@ -880,26 +1070,69 @@ export default function RefactorFormVendorPage() {
                       name="localovs"
                       label="Local / Overseas"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       options={localoverseas}
                       rules={{ required: 'Please insert this field' }}
+                      onChangeovr={funChgLoc}
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={4}>
                     <TextFieldComp
                       name="name1"
                       label="Company Name"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 300, message: 'Max 300 Character' },
                       }}
+                      onChangeovr={funChgname}
                     />
                   </Grid>
+                  {checkIsExist && (
+                    <Grid item xs={2}>
+                      <LoadingButton
+                        onClick={() => checkExist(getValues('name1'))}
+                        sx={{ width: '4rem', height: '3.5rem' }}
+                        loading={loadingEx}
+                      >
+                        Verify
+                      </LoadingButton>
+                    </Grid>
+                  )}
+
+                  {(ticketState === 'CREA' || ticketState === 'FINA') && UPDATE[ticketState] && (
+                    <Grid item xs={6}>
+                      <TextFieldComp
+                        name="search_term"
+                        label="Search Term"
+                        control={control}
+                        readOnly={!(UPDATE.CREA && ticketState === 'CREA')}
+                        rules={{
+                          required: 'Please insert this field',
+                          maxLength: { value: 100, message: 'Max 100 Character' },
+                        }}
+                      />
+                    </Grid>
+                  )}
                 </Grid>
               </AccordionDetails>
             </Accordion>
+            {checkIsExist && (
+              <Alert sx={{ mt: '2rem', mb: '2rem' }} severity="error" variant="filled">
+                Company Name Already Exist or Not Valid
+              </Alert>
+            )}
             <Accordion expanded={expanded.panelAddr} onChange={handleExpanded('panelAddr')}>
               <AccordionSummary
                 sx={{
@@ -923,7 +1156,12 @@ export default function RefactorFormVendorPage() {
                       name="street"
                       label="Address"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 200, message: 'Max 200 Character' },
@@ -936,7 +1174,12 @@ export default function RefactorFormVendorPage() {
                         name="street2"
                         label="Address 2"
                         control={control}
-                        readOnly={!((UPDATE.CREA && ticketState === 'CREA') || (UPDATE.FINA && ticketState === 'FINA'))}
+                        readOnly={
+                          !(
+                            (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC') ||
+                            (UPDATE.FINA && ticketState === 'FINA')
+                          )
+                        }
                         rules={{
                           maxLength: { value: 160, message: 'Max 160 Character' },
                         }}
@@ -949,7 +1192,12 @@ export default function RefactorFormVendorPage() {
                       name="country"
                       label="Country"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       options={countries.current}
                       onChangeovr={funChgCountry}
                       rules={{
@@ -962,9 +1210,14 @@ export default function RefactorFormVendorPage() {
                       name="postal"
                       label="Postal Code"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
-                        required: 'Please insert this field',
+                        required: chgLocal === 'OVS' ? false : 'Please insert this field',
                       }}
                       format="################"
                       isNumString={false}
@@ -975,7 +1228,12 @@ export default function RefactorFormVendorPage() {
                       name="city"
                       label="City"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       options={cities}
                       rules={{
                         required: 'Please insert this field',
@@ -988,7 +1246,12 @@ export default function RefactorFormVendorPage() {
                       name="telf"
                       label="Telephone Number"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       format="################"
                       isNumString={false}
                     />
@@ -998,7 +1261,12 @@ export default function RefactorFormVendorPage() {
                       name="fax"
                       label="Fax"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                     />
                   </Grid>
                   <Grid item xs={3}>
@@ -1006,7 +1274,12 @@ export default function RefactorFormVendorPage() {
                       name="email"
                       label="Email"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -1037,7 +1310,13 @@ export default function RefactorFormVendorPage() {
                       name="ispkp"
                       label="Pengusaha Kena Pajak (PKP)"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
+                      onChangeovr={funChgIsPTKP}
                     />
                   </Grid>
                   <Grid item xs={9}></Grid>
@@ -1046,12 +1325,18 @@ export default function RefactorFormVendorPage() {
                       name="npwp"
                       label="Tax Number"
                       control={control}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
                         pattern: {
                           value: /^[0-9.-]+$/,
                           message: 'format not matched. only numbers (0-9), point (.), and hyphen (-)',
                         },
+                        required: chgIsPTKP ? 'this field is required' : false,
                       }}
                     />
                   </Grid>
@@ -1065,7 +1350,12 @@ export default function RefactorFormVendorPage() {
                         { value: 'cash', label: 'Cash' },
                         { value: 'Giro', label: 'Giro' },
                       ]}
-                      readOnly={!((UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA'))}
+                      readOnly={
+                        !(
+                          (UPDATE.INIT && ticketState === 'INIT') ||
+                          (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                        )
+                      }
                       rules={{
                         required: 'Please insert this field',
                       }}
@@ -1273,7 +1563,10 @@ export default function RefactorFormVendorPage() {
                 iniData={initDataFile.current}
                 idParent={loader_data.ven_id}
                 onChildDataChange={setVen_fileFromChild}
-                allow={(UPDATE.INIT && ticketState === 'INIT') || (UPDATE.CREA && ticketState === 'CREA')}
+                allow={
+                  (UPDATE.INIT && ticketState === 'INIT') ||
+                  (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
+                }
               />
             </AccordionDetails>
           </Accordion>
@@ -1331,7 +1624,7 @@ export default function RefactorFormVendorPage() {
             </Box>
             <Box>
               {((ticketState === 'CREA' && UPDATE.CREA && loader_data.ticket_type !== 'PROC') ||
-                (ticketState === 'FINA' && UPDATE.FINA)) && (
+                (ticketState === 'FINA' && UPDATE.FINA && loader_data.cur_pos !== 'MGR')) && (
                 <Button
                   sx={{ height: 50, width: 100, margin: 2 }}
                   color="error"
@@ -1343,7 +1636,7 @@ export default function RefactorFormVendorPage() {
                   Reject
                 </Button>
               )}
-              {UPDATE[ticketState] && (
+              {UPDATE[ticketState] && loader_data.cur_pos !== 'MGR' && (
                 <Button
                   sx={{ height: 50, width: 120, margin: 2 }}
                   color="warning"
@@ -1357,13 +1650,13 @@ export default function RefactorFormVendorPage() {
                   Save Draft
                 </Button>
               )}
-              {UPDATE[ticketState] && (
+              {UPDATE[ticketState] && loader_data.cur_pos !== 'MGR' && (
                 <Button
                   sx={{ height: 50, width: 100, margin: 2 }}
                   variant="contained"
                   type="submit"
                   onClick={handleSubmit((value) => {
-                    console.log(value);
+                    // console.log(value);
                     is_draft.current = false;
                     submitForm(value);
                   })}
