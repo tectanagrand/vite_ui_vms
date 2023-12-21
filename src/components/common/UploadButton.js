@@ -96,7 +96,7 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
       // console.log(items);
       if (items.status == 200) {
         const dataUploaded = items.data.map((item) => ({ ...item, id: item.file_id }));
-        console.log(dataUploaded);
+        // console.log(dataUploaded);
         setFileStaged([...fileStaged, ...dataUploaded]);
         sendDataParent([...fileStaged, ...dataUploaded]);
         // console.log(fileStaged);
