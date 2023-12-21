@@ -16,7 +16,6 @@ import MenuAccessPage from 'src/pages/MenuAccessPage';
 import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
 import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
 import QRPage from 'src/pages/QRPage';
-import TestPage from 'src/pages/TestPage';
 import ListMasterBank from 'src/pages/dashboard/ListMasterBank';
 import TicketInvalid from 'src/pages/TicketInvalid';
 
@@ -125,10 +124,6 @@ export const routes = createBrowserRouter([
   {
     path: '/qr',
     element: <QRPage />,
-  },
-  {
-    path: 'testpage',
-    element: <TestPage />,
   },
   {
     path: 'invalidticket',
