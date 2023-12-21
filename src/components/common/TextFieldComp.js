@@ -1,7 +1,7 @@
 import { TextField } from '@mui/material';
 import { Controller } from 'react-hook-form';
 
-export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly }) => {
+export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly, onChangeovr }) => {
   return (
     <>
       <Controller
@@ -13,7 +13,14 @@ export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly 
           <TextField
             helperText={error ? error.message : null}
             error={!!error}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange(e);
+            }}
+            onBlur={(e) => {
+              if (onChangeovr !== undefined) {
+                onChangeovr(e.target.value);
+              }
+            }}
             inputRef={ref}
             value={value}
             label={label}
