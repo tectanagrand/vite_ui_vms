@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter, redirect, useRoutes } from 'react-router-dom';
+import { Navigate, createBrowserRouter } from 'react-router-dom';
 import FormVendorPage from '../pages/FormVendorPage';
 import axios from 'axios';
 import ErrorPage from '../pages/ErrorPage';
@@ -18,6 +18,7 @@ import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
 import QRPage from 'src/pages/QRPage';
 import ListMasterBank from 'src/pages/dashboard/ListMasterBank';
 import TicketInvalid from 'src/pages/TicketInvalid';
+import ResetPassword from 'src/pages/ResetPassword';
 
 export const routes = createBrowserRouter([
   {
@@ -49,12 +50,15 @@ export const routes = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: 'user',
-    element: <FormUserPage />,
+    path: 'resetpass',
+    element: <ResetPassword />,
   },
   {
     path: 'dashboard',
     element: <Dashboard />,
+    loader: () => {
+      return null;
+    },
     errorElement: <ErrorPage />,
     children: [
       {
@@ -112,18 +116,6 @@ export const routes = createBrowserRouter([
   {
     path: '*',
     element: <Navigate to="login" />,
-  },
-  {
-    path: '/nav',
-    element: <NavSection />,
-  },
-  {
-    path: '/accessmenu',
-    element: <MenuAccessPage />,
-  },
-  {
-    path: '/qr',
-    element: <QRPage />,
   },
   {
     path: 'invalidticket',
