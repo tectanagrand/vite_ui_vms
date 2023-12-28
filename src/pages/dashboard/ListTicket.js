@@ -1,4 +1,4 @@
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid, GridToolbar, GridToolbarContainer } from '@mui/x-data-grid';
 import {
   Button,
   IconButton,
@@ -18,12 +18,13 @@ import {
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useEffect, useState } from 'react';
-import { Edit, Link, Visibility, Delete } from '@mui/icons-material';
+import { Edit, Link, Visibility, Delete, Refresh } from '@mui/icons-material';
 import Cookies from 'js-cookie';
 import ModalCreateTicket from 'src/components/common/ModalCreateTicket';
 import { useSession } from 'src/provider/sessionProvider';
 import { useNavigate } from 'react-router-dom';
 import ProgressStat from 'src/components/common/ProgressStat';
+import { LoadingButton } from '@mui/lab';
 
 // function loaderTicket(filterAct) {
 //   axios.defaults.headers.common.Authorization =
@@ -39,23 +40,18 @@ const overrides = {
   },
 };
 
-// const loadTicket = async (filterAct) => {
-//   let ticket_load = [];
-//   load.data.map((item) => {
-//     ticket_load.push({
-//       id: item.token,
-//       ticket_num: item.ticket_id,
-//       date_ticket: new Date(item.created_at),
-//       assignee: item.email,
-//       cur_pos: item.cur_pos,
-//       status_ticket: item.status_ticket,
-//       vendor_name: item.name_1,
-//       vendor_code: item.ven_code,
-//       ticket_state: item.ticket_state,
-//     });
-//   });
-//   return ticket_load;
-// };
+function RefreshTable(props) {
+  const refreshBtn = () => {
+    props.setRefreshbtn(true);
+  };
+  return (
+    <Tooltip title={<Typography>Refresh</Typography>}>
+      <LoadingButton loading={props.isLoading} onClick={refreshBtn} sx={props.sx} variant={'contained'}>
+        <Refresh></Refresh>
+      </LoadingButton>
+    </Tooltip>
+  );
+}
 
 export function ListTicket() {
   // const load = useLoaderData();
@@ -71,6 +67,7 @@ export function ListTicket() {
   const [filterAct, setFilteract] = useState(true);
   const [deleted, setDelete] = useState(false);
   const [ticket_state, setTicketstate] = useState([]);
+  const [refreshBtn, setRefreshbtn] = useState(false);
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   const urlSetFunc = (urlitem) => {
@@ -117,6 +114,9 @@ export function ListTicket() {
         ticket_state: item.ticket_state,
       }));
       setTicket(load);
+      if (refreshBtn) {
+        setRefreshbtn(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -125,13 +125,7 @@ export function ListTicket() {
   useEffect(() => {
     const controller = new AbortController();
     tickets(controller);
-  }, [url, filterAct, deleted]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const interval = setInterval(async () => await tickets(controller), 1000 * 10);
-    return () => clearInterval(interval);
-  }, [filterAct]);
+  }, [url, filterAct, deleted, refreshBtn]);
 
   useEffect(() => {
     let permission = {};
@@ -149,6 +143,10 @@ export function ListTicket() {
 
   const handleOnBtnClose = () => () => {
     setBtn(false);
+  };
+
+  const buttonRefreshAct = () => {
+    setRefreshbtn(true);
   };
 
   const copyToClipboard = async (textToCopy) => {
@@ -367,19 +365,22 @@ export function ListTicket() {
       {ticket !== undefined ? (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <FormControl>
-              <Select
-                sx={{ width: '10em' }}
-                id={'filterAct'}
-                value={filterAct}
-                onChange={(e) => {
-                  setFilteract(!filterAct);
-                }}
-              >
-                <MenuItem value={true}>Active</MenuItem>
-                <MenuItem value={false}>Inactive</MenuItem>
-              </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl>
+                <Select
+                  sx={{ width: '10em' }}
+                  id={'filterAct'}
+                  value={filterAct}
+                  onChange={(e) => {
+                    setFilteract(!filterAct);
+                  }}
+                >
+                  <MenuItem value={true}>Active</MenuItem>
+                  <MenuItem value={false}>Inactive</MenuItem>
+                </Select>
+              </FormControl>
+              <RefreshTable setRefreshbtn={buttonRefreshAct} isLoading={refreshBtn} sx={{ mb: 3 }} />
+            </Box>
             {perm.Table.create && (
               <Button
                 variant="contained"
@@ -399,14 +400,6 @@ export function ListTicket() {
             disableColumnFilter
             disableColumnSelector
             disableDensitySelector
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: {
-                csvOptions: { disableToolbarButton: true },
-                printOptions: { disableToolbarButton: true },
-                showQuickFilter: true,
-              },
-            }}
           />
         </>
       ) : (
