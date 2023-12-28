@@ -13,11 +13,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AvatarComp from 'src/components/common/AvatarComp';
-import { Outlet, Link, useLocation, useOutlet } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import NavSection from 'src/components/nav/NavSection';
 import { Menu } from 'src/_mock/Menu';
 import { useSession } from 'src/provider/sessionProvider';
-import axios from 'axios';
+import Cookies from 'js-cookie';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { ReactComponent as KpnLogo } from '../../images/kpn-logo-3.svg';
 import { ReactComponent as KpnNav } from '../../images/kpn-logo.svg';
@@ -97,13 +97,15 @@ export default function MiniDrawer() {
   const [navMenu, setNavmenu] = useState('');
 
   useEffect(() => {
-    const getAuthorization = async () => {
-      const getAuth = await axiosPrivate.post(`/user/authorization`, {
-        group_id: session.groupid,
-      });
-      setSession({ ...session, ['permission']: getAuth.data });
-    };
-    getAuthorization();
+    if (Cookies.get('accessToken')) {
+      const getAuthorization = async () => {
+        const getAuth = await axiosPrivate.post(`/user/authorization`, {
+          group_id: session.groupid,
+        });
+        setSession({ ...session, ['permission']: getAuth.data });
+      };
+      getAuthorization();
+    }
   }, []);
 
   const handleDrawerOpen = () => {
@@ -128,6 +130,10 @@ export default function MiniDrawer() {
   const updateNavmenu = (menu) => {
     setNavmenu(menu);
   };
+
+  if (Cookies.get('accessToken') === undefined || Cookies.get('accessToken') === '') {
+    return <Navigate to="/login" />;
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
