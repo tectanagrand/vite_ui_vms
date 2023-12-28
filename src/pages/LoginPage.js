@@ -4,8 +4,8 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useForm } from 'react-hook-form';
 import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { Typography } from '@mui/material';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -14,6 +14,7 @@ import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
 import imgbg from '../images/gama-tower.jpg';
 import { ReactComponent as KpnNav } from '../images/kpn-logo.svg';
 import { LoadingButton } from '@mui/lab';
+import Cookies from 'js-cookie';
 
 const defaultValue = {
   Username: '',
@@ -21,7 +22,7 @@ const defaultValue = {
   FormToken: '',
 };
 export default function LoginPage() {
-  const matches = useMediaQuery('(max-width:400px)');
+  const matches = useMediaQuery('(max-width:380px)');
   const [btnClicked, setBtnclicked] = useState();
   const { handleSubmit, control } = useForm({ defaultValues: defaultValue });
   const [openLoad, setOpenload] = useState(false);
@@ -55,13 +56,15 @@ export default function LoginPage() {
     }
   };
 
-  const onFormClick = (e) => {
-    if (dirForm.state == 'login') {
-      setDirform({ state: 'form', html: 'User with dashboard access ?' });
-    } else {
-      setDirform({ state: 'login', html: 'User with form link ?' });
+  useEffect(() => {
+    if (Cookies.get('accessToken')) {
+      navigate('/dashboard/ticket');
     }
-  };
+  }, [navigate]);
+
+  if (Cookies.get('accessToken')) {
+    return <Navigate to="/dashboard/ticket" />;
+  }
 
   return (
     <>
@@ -138,7 +141,13 @@ export default function LoginPage() {
                 width: matches ? '18.75rem' : '37.5rem',
               }}
             >
-              {/* <Link onClick={onFormClick}>{dirForm.html}</Link> */}
+              <Link
+                onClick={() => {
+                  navigate('/resetpass');
+                }}
+              >
+                Forgot Password ?
+              </Link>
               {dirForm.state === 'login' && (
                 <LoadingButton type="submit" sx={{ height: '3.125rem', m: 1, width: '6.25rem' }} loading={btnClicked}>
                   Login
