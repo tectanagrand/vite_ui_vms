@@ -49,10 +49,17 @@ export default function User() {
 
   const buttonAction = (action, id) => {
     if (action === 'edit') {
-      navigate({
-        pathname: './create',
-        search: `?iduser=${id}`,
-      });
+      navigate(
+        {
+          pathname: './create',
+          search: `?iduser=${id}`,
+        },
+        {
+          state: {
+            page: 'user',
+          },
+        }
+      );
     }
   };
 
