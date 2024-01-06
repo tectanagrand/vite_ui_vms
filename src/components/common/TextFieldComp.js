@@ -1,7 +1,17 @@
 import { TextField } from '@mui/material';
 import { Controller } from 'react-hook-form';
 
-export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly, onChangeovr }) => {
+export const TextFieldComp = ({
+  control,
+  label,
+  name,
+  rules,
+  valueovr,
+  readOnly,
+  onChangeovr,
+  toUpperCase,
+  toLowerCase,
+}) => {
   return (
     <>
       <Controller
@@ -14,7 +24,13 @@ export const TextFieldComp = ({ control, label, name, rules, valueovr, readOnly,
             helperText={error ? error.message : null}
             error={!!error}
             onChange={(e) => {
-              onChange(e);
+              if (toUpperCase) {
+                onChange(e.target.value.toUpperCase());
+              } else if (toLowerCase) {
+                onChange(e.target.value.toLowerCase());
+              } else {
+                onChange(e);
+              }
             }}
             onBlur={(e) => {
               if (onChangeovr !== undefined) {
