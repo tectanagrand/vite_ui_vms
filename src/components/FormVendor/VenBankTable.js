@@ -52,10 +52,18 @@ function EditToolbar(props) {
   );
 }
 
-export default function VenBankTable({ onChildDataChange, initData, idParent, banks, currencies, countries, isallow }) {
+export default function VenBankTable({
+  onChildDataChange,
+  initData,
+  idParent,
+  banks,
+  currencies,
+  countries,
+  isallow,
+  ticketState,
+}) {
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
-  const banksData = banks?.map((item) => ({ value: item.bank_code, label: `${item.bank_code}-${item.bank_name}` }));
   const countriesData = countries?.map((item) => ({ value: item.value, label: item.value }));
   const DataGridBank = styled(DataGrid, { shouldForwardProp: (prop) => prop !== 'sx' })(() => ({
     '& .row-idle': {
@@ -83,7 +91,12 @@ export default function VenBankTable({ onChildDataChange, initData, idParent, ba
           id: item.id,
           acc_hold: item.acc_hold,
           bank_acc: item.bank_acc,
-          bank_id: { value: item.bank_key, label: `${item.bank_name} ${item.source != null ? '(new)' : ''}` },
+          bank_id: {
+            value: item.bank_id,
+            label: `${ticketState === 'FINA' ? item.bank_key : item.swift_code} - ${item.bank_name} ${
+              item.source != null ? '(new)' : ''
+            }`,
+          },
           bank_curr: { value: item.bank_curr, label: item.bank_curr },
           country: { value: item.country, label: item.country },
           isDb: true,
