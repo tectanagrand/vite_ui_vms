@@ -25,6 +25,7 @@ module.exports = {
     "no-alert": 0,
     "no-shadow": 0,
     "no-console": 0,
+    "no-useless-escape": 0,
     "react/jsx-key": 0,
     "import/no-cycle": 0,
     "arrow-body-style": 0,
