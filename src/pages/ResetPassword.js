@@ -141,6 +141,10 @@ export default function ResetPassword() {
     }, 1000);
   };
 
+  const backLogin = () => {
+    navigate('/login');
+  };
+
   const handleSnackClose = () => {
     setOpennotif({ ...openNotif, open: false });
   };
@@ -238,6 +242,11 @@ export default function ResetPassword() {
                   sx={{ height: '3.125rem', m: 1, width: '6.25rem' }}
                   disabled={countDown > 0 && userid !== '' && !otpVerified}
                 >
+                  Back
+                </Button>
+              )}
+              {userid === '' && !otpVerified && (
+                <Button onClick={backLogin} sx={{ height: '3.125rem', m: 1, width: '6.25rem' }}>
                   Back
                 </Button>
               )}
