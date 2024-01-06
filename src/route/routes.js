@@ -11,7 +11,7 @@ import ListVendor from 'src/pages/dashboard/ListVendor';
 import NavSection from 'src/components/nav/NavSection';
 import ListReqStat from 'src/pages/dashboard/ListReqStat';
 import FormUserPage from 'src/pages/FormUserPage';
-import User from 'src/pages/dashboard/User';
+import User from 'src/pages/dashboard/RefactorUser';
 import MenuAccessPage from 'src/pages/MenuAccessPage';
 import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
 import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
@@ -97,6 +97,10 @@ export const routes = createBrowserRouter([
       },
       {
         path: 'users/create',
+        element: <FormUserPage />,
+      },
+      {
+        path: 'account/edit',
         element: <FormUserPage />,
       },
       {
