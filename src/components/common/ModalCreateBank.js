@@ -10,8 +10,7 @@ import { useSession } from 'src/provider/sessionProvider';
 import { LoadingButton } from '@mui/lab';
 
 export default function ModalCreateBank({
-  bankcode,
-  bankkey,
+  swiftcode,
   bankname,
   address1,
   address2,
@@ -28,8 +27,7 @@ export default function ModalCreateBank({
   const { session } = useSession();
   const axiosPrivate = useAxiosPrivate();
   const defaultvalue = {
-    bankcode: '',
-    bankkey: '',
+    swiftcode: '',
     bankname: '',
     address1: '',
     address2: '',
@@ -55,8 +53,7 @@ export default function ModalCreateBank({
     };
     dynaCountry();
     methods.reset({
-      bankcode: bankcode,
-      bankkey: bankkey,
+      swiftcode: swiftcode,
       bankname: bankname,
       address1: address1,
       address2: address2,
@@ -74,8 +71,8 @@ export default function ModalCreateBank({
         source: 'form',
       });
       const newValue = {
-        value: submitForm.data.bankkey,
-        label: `${submitForm.data.bankkey} - ${submitForm.data.name} (new)`,
+        value: submitForm.data.id,
+        label: `${submitForm.data.swiftcode} - ${submitForm.data.name} (new)`,
       };
       const { id, row, field } = params;
       apiRef.current.setEditCellValue({ id, field, value: newValue });
@@ -97,21 +94,12 @@ export default function ModalCreateBank({
             <Box sx={{ width: 800, height: '100%', padding: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
                 <TextFieldComp
-                  name="bankcode"
-                  label="Bank Code"
+                  name="swiftcode"
+                  label="Swift Code"
                   control={methods.control}
                   rules={{
                     required: 'Please insert this field',
-                    maxLength: { value: 10, message: 'Length exceeded 10 characters' },
-                  }}
-                />
-                <TextFieldComp
-                  name="bankkey"
-                  label="Bank Key"
-                  control={methods.control}
-                  rules={{
-                    required: 'Please insert this field',
-                    maxLength: { value: 10, message: 'Length exceeded 10 characters' },
+                    maxLength: { value: 11, message: 'Length exceeded 10 characters' },
                   }}
                 />
               </Box>

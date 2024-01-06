@@ -15,6 +15,9 @@ import {
   Dialog,
   Skeleton,
   Link,
+  DialogTitle,
+  DialogActions,
+  AlertTitle,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -63,12 +66,12 @@ const ventypeList = {
 };
 
 const fileTypelist = [
-  { key: 'SPPKP', value: 'SPPKP' },
-  { key: 'NPWP', value: 'NPWP' },
-  { key: 'KODE ETIK / PAKTA INTEGRITAS', value: 'KODE ETIK / PAKTA INTEGRITAS' },
-  { key: 'SURAT PERNYATAAN REKENING', value: 'SURAT PERNYATAAN REKENING' },
-  { key: 'BUKU TABUNGAN', value: 'BUKU TABUNGAN' },
-  { key: 'KTP', value: 'KTP' },
+  { key: 'SPPKP', value: 'SPPKP' }, //SPPKP     => 1
+  { key: 'NPWP', value: 'NPWP' }, //NPWP      => 2
+  { key: 'KODE ETIK / PAKTA INTEGRITAS', value: 'KODE ETIK / PAKTA INTEGRITAS' }, //PAKTA     => 3
+  { key: 'SURAT PERNYATAAN REKENING', value: 'SURAT PERNYATAAN REKENING' }, //REK       => 4
+  { key: 'BUKU TABUNGAN', value: 'BUKU TABUNGAN' }, //TABUNGAN  => 5
+  { key: 'KTP', value: 'KTP' }, //KTP       => 6
 ];
 
 const newFileTypelist = [
@@ -110,7 +113,7 @@ export default function RefactorFormVendorPage() {
     description: '',
     is_tender: false,
     vendorcode: '',
-    remarks: '',
+    remarks_readOnly: '',
     limit: '',
     search_term: '',
   };
@@ -125,6 +128,11 @@ export default function RefactorFormVendorPage() {
     clearErrors,
   } = useForm({ defaultValues: defaultValue });
 
+  const { handleSubmit: handleSubmit1, control: control1 } = useForm({
+    defaultValues: {
+      remarks: '',
+    },
+  });
   // console.log(errors);
 
   const [loader_data, setLoaderdata] = useState({
@@ -174,7 +182,8 @@ export default function RefactorFormVendorPage() {
         description: data.description ? data.description : '',
         is_tender: data.is_tender ? data.is_tender : false,
         vendorcode: data.ven_code ? data.ven_code : data.header,
-        remarks: data.remarks ? data.remarks : '',
+        remarks_readOnly: data.remarks ? data.remarks : '',
+        remarks: '',
         limit: data.limit_vendor ? data.limit_vendor : '',
         reject_by: data.reject_by ? data.reject_by : '',
         search_term: data.search_term ? data.search_term : '',
@@ -266,7 +275,8 @@ export default function RefactorFormVendorPage() {
         description: data.description ? data.description : '',
         is_tender: data.is_tender ? data.is_tender : false,
         vendorcode: data.ven_code ? data.ven_code : data.header,
-        remarks: data.remarks ? data.remarks : '',
+        remarks_readOnly: data.remarks ? data.remarks : '',
+        remarks: '',
         limit: data.limit_vendor ? data.limit_vendor : '',
         reject_by: data.reject_by ? data.reject_by : '',
         is_active: data.ticket_stat,
@@ -352,6 +362,7 @@ export default function RefactorFormVendorPage() {
   const [chgVengrp, setVengrp] = useState(loader_data.data?.vengroup);
   const [chgVenacc, setVenacc] = useState(loader_data.data?.venacc);
   const [chgCurr, setChgCurr] = useState(loader_data.data?.currency);
+  // const [fileType, setFileType] = useState([...fileTypelist]);
   const [chgIsPTKP, setIsPTKP] = useState(false);
   const [chgLocal, setLocal] = useState('');
   const [compTitle, setComptitle] = useState(loader_data.data?.titlecomp);
@@ -359,6 +370,7 @@ export default function RefactorFormVendorPage() {
   const [checkIsExist, setCheckex] = useState(true);
   const [isTender, setTender] = useState(loader_data.data?.is_tender);
   const [btnClicked, setBtnclick] = useState(false);
+  const [modalRejectopen, setModalopen] = useState(false);
 
   const funChgCountry = (item) => {
     setChgCty(item);
@@ -459,6 +471,10 @@ export default function RefactorFormVendorPage() {
       });
       setBtnclick(false);
     }
+  };
+
+  const modalRejectclose = () => {
+    setModalopen(false);
   };
 
   useEffect(() => {
@@ -788,7 +804,11 @@ export default function RefactorFormVendorPage() {
 
   const handleReject = async (value) => {
     const controller = new AbortController();
+    // console.log(value);
     setLoading(true);
+    // setTimeout(() => {
+    //   setLoading(false);
+    // }, 3000);
     try {
       const rejectParams = {
         ticket_id: loader_data.ticket_id,
@@ -814,7 +834,7 @@ export default function RefactorFormVendorPage() {
         bank_valid.current = true;
         file_valid.current = true;
         let fileData = [...initDataFile.current, ...ven_file];
-        let bankData = [...ven_bank];
+        let bankData = [...initDataBank.current, ...ven_bank];
         let checkFileExist = {
           A001: 0,
           A002: 0,
@@ -856,12 +876,14 @@ export default function RefactorFormVendorPage() {
         };
         let fileremain = [];
         //check if file or banks is already submitted
-        if (initDataBank.current.length === 0 && ven_bank.length === 0) {
+        if (bankData.length === 0) {
           setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
           bank_valid.current = false;
         }
         bankData.forEach((item) => {
           // console.log(item);
+          delete item.acc_name;
+          delete item.source;
           Object.values(item).map((value) => {
             if (value === '' || value === null) {
               setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
@@ -938,8 +960,7 @@ export default function RefactorFormVendorPage() {
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
-    setVen_bank((prev) => prev.map((item) => ({ ...item, method: 'update' })));
-    // console.log(jsonSend);
+    console.log(jsonSend);
     if (loader_data.data.reject_by !== '') {
       jsonSend.remarks = '';
     }
@@ -961,6 +982,7 @@ export default function RefactorFormVendorPage() {
         submit = await axiosPrivate.post(`/ticket/form/submit`, jsonSend);
         // console.log('submitting...');
       }
+      setVen_bank((prev) => prev.map((item) => ({ ...item, method: 'update' })));
       const response = submit.data;
       setFormStat({ stat: true, type: 'success', message: response.message });
       setLoading(false);
@@ -1097,6 +1119,7 @@ export default function RefactorFormVendorPage() {
                         maxLength: { value: 300, message: 'Max 300 Character' },
                       }}
                       onChangeovr={funChgname}
+                      toUpperCase={true}
                     />
                   </Grid>
                   {checkIsExist && (
@@ -1122,6 +1145,7 @@ export default function RefactorFormVendorPage() {
                           required: 'Please insert this field',
                           maxLength: { value: 100, message: 'Max 100 Character' },
                         }}
+                        toUpperCase={true}
                       />
                     </Grid>
                   )}
@@ -1282,7 +1306,12 @@ export default function RefactorFormVendorPage() {
                       }
                       rules={{
                         required: 'Please insert this field',
+                        pattern: {
+                          value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g,
+                          message: 'invalid email address',
+                        },
                       }}
+                      toLowerCase={true}
                     />
                   </Grid>
                 </Grid>
@@ -1515,6 +1544,45 @@ export default function RefactorFormVendorPage() {
               </Accordion>
             )}
           </form>
+          <form onSubmit={handleSubmit1(handleReject)}>
+            <Dialog
+              open={modalRejectopen}
+              onClose={modalRejectclose}
+              maxWidth="lg"
+              sx={{ zIndex: (theme) => theme.zIndex.drawer - 2 }}
+            >
+              <DialogTitle>Reject Form</DialogTitle>
+              <Box
+                sx={{ width: '40rem', height: '12rem', display: 'flex', flexDirection: 'column', gap: 5, p: 2, mb: 3 }}
+              >
+                <Alert severity="warning">
+                  <AlertTitle>Please provide rejection reasons</AlertTitle> Your current works will not be saved when
+                  rejecting form
+                </Alert>
+                <TextFieldComp
+                  name="remarks"
+                  label="remarks"
+                  control={control1}
+                  rules={{
+                    required: 'Please provide rejection reason',
+                  }}
+                />
+              </Box>
+              <DialogActions>
+                <Button type="submit" color="error" variant="contained" onClick={handleSubmit1(handleReject)}>
+                  Reject
+                </Button>
+                <Button
+                  onClick={() => {
+                    setModalopen(false);
+                  }}
+                  variant="contained"
+                >
+                  Cancel
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </form>
           <Accordion expanded={expanded.panelBank} onChange={handleExpanded('panelBank')}>
             <AccordionSummary
               sx={{
@@ -1539,6 +1607,7 @@ export default function RefactorFormVendorPage() {
                 currencies={currencies.current}
                 countries={countries.current}
                 isallow={(UPDATE.INIT || UPDATE.CREA) && (ticketState === 'INIT' || loader_data.ticket_type === 'PROC')}
+                ticketState={ticketState}
               />
             </AccordionDetails>
           </Accordion>
@@ -1603,8 +1672,8 @@ export default function RefactorFormVendorPage() {
               </AccordionDetails>
             </Accordion>
           )}
-          <Box sx={{ my: 5 }}>
-            <TextFieldComp name="remarks" label="Remarks" control={control} />
+          <Box sx={{ my: 5, backgroundColor: 'white' }}>
+            <TextFieldComp name="remarks_readOnly" label="Rejection Remarks" control={control} readOnly={true} />
           </Box>
 
           <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
@@ -1630,7 +1699,7 @@ export default function RefactorFormVendorPage() {
                   color="error"
                   variant="contained"
                   onClick={() => {
-                    handleReject(getValues());
+                    setModalopen(true);
                   }}
                 >
                   Reject
@@ -1688,7 +1757,7 @@ export default function RefactorFormVendorPage() {
           </Alert>
         </Snackbar>
         <Backdrop
-          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer - 2 }}
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
           open={
             loading ||
             (loadingCountry &&

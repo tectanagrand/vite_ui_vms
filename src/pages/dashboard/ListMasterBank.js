@@ -33,6 +33,13 @@ export default function ListMasterBank() {
       sortable: false,
     },
     {
+      field: 'swift_code',
+      type: 'string',
+      headerName: 'Swift Code',
+      flex: 0.1,
+      sortable: false,
+    },
+    {
       field: 'bank_key',
       type: 'string',
       headerName: 'Bank Key',
@@ -92,7 +99,7 @@ export default function ListMasterBank() {
 
   const [rows, setRows] = useState({
     isLoading: false,
-    rows: [{ id: '', bank_key: '', bank_code: '', bank_name: '', country: '' }],
+    rows: [{ id: '', swift_code: '', bank_key: '', bank_code: '', bank_name: '', country: '' }],
   });
   const [typepost, setType] = useState('');
 
@@ -120,6 +127,7 @@ export default function ListMasterBank() {
     if (type === 'Edit') {
       setType('update');
       reset({
+        swiftcode: row.swift_code,
         bankcode: row.bank_code,
         bankkey: row.bank_key,
         bankname: row.bank_name,
@@ -133,8 +141,7 @@ export default function ListMasterBank() {
       if (confirm('Are you sure want to delete ' + row.bank_name + '?')) {
         try {
           const deleteBank = await axiosPrivate.post(`/master/deletebank`, {
-            bankcode: row.bank_code,
-            bankkey: row.bank_key,
+            id: row.id,
           });
           setFormstat({ stat: true, type: 'success', message: `${deleteBank.data.name} is deleted` });
           setParams({ page: 0, maxPage: params.maxPage, que: params.que });
@@ -226,6 +233,7 @@ export default function ListMasterBank() {
             setType('insert');
             setModalopen(true);
             reset({
+              swiftcode: '',
               bankcode: '',
               bankkey: '',
               bankname: '',
@@ -268,6 +276,15 @@ export default function ListMasterBank() {
         <form onSubmit={handleSubmit(submitBank)}>
           <Box sx={{ width: 800, height: '100%', padding: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+              <TextFieldComp
+                name="swiftcode"
+                label="Swift Code"
+                control={control}
+                rules={{
+                  required: 'Please insert this field',
+                  maxLength: { value: 11, message: 'Length exceeded 11 characters' },
+                }}
+              />
               <TextFieldComp
                 name="bankcode"
                 label="Bank Code"
