@@ -4,18 +4,21 @@ import { TextFieldComp } from 'src/components/common/TextFieldComp';
 import { PasswordWithEyes } from 'src/components/common/PasswordWithEyes';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import dayjs from 'dayjs';
 import DatePickerComp from 'src/components/common/DatePickerComp';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { LoadingButton } from '@mui/lab';
+import { useSession } from 'src/provider/sessionProvider';
 
 export default function FormUserPage() {
   const [btnClicked, setBtnclicked] = useState(false);
+  const location = useLocation();
   const axiosPrivate = useAxiosPrivate();
   const [searchParams] = useSearchParams();
   const [userId, setUserid] = useState('');
+  const { session, getPermission } = useSession();
+  const allowUpdate = getPermission('User').update;
   const navigate = useNavigate();
   const {
     handleSubmit,
@@ -47,6 +50,9 @@ export default function FormUserPage() {
     const data = userDt.data.data;
     if (data != undefined) {
       setUserid(data.user_id);
+      if (data.role === 'MGR') {
+        setisMgr(true);
+      }
       reset({
         manager: data.mgr_id,
         fullname: data.fullname,
@@ -118,9 +124,12 @@ export default function FormUserPage() {
   }, []);
 
   useEffect(() => {
-    const userid = searchParams.get('iduser');
+    let userid = searchParams.get('iduser');
+    if (!getPermission('User').update && searchParams.get('iduser') !== session.user_id) {
+      userid = session.user_id;
+    }
     getUserData(userid);
-  }, []);
+  }, [location.state]);
 
   const submitUser = async (data) => {
     setBtnclicked(true);
@@ -144,27 +153,37 @@ export default function FormUserPage() {
       const submitDatauser = await axiosPrivate.post(`/user/submit`, subUserDt);
       setBtnclicked(false);
       alert(submitDatauser.data.message);
-      navigate('../users');
+      if (getPermission('User').update) {
+        navigate('../users');
+      } else {
+        navigate('../ticket');
+      }
     } catch (error) {
       setBtnclicked(false);
       alert(error);
     }
   };
+
+  if (!getPermission('User').update && searchParams.get('iduser') !== session.user_id) {
+    return <Navigate to={`../../dashboard/account/edit?iduser=${session.user_id}`} />;
+  }
   return (
     <Container>
       <form onSubmit={handleSubmit(submitUser)}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
           <Typography variant="h4" sx={{ textAlign: 'center', pb: 5 }}>
-            User Form
+            User Information
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs>
-              <DatePickerComp label="Date Created" name="datecreated" control={control} rules={{ required: true }} />
+          {allowUpdate && location.state?.page !== 'userinfo' && (
+            <Grid container spacing={2}>
+              <Grid item xs>
+                <DatePickerComp label="Date Created" name="datecreated" control={control} rules={{ required: true }} />
+              </Grid>
+              <Grid item xs>
+                <DatePickerComp label="Expired Date" name="expireddate" control={control} rules={{ required: true }} />
+              </Grid>
             </Grid>
-            <Grid item xs>
-              <DatePickerComp label="Expired Date" name="expireddate" control={control} rules={{ required: true }} />
-            </Grid>
-          </Grid>
+          )}
           <Grid container spacing={2}>
             <Grid item xs>
               <TextFieldComp name="username" control={control} label="Username" rules={{ required: true }} />
@@ -186,32 +205,32 @@ export default function FormUserPage() {
               <TextFieldComp name="email" control={control} label="Email" rules={{ required: true }} />
             </Grid>
           </Grid>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <SelectComp
-                name="usergroup"
-                control={control}
-                label="User Group"
-                options={userGroup}
-                rules={{ required: true }}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <SelectComp
-                name="role"
-                control={control}
-                label="Role"
-                options={roles}
-                rules={{ required: true }}
-                onChangeovr={onRoleChange}
-              />
-            </Grid>
-            {
+          {allowUpdate && location.state?.page !== 'userinfo' && (
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <SelectComp
+                  name="usergroup"
+                  control={control}
+                  label="User Group"
+                  options={userGroup}
+                  rules={{ required: true }}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <SelectComp
+                  name="role"
+                  control={control}
+                  label="Role"
+                  options={roles}
+                  rules={{ required: true }}
+                  onChangeovr={onRoleChange}
+                />
+              </Grid>
               <Grid item xs={6}>
                 <SelectComp name="manager" control={control} label="Manager" options={manager} disabled={isMgr} />
               </Grid>
-            }
-          </Grid>
+            </Grid>
+          )}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 10 }}>
           <LoadingButton type="submit" sx={{ width: 100, height: 50 }} variant="contained" loading={btnClicked}>
