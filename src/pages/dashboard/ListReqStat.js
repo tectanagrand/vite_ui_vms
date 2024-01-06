@@ -16,6 +16,7 @@ import TableLayout from 'src/components/common/TableLayout';
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { LoadingButton } from '@mui/lab';
+import RefreshButton from 'src/components/common/RefreshButton';
 
 export default function ListReqStat() {
   const axiosPrivate = useAxiosPrivate();
@@ -23,6 +24,7 @@ export default function ListReqStat() {
   const columns = ['Ticket Number', 'Date', 'Requestor', 'Request', 'Vendor Code', 'Vendor Name'];
   const { session } = useSession();
   const [btnState, setBtn] = useState(['accept', 'reject']);
+  const [refreshBtn, setRefresh] = useState(true);
   const [reload, setReload] = useState(true);
   const [openValid, setOpenval] = useState(false);
   const [apprType, setAppr] = useState('');
@@ -47,6 +49,10 @@ export default function ListReqStat() {
     setOpenval(true);
     setAppr(type);
     setVendata(ticket.find((item) => item.id === id));
+  };
+
+  const buttonRefreshAct = () => {
+    setRefresh(true);
   };
 
   const handleProcessReq = async (action, id) => {
@@ -78,16 +84,25 @@ export default function ListReqStat() {
 
   useEffect(() => {
     const getTicket = async () => {
-      const fetchTicket = await axiosPrivate.get(`/reqstat/show?is_active=${filterAct}`);
-      setTicket(fetchTicket.data.data);
+      try {
+        const fetchTicket = await axiosPrivate.get(`/reqstat/show?is_active=${filterAct}`);
+        setTicket(fetchTicket.data.data);
+        setRefresh(false);
+      } catch (error) {
+        console.log(error);
+        alert(error);
+        setRefresh(false);
+      }
     };
     if (filterAct === false) {
       setBtn([]);
     } else {
       setBtn(['accept', 'reject']);
     }
-    getTicket();
-  }, [reload, filterAct]);
+    if (refreshBtn) {
+      getTicket();
+    }
+  }, [reload, filterAct, refreshBtn]);
 
   useEffect(() => {
     setColLength(columns.length + 1);
@@ -102,12 +117,18 @@ export default function ListReqStat() {
           value={filterAct}
           onChange={() => {
             setFilteract(!filterAct);
+            setRefresh(true);
           }}
         >
           <MenuItem value={true}>Active</MenuItem>
           <MenuItem value={false}>Not Active</MenuItem>
         </Select>
       </FormControl>
+      <RefreshButton
+        setRefreshbtn={buttonRefreshAct}
+        isLoading={refreshBtn}
+        sx={{ width: '3.5rem', height: '3.5rem', ml: 2 }}
+      />
 
       {ticket != undefined ? (
         <TableLayout data={ticket} buttons={btnState} lengthRow={colLength} onAction={handleAppr} header={columns} />

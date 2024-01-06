@@ -67,7 +67,7 @@ export function ListTicket() {
   const [filterAct, setFilteract] = useState(true);
   const [deleted, setDelete] = useState(false);
   const [ticket_state, setTicketstate] = useState([]);
-  const [refreshBtn, setRefreshbtn] = useState(false);
+  const [refreshBtn, setRefreshbtn] = useState(true);
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   const urlSetFunc = (urlitem) => {
@@ -124,7 +124,9 @@ export function ListTicket() {
 
   useEffect(() => {
     const controller = new AbortController();
-    tickets(controller);
+    if (refreshBtn) {
+      tickets(controller);
+    }
   }, [url, filterAct, deleted, refreshBtn]);
 
   useEffect(() => {
@@ -373,6 +375,7 @@ export function ListTicket() {
                   value={filterAct}
                   onChange={(e) => {
                     setFilteract(!filterAct);
+                    setRefreshbtn(true);
                   }}
                 >
                   <MenuItem value={true}>Active</MenuItem>

@@ -18,6 +18,7 @@ import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useSession } from 'src/provider/sessionProvider';
 import LoadingButton from '@mui/lab/LoadingButton';
+import RefreshButton from 'src/components/common/RefreshButton';
 
 export default function ListVendor() {
   const axiosPrivate = useAxiosPrivate();
@@ -31,6 +32,7 @@ export default function ListVendor() {
   };
 
   const [btnClicked, setBtnClicked] = useState(false);
+  const [refreshBtn, setRefresh] = useState(true);
   const [filterAct, setFilteract] = useState(true);
   const [formStat, setFormstat] = useState({
     stat: false,
@@ -56,8 +58,14 @@ export default function ListVendor() {
   };
 
   const getData = async () => {
-    const data = await axiosPrivate.get(`/vendor/?isactive=${filterAct}`);
-    return data.data;
+    try {
+      const data = await axiosPrivate.get(`/vendor/?isactive=${filterAct}`);
+      setRefresh(false);
+      return data.data;
+    } catch (error) {
+      console.log(error);
+      setRefresh(false);
+    }
   };
 
   const handleBtnAct = (row) => () => {
@@ -111,6 +119,10 @@ export default function ListVendor() {
     }
   };
 
+  const buttonRefreshAct = () => {
+    setRefresh(true);
+  };
+
   const handleReason = (e) => {
     setRequest((prevRequest) => ({
       ...prevRequest,
@@ -127,8 +139,10 @@ export default function ListVendor() {
       const items = await getData();
       setData(items.data);
     };
-    response();
-  }, [filterAct, formStat]);
+    if (refreshBtn) {
+      response();
+    }
+  }, [filterAct, formStat, refreshBtn]);
 
   const columns = [
     {
@@ -184,12 +198,18 @@ export default function ListVendor() {
           value={filterAct}
           onChange={(e) => {
             setFilteract(e.target.value);
+            setRefresh(true);
           }}
         >
           <MenuItem value={true}>Active</MenuItem>
           <MenuItem value={false}>Not Active</MenuItem>
         </Select>
       </FormControl>
+      <RefreshButton
+        setRefreshbtn={buttonRefreshAct}
+        isLoading={refreshBtn}
+        sx={{ width: '3.5rem', height: '3.5rem', ml: 2 }}
+      />
       <DataGrid
         sx={overrides}
         columns={columns}
