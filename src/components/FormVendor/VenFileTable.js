@@ -1,7 +1,7 @@
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { useState, forwardRef, useEffect } from 'react';
 import { Delete as DeleteIcon, Undo, Download } from '@mui/icons-material';
-import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress } from '@mui/material';
+import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress, Skeleton } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
@@ -12,7 +12,7 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function VenFileTable({ initData, upTable, isallow }) {
+export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
   const [file_ven, setFile_ven] = useState(initData);
   const [sbarOpen, setSbarOpen] = useState(false);
   const [loaderOpen, setLoaderopen] = useState(false);
@@ -197,7 +197,23 @@ export default function VenFileTable({ initData, upTable, isallow }) {
 
   return (
     <>
-      <DataGridFile
+      {isLoad ? (
+        <Skeleton variant="rectangular" width={1000} height={200} />
+      ) : (
+        <DataGridFile
+          autoHeight
+          rows={file_ven}
+          columns={columns}
+          getRowClassName={(params) => {
+            if (params.row.method == 'delete') {
+              return 'row-delete';
+            } else {
+              return 'row-idle';
+            }
+          }}
+        />
+      )}
+      {/* <DataGridFile
         autoHeight
         rows={file_ven}
         columns={columns}
@@ -208,7 +224,7 @@ export default function VenFileTable({ initData, upTable, isallow }) {
             return 'row-idle';
           }
         }}
-      />
+      /> */}
       <Snackbar
         open={sbarOpen}
         autoHideDuration={3000}

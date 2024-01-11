@@ -15,7 +15,7 @@ import {
   Cancel as CancelIcon,
   Undo,
 } from '@mui/icons-material';
-import { Button } from '@mui/material';
+import { Button, Skeleton } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 import AutoCompleteCustom from '../common/AutoCompleteCustom';
 import AutoCompleteBank from '../common/AutoCompleteBank';
@@ -61,6 +61,7 @@ export default function VenBankTable({
   countries,
   isallow,
   ticketState,
+  isLoad,
 }) {
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
@@ -93,7 +94,7 @@ export default function VenBankTable({
           bank_acc: item.bank_acc,
           bank_id: {
             value: item.bank_id,
-            label: `${ticketState === 'FINA' ? item.bank_key : item.swift_code} - ${item.bank_name} ${
+            label: `${ticketState === 'FINA' ? item.bank_key : item.bank_code} - ${item.bank_name} ${
               item.source != null ? '(new)' : ''
             }`,
           },
@@ -133,7 +134,7 @@ export default function VenBankTable({
 
   const [rowModesModel, setRowModesModel] = useState({});
   const handleRowEditStop = (params, event) => {
-    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+    if (params.reason === GridRowEditStopReasons.rowFocusOut || params.reason === GridRowEditStopReasons.enterKeyDown) {
       event.defaultMuiPrevented = true;
     }
   };
@@ -240,8 +241,22 @@ export default function VenBankTable({
       renderEditCell: (params) => <AutoCompleteCustom {...params} options={currencies} />,
       width: 100,
     },
-    { field: 'bank_acc', type: 'string', headerName: 'Bank Account', width: 200, editable: isallow },
-    { field: 'acc_hold', type: 'string', headerName: 'Account Holder', width: 250, editable: isallow },
+    {
+      field: 'bank_acc',
+      type: 'string',
+      headerName: 'Bank Account',
+      width: 200,
+      editable: isallow,
+      valueGetter: (params) => params.value?.toUpperCase(),
+    },
+    {
+      field: 'acc_hold',
+      type: 'string',
+      headerName: 'Account Holder',
+      width: 250,
+      editable: isallow,
+      valueGetter: (params) => params.value?.toUpperCase(),
+    },
     {
       field: 'action',
       type: 'actions',
@@ -278,32 +293,36 @@ export default function VenBankTable({
 
   return (
     <>
-      <DataGrid
-        rows={ven_bank}
-        columns={columns}
-        editMode="row"
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={handleRowModesModelChange}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-        slots={{
-          toolbar: EditToolbar,
-        }}
-        slotProps={{
-          toolbar: { setVen_bank, setRowModesModel, idParent, isallow },
-        }}
-        getRowClassName={(params) => {
-          if (params.row.method == 'delete') {
-            return 'row-delete';
-          } else {
-            return 'row-idle';
-          }
-        }}
-        autoHeight
-        getEstimatedRowHeight={() => 100}
-        getRowHeight={() => 'auto'}
-        sx={{ fontSize: '11pt' }}
-      />
+      {isLoad ? (
+        <Skeleton variant="rectangular" width={1000} height={200} />
+      ) : (
+        <DataGrid
+          rows={ven_bank}
+          columns={columns}
+          editMode="row"
+          rowModesModel={rowModesModel}
+          onRowModesModelChange={handleRowModesModelChange}
+          onRowEditStop={handleRowEditStop}
+          processRowUpdate={processRowUpdate}
+          slots={{
+            toolbar: EditToolbar,
+          }}
+          slotProps={{
+            toolbar: { setVen_bank, setRowModesModel, idParent, isallow },
+          }}
+          getRowClassName={(params) => {
+            if (params.row.method == 'delete') {
+              return 'row-delete';
+            } else {
+              return 'row-idle';
+            }
+          }}
+          autoHeight
+          getEstimatedRowHeight={() => 100}
+          getRowHeight={() => 'auto'}
+          sx={{ fontSize: '11pt' }}
+        />
+      )}
     </>
   );
 }

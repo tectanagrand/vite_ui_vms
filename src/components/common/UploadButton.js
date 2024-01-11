@@ -20,7 +20,7 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function UploadButton({ inputTypes, onChildDataChange, iniData, idParent, allow }) {
+export default function UploadButton({ inputTypes, onChildDataChange, iniData, idParent, allow, loadData }) {
   const { session } = useSession();
   const [typeFile, setTypeFile] = useState(0);
   const [statUpload, setStatUpload] = useState({ stat: false, type: '', message: '' });
@@ -163,7 +163,8 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
             {statUpload.message}
           </Alert>
         </Snackbar>
-        <VenFileTable initData={fileStaged} upTable={handleUpFromTb} isallow={allow} />
+
+        <VenFileTable initData={fileStaged} upTable={handleUpFromTb} isallow={allow} isLoad={loadData} />
       </Stack>
     </>
   );
