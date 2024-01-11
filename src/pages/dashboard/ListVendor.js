@@ -106,9 +106,11 @@ export default function ListVendor() {
         type: 'success',
         message: message,
       });
+      setRefresh(true);
       setDialog(false);
       setBtnClicked(false);
     } catch (error) {
+      setRefresh(true);
       setFormstat({
         stat: true,
         type: 'error',
@@ -225,6 +227,8 @@ export default function ListVendor() {
             showQuickFilter: true,
           },
         }}
+        initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
+        pageSizeOptions={[5, 10, 25]}
       />
       <Dialog maxWidth="xl" open={dialogOpen} onClose={handleCloseMdl}>
         <DialogTitle>Create {btnState.text} Request</DialogTitle>
