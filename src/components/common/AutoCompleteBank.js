@@ -29,7 +29,7 @@ export default function AutoCompleteBank(params) {
         const result = response.data;
         const databank = result?.map((item) => ({
           value: item.id,
-          label: `${item.swift_code} - ${item.bank_name} ${item.source != null ? '(new)' : ''}`,
+          label: `${item.bank_code} - ${item.bank_name} ${item.source != null ? '(new)' : ''}`,
         }));
         setBanksdata(databank);
       } catch (error) {
