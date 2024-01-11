@@ -33,13 +33,6 @@ export default function ListMasterBank() {
       sortable: false,
     },
     {
-      field: 'swift_code',
-      type: 'string',
-      headerName: 'Swift Code',
-      flex: 0.1,
-      sortable: false,
-    },
-    {
       field: 'bank_key',
       type: 'string',
       headerName: 'Bank Key',
@@ -49,7 +42,7 @@ export default function ListMasterBank() {
     {
       field: 'bank_code',
       type: 'string',
-      headerName: 'Bank Code',
+      headerName: 'Swift Code',
       flex: 0.1,
       sortable: false,
     },
@@ -111,6 +104,7 @@ export default function ListMasterBank() {
 
   const [modalOpen, setModalopen] = useState(false);
   const [btnClicked, setBtnclick] = useState(false);
+  const id = useRef();
 
   const countries = useRef({ value: '', label: '' });
 
@@ -127,8 +121,7 @@ export default function ListMasterBank() {
     if (type === 'Edit') {
       setType('update');
       reset({
-        swiftcode: row.swift_code,
-        bankcode: row.bank_code,
+        swiftcode: row.bank_code,
         bankkey: row.bank_key,
         bankname: row.bank_name,
         address1: row.address_1,
@@ -136,6 +129,7 @@ export default function ListMasterBank() {
         address3: row.address_3,
         country: { value: row.country, label: `${row.country} - ${row.country_name}` },
       });
+      id.current = row.id;
       setModalopen(true);
     } else if (type === 'Delete') {
       if (confirm('Are you sure want to delete ' + row.bank_name + '?')) {
@@ -178,11 +172,12 @@ export default function ListMasterBank() {
         ...values,
         country: values.country.value,
         type: typepost,
+        id: id.current,
       });
       setFormstat({
         stat: true,
         type: 'success',
-        message: `${submitForm.data.name} is successfully added`,
+        message: `${submitForm.data.name} is successfully ${typepost === 'insert' ? 'added' : 'updated'}`,
       });
       setModalopen(false);
       setBtnclick(false);
@@ -205,7 +200,7 @@ export default function ListMasterBank() {
       setTotal((prev) => (getBankdata.data.allrow !== undefined ? getBankdata.data.allrow : prev));
     };
     getBankdt();
-  }, [params]);
+  }, [params, btnClicked]);
 
   useEffect(() => {
     const dynaCountry = async () => {
@@ -234,7 +229,6 @@ export default function ListMasterBank() {
             setModalopen(true);
             reset({
               swiftcode: '',
-              bankcode: '',
               bankkey: '',
               bankname: '',
               address1: '',
@@ -282,17 +276,9 @@ export default function ListMasterBank() {
                 control={control}
                 rules={{
                   required: 'Please insert this field',
-                  maxLength: { value: 11, message: 'Length exceeded 11 characters' },
-                }}
-              />
-              <TextFieldComp
-                name="bankcode"
-                label="Bank Code"
-                control={control}
-                rules={{
-                  required: 'Please insert this field',
                   maxLength: { value: 10, message: 'Length exceeded 10 characters' },
                 }}
+                toUpperCase={true}
               />
               <TextFieldComp
                 name="bankkey"
@@ -302,6 +288,7 @@ export default function ListMasterBank() {
                   required: 'Please insert this field',
                   maxLength: { value: 10, message: 'Length exceeded 10 characters' },
                 }}
+                toUpperCase={true}
               />
             </Box>
             <TextFieldComp
@@ -309,6 +296,7 @@ export default function ListMasterBank() {
               label="Bank Name"
               control={control}
               rules={{ required: 'Please insert this field' }}
+              toUpperCase={true}
             />
             <TextFieldComp
               name="address1"
@@ -318,6 +306,7 @@ export default function ListMasterBank() {
                 required: 'Please insert this field',
                 maxLength: { value: 200, message: 'Exceeded 200 characters' },
               }}
+              toUpperCase={true}
             />
             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
               <AutoCompleteSelect name="country" label="Country" control={control} options={countries.current} />
@@ -326,18 +315,18 @@ export default function ListMasterBank() {
                 label="Address 2"
                 control={control}
                 rules={{
-                  required: 'Please insert this field',
                   maxLength: { value: 50, message: 'Exceeded 50 characters' },
                 }}
+                toUpperCase={true}
               />
               <TextFieldComp
                 name="address3"
                 label="Address 3"
                 control={control}
                 rules={{
-                  required: 'Please insert this field',
                   maxLength: { value: 50, message: 'Exceeded 50 characters' },
                 }}
+                toUpperCase={true}
               />
             </Box>
           </Box>
