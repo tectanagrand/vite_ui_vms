@@ -35,6 +35,7 @@ import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import PatternFieldComp from 'src/components/common/PatternFieldComp';
 import AutoCompleteSelect from 'src/components/common/AutoCompleteSelect';
 import { LoadingButton } from '@mui/lab';
+import ConfirmComponent from 'src/components/common/ConfirmComponent';
 
 const ventypeList = {
   '3RD_PARTY': [
@@ -124,7 +125,7 @@ export default function RefactorFormVendorPage() {
     getValues,
     reset,
     setFocus,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
     clearErrors,
   } = useForm({ defaultValues: defaultValue });
 
@@ -371,6 +372,8 @@ export default function RefactorFormVendorPage() {
   const [isTender, setTender] = useState(loader_data.data?.is_tender);
   const [btnClicked, setBtnclick] = useState(false);
   const [modalRejectopen, setModalopen] = useState(false);
+  const [modalConfirmopen, setConfOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(false);
 
   const funChgCountry = (item) => {
     setChgCty(item);
@@ -477,7 +480,16 @@ export default function RefactorFormVendorPage() {
     setModalopen(false);
   };
 
+  const modalConfclose = () => {
+    setConfOpen(false);
+  };
+
+  const confirmActionFun = () => {
+    setConfirmAction(true);
+  };
+
   useEffect(() => {
+    // console.log(loader_data);
     reset(loader_data.data);
     setChgCty(loader_data.data?.country);
     setVengrp(loader_data.data?.vengroup);
@@ -487,6 +499,7 @@ export default function RefactorFormVendorPage() {
     setComptitle(loader_data.data?.titlecomp);
     setCompname(loader_data.data?.name1);
     setLocal(loader_data.data?.localovs);
+    setIsPTKP(loader_data.data?.ispkp);
   }, [loader_data]);
 
   useEffect(() => {
@@ -498,6 +511,14 @@ export default function RefactorFormVendorPage() {
       setFocus(firstError);
     }
   }, [errors, setFocus]);
+
+  useEffect(() => {
+    if (confirmAction) {
+      submitForm(getValues());
+      setConfOpen(false);
+      setConfirmAction(false);
+    }
+  }, [confirmAction]);
 
   const navigate = useNavigate();
   const { session, getPermission } = useSession();
@@ -534,10 +555,12 @@ export default function RefactorFormVendorPage() {
   const banks = useRef([{ value: '', label: '' }]);
   const payterm = useRef([{ value: '', label: '' }]);
   const comps = useRef([{ value: '', label: '' }]);
-  const bank_valid = useRef(true);
-  const file_valid = useRef(true);
-  const initDataBank = useRef([]);
-  const initDataFile = useRef([]);
+  const bank_valid = useRef(false);
+  const file_valid = useRef(false);
+  // const initDataBank = useRef([]);
+  // const initDataFile = useRef([]);
+  const [initDataBank, setInitDbank] = useState([]);
+  const [initDataFile, setInitDfile] = useState([]);
   const [isFileload, setFileLoad] = useState(false);
   const [isBankload, setBankLoad] = useState(false);
 
@@ -673,7 +696,7 @@ export default function RefactorFormVendorPage() {
       try {
         const bankInit = await axiosPrivate.get(`/vendor/bank/${loader_data.ven_id}`);
         const result = bankInit.data.data;
-        initDataBank.current = result.data;
+        setInitDbank(result.data);
         setLoadInitBank(false);
       } catch (err) {
         setLoadInitBank(false);
@@ -687,7 +710,7 @@ export default function RefactorFormVendorPage() {
       try {
         const fileInit = await axiosPrivate.get(`/vendor/file/${loader_data.ven_id}`);
         const result = fileInit.data.data;
-        initDataFile.current = result.data;
+        setInitDfile(result.data);
         setLoadInitFile(false);
       } catch (err) {
         setLoadInitFile(false);
@@ -828,92 +851,128 @@ export default function RefactorFormVendorPage() {
   };
 
   useEffect(() => {
-    if (!is_draft.current) {
-      if (isFileload || isBankload) {
-        // console.log(initDataFile.current);
-        bank_valid.current = true;
-        file_valid.current = true;
-        let fileData = [...initDataFile.current, ...ven_file];
-        let bankData = [...initDataBank.current, ...ven_bank];
-        let checkFileExist = {
+    if (isFileload || isBankload) {
+      let prefileData = [...ven_file, ...initDataFile];
+      let prebankData = [...ven_bank, ...initDataBank];
+      let deletedIdBank = [];
+      let deletedIdFile = [];
+      // console.log(prefileData, prebankData);
+      for (const file of prefileData) {
+        if (file?.method === 'delete') {
+          deletedIdFile.push(file.file_id);
+        }
+      }
+      for (const bank of prebankData) {
+        if (bank?.method === 'delete') {
+          deletedIdBank.push(bank.bankv_id);
+        }
+      }
+      // console.log(deletedIdBank, deletedIdFile);
+      let fileData = prefileData.filter((file) => !deletedIdFile.includes(file.file_id));
+      let bankData = prebankData.filter(
+        (bank) => !(deletedIdBank.includes(bank.id) || deletedIdBank.includes(bank.bankv_id))
+      );
+      // console.log(fileData, bankData);
+      let checkFileExist = {
+        A001: 0,
+        A002: 0,
+        A003: 0,
+        A004: 0,
+        A005: 0,
+        A006: 0,
+      };
+      if (compTitle === 'COMPANY') {
+        checkFileExist = {
           A001: 0,
           A002: 0,
-          A003: 0,
           A004: 0,
           A005: 0,
           A006: 0,
         };
-        if (compTitle === 'COMPANY') {
-          checkFileExist = {
-            A001: 0,
-            A002: 0,
-            A004: 0,
-            A005: 0,
-            A006: 0,
-          };
-        } else if (compTitle === 'PERSONAL') {
-          checkFileExist = {
-            A001: 0,
-            A002: 0,
-            A003: 0,
-            A004: 0,
-          };
-        }
-        if (chgLocal === 'OVS') {
-          delete checkFileExist.A005;
-          delete checkFileExist.A006;
-        }
-        if (!chgIsPTKP) {
-          delete checkFileExist.A006;
-        }
-        let filenames = {
-          A001: 'Account Statement Letter',
-          A002: 'Passbook',
-          A003: 'ID Card (KTP)',
-          A004: 'Integrity Pact',
-          A005: 'NPWP (Tax ID Number)',
-          A006: 'SPPKP',
+      } else if (compTitle === 'PERSONAL') {
+        checkFileExist = {
+          A001: 0,
+          A002: 0,
+          A003: 0,
+          A004: 0,
         };
-        let fileremain = [];
-        //check if file or banks is already submitted
-        if (bankData.length === 0) {
-          setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
-          bank_valid.current = false;
+      }
+      if (chgLocal === 'OVS') {
+        delete checkFileExist.A005;
+        delete checkFileExist.A006;
+      }
+      if (!chgIsPTKP) {
+        delete checkFileExist.A006;
+      }
+      let filenames = {
+        A001: 'Account Statement Letter',
+        A002: 'Passbook',
+        A003: 'ID Card (KTP)',
+        A004: 'Integrity Pact',
+        A005: 'NPWP (Tax ID Number)',
+        A006: 'SPPKP',
+      };
+      let fileremain = [];
+      //check if file or banks is already submitted
+      if (bankData.length === 0) {
+        // console.log('bankempty');
+        setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
+        bank_valid.current = false;
+      } else {
+        bank_valid.current = true;
+      }
+      bankData.forEach((item) => {
+        // console.log(item);
+        delete item.acc_name;
+        delete item.source;
+        delete item.swift_code;
+        if (ticketState !== 'FINA') {
+          delete item.bank_key;
         }
-        bankData.forEach((item) => {
-          // console.log(item);
-          delete item.acc_name;
-          delete item.source;
-          Object.values(item).map((value) => {
-            if (value === '' || value === null) {
+        Object.keys(item).map((key) => {
+          if (item[key] === '' || item[key] === null) {
+            // console.log('field bank empty');
+            if (key === 'bank_key') {
+              setFormStat({ stat: true, type: 'error', message: 'Please complete bank key data on master bank menu' });
+            } else {
               setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
-              bank_valid.current = false;
             }
-          });
-        });
-        if (fileData.length === 0) {
-          setFormStat({ stat: true, type: 'error', message: 'Attachment not filled yet | Lampiran belum dilengkapi' });
-          file_valid.current = false;
-        }
-        fileData.forEach((item) => {
-          checkFileExist[item.file_type] = checkFileExist[item.file_type] + 1;
-        });
-        Object.keys(checkFileExist).map((keys) => {
-          if (checkFileExist[keys] === 0) {
-            fileremain.push(filenames[keys]);
+            bank_valid.current = false;
+          } else {
+            bank_valid.current = true;
           }
         });
-        if (fileremain.length > 0) {
-          file_valid.current = false;
-          setFormStat({ stat: true, type: 'error', message: `Surat berikut belum lengkap : ${fileremain.join(', ')}` });
-        }
+      });
+      if (fileData.length === 0) {
+        setFormStat({ stat: true, type: 'error', message: 'Attachment not filled yet | Lampiran belum dilengkapi' });
+        file_valid.current = false;
       } else {
-        setFileLoad(true);
-        setBankLoad(true);
+        file_valid.current = true;
       }
+      fileData.forEach((item) => {
+        checkFileExist[item.file_type] = checkFileExist[item.file_type] + 1;
+      });
+      Object.keys(checkFileExist).map((keys) => {
+        if (checkFileExist[keys] === 0) {
+          fileremain.push(filenames[keys]);
+        }
+      });
+      if (fileremain.length > 0) {
+        file_valid.current = false;
+        setFormStat({ stat: true, type: 'error', message: `Surat berikut belum lengkap : ${fileremain.join(', ')}` });
+      } else {
+        file_valid.current = true;
+      }
+    } else {
+      setFileLoad(true);
+      setBankLoad(true);
     }
+    // console.log(
+    //   'check : file => ' + file_valid.current + ' ; bank => ' + bank_valid.current + 'submitting : ' + isSubmitting
+    // );
     setBtnclick(false);
   }, [isSubmitting]);
+
   const submitForm = async (value) => {
     setBtnclick(true);
     if (is_reject === true) {
@@ -960,16 +1019,17 @@ export default function RefactorFormVendorPage() {
       ven_banks: ven_bank,
       ven_files: ven_file,
     };
-    console.log(jsonSend);
+    // console.log(jsonSend);
     if (loader_data.data.reject_by !== '') {
       jsonSend.remarks = '';
     }
     if (UPDATE.FINA) {
       jsonSend.mdm_id = session.user_id;
     }
+    // console.log(bank_valid.current, file_valid.current, is_draft.current, isSubmitting);
     try {
-      if (!(bank_valid.current && file_valid.current)) {
-        if (!is_draft.current) {
+      if (!is_draft.current) {
+        if (!(bank_valid.current && file_valid.current)) {
           return;
         }
       }
@@ -1190,6 +1250,7 @@ export default function RefactorFormVendorPage() {
                         required: 'Please insert this field',
                         maxLength: { value: 200, message: 'Max 200 Character' },
                       }}
+                      toUpperCase={true}
                     />
                   </Grid>
                   {(ticketState === 'CREA' || ticketState === 'FINA') && (
@@ -1207,6 +1268,7 @@ export default function RefactorFormVendorPage() {
                         rules={{
                           maxLength: { value: 160, message: 'Max 160 Character' },
                         }}
+                        toUpperCase={true}
                       />
                     </Grid>
                   )}
@@ -1445,6 +1507,7 @@ export default function RefactorFormVendorPage() {
                           required: 'Please insert this field',
                           maxLength: { value: 20, message: 'Max 20 Character' },
                         }}
+                        toUpperCase={true}
                       />
                     </Grid>
                     <Grid item xs={3}></Grid>
@@ -1601,13 +1664,14 @@ export default function RefactorFormVendorPage() {
             <AccordionDetails>
               <VenBankTable
                 onChildDataChange={setVen_bankFromChild}
-                initData={initDataBank.current}
+                initData={initDataBank}
                 idParent={loader_data.ven_id}
                 banks={banks.current}
                 currencies={currencies.current}
                 countries={countries.current}
                 isallow={(UPDATE.INIT || UPDATE.CREA) && (ticketState === 'INIT' || loader_data.ticket_type === 'PROC')}
                 ticketState={ticketState}
+                isLoad={loadingInitBank}
               />
             </AccordionDetails>
           </Accordion>
@@ -1629,9 +1693,10 @@ export default function RefactorFormVendorPage() {
             <AccordionDetails>
               <UploadButton
                 inputTypes={newFileTypelist}
-                iniData={initDataFile.current}
+                iniData={initDataFile}
                 idParent={loader_data.ven_id}
                 onChildDataChange={setVen_fileFromChild}
+                loadData={loadingInitFile}
                 allow={
                   (UPDATE.INIT && ticketState === 'INIT') ||
                   (UPDATE.CREA && ticketState === 'CREA' && loader_data.ticket_type === 'PROC')
@@ -1710,7 +1775,9 @@ export default function RefactorFormVendorPage() {
                   sx={{ height: 50, width: 120, margin: 2 }}
                   color="warning"
                   variant="contained"
+                  type="submit"
                   onClick={() => {
+                    // console.log(value);
                     is_draft.current = true;
                     submitForm(getValues());
                   }}
@@ -1727,7 +1794,11 @@ export default function RefactorFormVendorPage() {
                   onClick={handleSubmit((value) => {
                     // console.log(value);
                     is_draft.current = false;
-                    submitForm(value);
+                    if (isTender && ticketState === 'CREA' && isValid && bank_valid.current && file_valid.current) {
+                      setConfOpen(true);
+                    } else {
+                      submitForm(value);
+                    }
                   })}
                   disabled={btnClicked}
                 >
@@ -1771,7 +1842,7 @@ export default function RefactorFormVendorPage() {
         >
           <CircularProgress color="inherit" />
         </Backdrop>
-        <Dialog open={formStat.type === 'success' && is_draft.current == false}>
+        <Dialog open={formStat.stat && formStat.type === 'success' && is_draft.current == false}>
           <Box
             sx={{
               width: 500,
@@ -1788,6 +1859,13 @@ export default function RefactorFormVendorPage() {
             </Typography>
           </Box>
         </Dialog>
+        <ConfirmComponent
+          open={modalConfirmopen}
+          handleConfirm={confirmActionFun}
+          onCloseConf={modalConfclose}
+          sx={{ zIndex: (theme) => theme.zIndex.drawer - 2 }}
+          confirmText={`You're about to send this form to CEO/CFO, are you sure ?`}
+        />
       </Container>
     </>
   );
