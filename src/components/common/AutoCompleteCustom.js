@@ -1,9 +1,11 @@
 import { Autocomplete, TextField, createFilterOptions } from '@mui/material';
 import ModalCreateBank from './ModalCreateBank';
 import { useGridApiContext } from '@mui/x-data-grid';
+import { useRef, useEffect } from 'react';
 
 export default function AutoCompleteCustom(params) {
   const apiRef = useGridApiContext();
+  const reference = useRef();
   const handleChange = (paramsa, newvalue) => {
     const { id, row, field } = paramsa;
     apiRef.current.setEditCellValue({ id, field, value: newvalue });
@@ -12,9 +14,15 @@ export default function AutoCompleteCustom(params) {
     params.newAddModal(e.inputValue);
   };
   const filter = createFilterOptions();
+  useEffect(() => {
+    if (params.hasFocus) {
+      reference.current.focus();
+    }
+  }, [params.hasFocus]);
   return (
     <>
       <Autocomplete
+        tabIndex={params.tabIndex}
         name={params.name}
         options={params.options}
         value={params.value}
@@ -54,7 +62,7 @@ export default function AutoCompleteCustom(params) {
         renderOption={(props, option) => <li {...props}>{option.label}</li>}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         fullWidth
-        renderInput={(paramb) => <TextField {...paramb} label={params.label} fullWidth />}
+        renderInput={(paramb) => <TextField {...paramb} inputRef={reference} label={params.label} fullWidth />}
       />
     </>
   );
