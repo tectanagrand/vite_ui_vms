@@ -23,7 +23,15 @@ export default function AutoCompleteSelect({
             if (onChangeovr != undefined) {
               onChangeovr(newValue);
             }
-            onChange(newValue);
+            if (freeSolo) {
+              if (typeof newValue === 'object') {
+                onChange(newValue);
+              } else {
+                onChange(newValue?.toUpperCase());
+              }
+            } else {
+              onChange(newValue);
+            }
           }}
           value={value}
           error={error}
