@@ -72,6 +72,7 @@ export function ListTicket() {
   const navigate = useNavigate();
   const urlSetFunc = (urlitem) => {
     setUrl(urlitem);
+    setRefreshbtn(true);
   };
   const tickets = async (controller) => {
     let permission = {};
@@ -191,6 +192,7 @@ export function ListTicket() {
     } else if (type === 'Delete') {
       const deleteTicket = await axiosPrivate.delete(`/ticket/${row.id}`);
       setDelete(!deleted);
+      setRefreshbtn(true);
       alert(`Ticket ${deleteTicket.data.data} is deleted`);
     } else {
       // <Navigate to={`/form/${row.id}`} />;
@@ -330,7 +332,7 @@ export function ListTicket() {
             }
           }
           if (item.row.ticket_state == 'FINA') {
-            if (perm.FINA.update) {
+            if (perm.FINA.update && item.row.cur_pos !== 'CEO') {
               Buttons.push(
                 <Tooltip key={item.id} title="Edit">
                   <IconButton onClick={handleButtonAction('Edit', item.row)}>
@@ -382,7 +384,7 @@ export function ListTicket() {
                   <MenuItem value={false}>Inactive</MenuItem>
                 </Select>
               </FormControl>
-              <RefreshTable setRefreshbtn={buttonRefreshAct} isLoading={refreshBtn} sx={{ mb: 3 }} />
+              <RefreshTable setRefreshbtn={buttonRefreshAct} isLoading={refreshBtn} sx={{ mb: 3, height: '3.5rem' }} />
             </Box>
             {perm.Table.create && (
               <Button
