@@ -18,7 +18,7 @@ import {
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useEffect, useState } from 'react';
-import { Edit, Link, Visibility, Delete, Refresh } from '@mui/icons-material';
+import { Edit, Link, Visibility, Delete, Refresh, Update } from '@mui/icons-material';
 import Cookies from 'js-cookie';
 import ModalCreateTicket from 'src/components/common/ModalCreateTicket';
 import { useSession } from 'src/provider/sessionProvider';
@@ -113,6 +113,7 @@ export function ListTicket() {
         vendor_name: item.name_1,
         vendor_code: item.ven_code,
         ticket_state: item.ticket_state,
+        is_expired: item.is_expired,
       }));
       setTicket(load);
       if (refreshBtn) {
@@ -177,27 +178,39 @@ export function ListTicket() {
   };
 
   const handleButtonAction = (type, row) => async (e) => {
-    if (type === 'Link') {
-      if (navigator.clipboard === undefined) {
-        await copyToClipboard(`${location.host}/frm/newform/${row.id}`);
+    try {
+      if (type === 'Link') {
+        if (navigator.clipboard === undefined) {
+          await copyToClipboard(`${location.host}/frm/newform/${row.id}`);
+        } else {
+          navigator.clipboard.writeText(`${location.host}/frm/newform/${row.id}`);
+        }
+        setAnchorel(e.target);
+        setBtn(true);
+        setGrow(true);
+        setTimeout(() => {
+          setBtn(false);
+        }, 1000);
+      } else if (type === 'Delete') {
+        const deleteTicket = await axiosPrivate.delete(`/ticket/${row.id}`);
+        setDelete(!deleted);
+        setRefreshbtn(true);
+        alert(`Ticket ${deleteTicket.data.data} is deleted`);
+      } else if (type === 'Extend') {
+        if (confirm('Are you sure want to extend ? (+1 day)')) {
+          const extendTicket = await axiosPrivate.post(`/ticket/extexp`, {
+            ticket_id: row.id,
+          });
+          alert(`Ticket ${extendTicket.data.ticket_num} expiry date extended`);
+          setRefreshbtn(true);
+        }
       } else {
-        navigator.clipboard.writeText(`${location.host}/frm/newform/${row.id}`);
+        // <Navigate to={`/form/${row.id}`} />;
+        navigate(`../form/${row.id}`, { relative: 'path' });
+        setLoader(true);
       }
-      setAnchorel(e.target);
-      setBtn(true);
-      setGrow(true);
-      setTimeout(() => {
-        setBtn(false);
-      }, 1000);
-    } else if (type === 'Delete') {
-      const deleteTicket = await axiosPrivate.delete(`/ticket/${row.id}`);
-      setDelete(!deleted);
-      setRefreshbtn(true);
-      alert(`Ticket ${deleteTicket.data.data} is deleted`);
-    } else {
-      // <Navigate to={`/form/${row.id}`} />;
-      navigate(`../form/${row.id}`, { relative: 'path' });
-      setLoader(true);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -321,6 +334,15 @@ export function ListTicket() {
                   </IconButton>
                 </Tooltip>
               );
+              if (item.row.is_expired) {
+                Buttons.push(
+                  <Tooltip key={item.id} title="Extend Expiry">
+                    <IconButton onClick={handleButtonAction('Extend', item.row)}>
+                      <Update />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }
             } else if (perm.CREA.read) {
               Buttons.push(
                 <Tooltip key={item.id} title="View">
