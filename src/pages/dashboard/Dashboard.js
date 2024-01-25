@@ -99,10 +99,14 @@ export default function MiniDrawer() {
   useEffect(() => {
     if (Cookies.get('accessToken')) {
       const getAuthorization = async () => {
-        const getAuth = await axiosPrivate.post(`/user/authorization`, {
-          group_id: session.groupid,
-        });
-        setSession({ ...session, ['permission']: getAuth.data });
+        try {
+          const getAuth = await axiosPrivate.post(`/user/authorization`, {
+            group_id: session.groupid,
+          });
+          setSession({ ...session, ['permission']: getAuth.data });
+        } catch (error) {
+          console.error(error);
+        }
       };
       getAuthorization();
     }

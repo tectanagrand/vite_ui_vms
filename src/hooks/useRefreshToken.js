@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useSession } from 'src/provider/sessionProvider';
+import Cookies from 'js-cookie';
 
 const useRefreshToken = () => {
   const { setAccessToken, logOut } = useSession();
@@ -12,6 +13,9 @@ const useRefreshToken = () => {
       return response.data.accessToken;
     } catch (error) {
       console.log(error);
+      Object.keys(Cookies.get()).map((item) => {
+        Cookies.remove(item);
+      });
       setTimeout(() => {
         window.location.replace(`${window.location.hostname}/login`);
       }, 100);
