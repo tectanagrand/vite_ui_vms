@@ -850,10 +850,18 @@ export default function RefactorFormVendorPage() {
     }
   };
 
-  useEffect(() => {
+  const checkBankandFile = () => {
     if (isFileload || isBankload) {
       let prefileData = [...ven_file, ...initDataFile];
-      let prebankData = [...ven_bank, ...initDataBank];
+      let prebankData = {};
+      initDataBank.map((item) => {
+        prebankData[item.id] = item;
+      });
+      if (ven_bank.length > 0) {
+        ven_bank.map((item) => {
+          prebankData[item.bankv_id] = { ...item, id: item.bankv_id };
+        });
+      }
       let deletedIdBank = [];
       let deletedIdFile = [];
       // console.log(prefileData, prebankData);
@@ -862,17 +870,15 @@ export default function RefactorFormVendorPage() {
           deletedIdFile.push(file.file_id);
         }
       }
-      for (const bank of prebankData) {
-        if (bank?.method === 'delete') {
-          deletedIdBank.push(bank.bankv_id);
+      Object.values(prebankData).map((item) => {
+        if (item?.method === 'delete') {
+          deletedIdBank.push(item.id);
         }
-      }
+      });
       // console.log(deletedIdBank, deletedIdFile);
       let fileData = prefileData.filter((file) => !deletedIdFile.includes(file.file_id));
-      let bankData = prebankData.filter(
-        (bank) => !(deletedIdBank.includes(bank.id) || deletedIdBank.includes(bank.bankv_id))
-      );
-      // console.log(fileData, bankData);
+      let bankData = Object.values(prebankData).filter((bank) => !deletedIdBank.includes(bank.id));
+      console.log(fileData, bankData);
       let checkFileExist = {
         A001: 0,
         A002: 0,
@@ -921,6 +927,7 @@ export default function RefactorFormVendorPage() {
       } else {
         bank_valid.current = true;
       }
+      let isFalse = false;
       bankData.forEach((item) => {
         // console.log(item);
         delete item.acc_name;
@@ -930,16 +937,19 @@ export default function RefactorFormVendorPage() {
           delete item.bank_key;
         }
         Object.keys(item).map((key) => {
-          if (item[key] === '' || item[key] === null) {
+          if (item[key] === '' || item[key] === null || item[key] === undefined) {
             // console.log('field bank empty');
             if (key === 'bank_key') {
               setFormStat({ stat: true, type: 'error', message: 'Please complete bank key data on master bank menu' });
             } else {
-              setFormStat({ stat: true, type: 'error', message: 'Banks not filled yet | Bank belum dilengkapi' });
+              setFormStat({ stat: true, type: 'error', message: `${key} field not filled yet` });
             }
             bank_valid.current = false;
+            isFalse = true;
           } else {
-            bank_valid.current = true;
+            if (!isFalse) {
+              bank_valid.current = true;
+            }
           }
         });
       });
@@ -971,6 +981,10 @@ export default function RefactorFormVendorPage() {
     //   'check : file => ' + file_valid.current + ' ; bank => ' + bank_valid.current + 'submitting : ' + isSubmitting
     // );
     setBtnclick(false);
+  };
+
+  useEffect(() => {
+    checkBankandFile();
   }, [isSubmitting]);
 
   const submitForm = async (value) => {
@@ -1026,7 +1040,11 @@ export default function RefactorFormVendorPage() {
     if (UPDATE.FINA) {
       jsonSend.mdm_id = session.user_id;
     }
+    checkBankandFile();
     // console.log(bank_valid.current, file_valid.current, is_draft.current, isSubmitting);
+    // if (bank_valid.current && file_valid.current) {
+    //   console.log('submitting');
+    // }
     try {
       if (!is_draft.current) {
         if (!(bank_valid.current && file_valid.current)) {
