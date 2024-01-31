@@ -306,6 +306,15 @@ export function ListTicket() {
                   </IconButton>
                 </Tooltip>
               );
+              if (item.row.is_expired) {
+                Buttons.push(
+                  <Tooltip key={item.id} title="Extend Expiry">
+                    <IconButton onClick={handleButtonAction('Extend', item.row)}>
+                      <Update />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }
             } else if (perm.INIT.read) {
               Buttons.push(
                 <Tooltip key={item.id} title="View">
@@ -334,15 +343,6 @@ export function ListTicket() {
                   </IconButton>
                 </Tooltip>
               );
-              if (item.row.is_expired) {
-                Buttons.push(
-                  <Tooltip key={item.id} title="Extend Expiry">
-                    <IconButton onClick={handleButtonAction('Extend', item.row)}>
-                      <Update />
-                    </IconButton>
-                  </Tooltip>
-                );
-              }
             } else if (perm.CREA.read) {
               Buttons.push(
                 <Tooltip key={item.id} title="View">
