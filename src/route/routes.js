@@ -1,24 +1,37 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
-import FormVendorPage from '../pages/FormVendorPage';
 import axios from 'axios';
-import ErrorPage from '../pages/ErrorPage';
-import Error404 from 'src/pages/Error404';
-import LoginPage from 'src/pages/LoginPage';
-import Dashboard from 'src/pages/dashboard/Dashboard';
-import Cookies from 'js-cookie';
-import { ListTicket, loaderTicket } from 'src/pages/dashboard/ListTicket';
-import ListVendor from 'src/pages/dashboard/ListVendor';
-import NavSection from 'src/components/nav/NavSection';
-import ListReqStat from 'src/pages/dashboard/ListReqStat';
-import FormUserPage from 'src/pages/FormUserPage';
-import User from 'src/pages/dashboard/RefactorUser';
-import MenuAccessPage from 'src/pages/MenuAccessPage';
-import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
-import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
-import QRPage from 'src/pages/QRPage';
-import ListMasterBank from 'src/pages/dashboard/ListMasterBank';
-import TicketInvalid from 'src/pages/TicketInvalid';
-import ResetPassword from 'src/pages/ResetPassword';
+import { lazy } from 'react';
+// import ErrorPage from '../pages/ErrorPage';
+// import Error404 from 'src/pages/Error404';
+// import LoginPage from 'src/pages/LoginPage';
+// import Dashboard from 'src/pages/dashboard/Dashboard';
+// import ListTicket from 'src/pages/dashboard/ListTicket';
+// import ListVendor from 'src/pages/dashboard/ListVendor';
+// import ListReqStat from 'src/pages/dashboard/ListReqStat';
+// import FormUserPage from 'src/pages/FormUserPage';
+// import User from 'src/pages/dashboard/RefactorUser';
+// import MenuAccessPage from 'src/pages/MenuAccessPage';
+// import ListUserGroup from 'src/pages/dashboard/ListUserGroup';
+// import RefactorFormVendorPage from 'src/pages/RefactorFormVendorPage';
+// import ListMasterBank from 'src/pages/dashboard/ListMasterBank';
+// import TicketInvalid from 'src/pages/TicketInvalid';
+// import ResetPassword from 'src/pages/ResetPassword';
+
+const ErrorPage = lazy(() => import('../pages/ErrorPage'));
+const Error404 = lazy(() => import('src/pages/Error404'));
+const LoginPage = lazy(() => import('src/pages/LoginPage'));
+const Dashboard = lazy(() => import('src/pages/dashboard/Dashboard'));
+const ListTicket = lazy(() => import('src/pages/dashboard/ListTicket'));
+const ListVendor = lazy(() => import('src/pages/dashboard/ListVendor'));
+const ListReqStat = lazy(() => import('src/pages/dashboard/ListReqStat'));
+const FormUserPage = lazy(() => import('src/pages/FormUserPage'));
+const User = lazy(() => import('src/pages/dashboard/RefactorUser'));
+const MenuAccessPage = lazy(() => import('src/pages/MenuAccessPage'));
+const ListUserGroup = lazy(() => import('src/pages/dashboard/ListUserGroup'));
+const RefactorFormVendorPage = lazy(() => import('src/pages/RefactorFormVendorPage'));
+const ListMasterBank = lazy(() => import('src/pages/dashboard/ListMasterBank'));
+const TicketInvalid = lazy(() => import('src/pages/TicketInvalid'));
+const ResetPassword = lazy(() => import('src/pages/ResetPassword'));
 
 export const routes = createBrowserRouter([
   {
@@ -48,10 +61,12 @@ export const routes = createBrowserRouter([
   {
     path: 'login',
     element: <LoginPage />,
+    errorElement: <ErrorPage />,
   },
   {
     path: 'resetpass',
     element: <ResetPassword />,
+    errorElement: <ErrorPage />,
   },
   {
     path: 'dashboard',
@@ -124,6 +139,7 @@ export const routes = createBrowserRouter([
   {
     path: 'invalidticket',
     element: <TicketInvalid />,
+    errorElement: <ErrorPage />,
   },
 ]);
 

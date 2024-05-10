@@ -5,29 +5,24 @@ import ThemeProvider from './theme';
 
 import { routes } from './route/routes';
 import AuthProvider from './provider/sessionProvider';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Suspense } from 'react';
+import LoadingSuspense from './components/loadingscreen/Loading';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from './ErrorFallback';
 
 function App() {
-  // return (
-  //   <HelmetProvider>
-  //     <BrowserRouter>
-  //       <ThemeProvider>
-  //         <Router />
-  //       </ThemeProvider>
-  //     </BrowserRouter>
-  //   </HelmetProvider>
-  // );
   return (
-    <HelmetProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <RouterProvider router={routes} />
-          </LocalizationProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </HelmetProvider>
+    <ErrorBoundary fallback={ErrorFallback}>
+      <Suspense fallback={<LoadingSuspense />}>
+        <HelmetProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <RouterProvider router={routes} />
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

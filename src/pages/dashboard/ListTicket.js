@@ -18,7 +18,7 @@ import {
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import { useEffect, useState } from 'react';
-import { Edit, Link, Visibility, Delete, Refresh, Update } from '@mui/icons-material';
+import { Edit, Link, Visibility, Delete, Refresh, Update, MailOutline } from '@mui/icons-material';
 import Cookies from 'js-cookie';
 import ModalCreateTicket from 'src/components/common/ModalCreateTicket';
 import { useSession } from 'src/provider/sessionProvider';
@@ -53,7 +53,7 @@ function RefreshTable(props) {
   );
 }
 
-export function ListTicket() {
+export default function ListTicket() {
   // const load = useLoaderData();
   const { session, getPermission, logOut } = useSession();
   const [perm, setPerm] = useState();
@@ -203,6 +203,19 @@ export function ListTicket() {
           });
           alert(`Ticket ${extendTicket.data.ticket_num} expiry date extended`);
           setRefreshbtn(true);
+        }
+      } else if (type === 'RESEND') {
+        if (confirm('Are you sure want to resend request to CEO ?')) {
+          try {
+            const resendTicket = await axiosPrivate.post(`/ticket/resendceo`, {
+              ticket_id: row.id,
+            });
+            alert(`Ticket resent`);
+          } catch (error) {
+            alert(error.response?.data?.message);
+          } finally {
+            setRefreshbtn(true);
+          }
         }
       } else {
         // <Navigate to={`/form/${row.id}`} />;
@@ -370,6 +383,15 @@ export function ListTicket() {
                   </IconButton>
                 </Tooltip>
               );
+              if (item.row.cur_pos === 'CEO') {
+                Buttons.push(
+                  <Tooltip key={item.id} title="Resend CEO">
+                    <IconButton onClick={handleButtonAction('RESEND', item.row)} onClose={handleOnBtnClose}>
+                      <MailOutline />
+                    </IconButton>
+                  </Tooltip>
+                );
+              }
             }
           }
         } else {

@@ -33,10 +33,11 @@ export default function ConfirmComponent({ open, handleConfirm, onCloseConf, sx,
             modalConfClose();
           }}
           variant="contained"
+          color="error"
         >
           Cancel
         </Button>
-        <Button color="error" variant="contained" onClick={() => confirmAction()}>
+        <Button color="primary" variant="contained" onClick={() => confirmAction()}>
           Submit
         </Button>
       </DialogActions>

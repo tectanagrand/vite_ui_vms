@@ -1,9 +1,18 @@
 import { Box, Stack } from '@mui/material';
 import { useRouteError, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export default function ErrorPage() {
   const error = useRouteError();
   console.log(error);
+
+  useEffect(() => {
+    const chunkFailedMessage = /^.*Failed\s+to\s+fetch\s+dynamically\s+imported\s+module.*$/;
+    if (error?.message && chunkFailedMessage.test(error?.message)) {
+      window.location.reload();
+    }
+  }, [error]);
+
   if (error.response?.status === 401) {
     return <Navigate replace to="/login" />;
   }

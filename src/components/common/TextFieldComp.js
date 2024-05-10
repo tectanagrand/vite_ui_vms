@@ -11,6 +11,7 @@ export const TextFieldComp = ({
   onChangeovr,
   toUpperCase,
   toLowerCase,
+  helperText,
 }) => {
   return (
     <>
@@ -21,7 +22,7 @@ export const TextFieldComp = ({
         defaultValue={valueovr}
         render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
           <TextField
-            helperText={error ? error.message : null}
+            helperText={error ? error.message : helperText}
             error={!!error}
             onChange={(e) => {
               if (toUpperCase) {
