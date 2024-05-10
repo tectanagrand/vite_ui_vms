@@ -1267,8 +1267,10 @@ export default function RefactorFormVendorPage() {
                       rules={{
                         required: 'Please insert this field',
                         maxLength: { value: 200, message: 'Max 200 Character' },
+                        pattern: { value: /^[^,]*$/, message: `Please fill without ',' (comma) character ` },
                       }}
                       toUpperCase={true}
+                      helperText={`Please insert address without ',' (comma) character`}
                     />
                   </Grid>
                   {(ticketState === 'CREA' || ticketState === 'FINA') && (
