@@ -22,6 +22,7 @@ export default function AutoCompleteCustom(params) {
   return (
     <>
       <Autocomplete
+        readOnly={params.is_local}
         tabIndex={params.tabIndex}
         name={params.name}
         options={params.options}

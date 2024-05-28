@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  IconButton,
   FormControl,
   InputLabel,
   MenuItem,
@@ -9,37 +10,41 @@ import {
   Stack,
   Snackbar,
   Alert as MuiAlert,
+  Tooltip,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useState, forwardRef, useEffect } from 'react';
 import VenFileTable from '../FormVendor/VenFileTable';
 import { useSession } from 'src/provider/sessionProvider';
 import { LoadingButton } from '@mui/lab';
+import { useTranslation } from 'react-i18next';
+import { Help } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function UploadButton({ inputTypes, onChildDataChange, iniData, idParent, allow, loadData }) {
+const UploadButton = forwardRef(function UploadButton(
+  { inputTypes, onChildDataChange, iniData, idParent, allow, loadData, deleteFile, requiredFiles, fileCheck, lang },
+  ref
+) {
+  const { t } = useTranslation();
   const { session } = useSession();
   const [typeFile, setTypeFile] = useState(0);
   const [statUpload, setStatUpload] = useState({ stat: false, type: '', message: '' });
   const [fileStaged, setFileStaged] = useState([]);
   const inTypes = [{ key: 'pleaseSelect', value: 'Please Select Item' }, ...inputTypes];
   const [btnClicked, setBtnclick] = useState(false);
+  const theme = useTheme();
 
   const sendDataParent = (file_ven) => {
     let items = [];
     file_ven.map((item) => {
-      if (item.method !== '') {
-        let temp = { ...item };
-        delete temp.id;
-        items.push(temp);
-      }
+      let temp = { ...item };
+      delete temp.id;
+      items.push(temp);
     });
-    // console.log(items);
-    // console.log('from table:');
-    // console.log(items);
     onChildDataChange(items);
   };
 
@@ -49,9 +54,8 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
       iniData.map((item) => {
         covtData.push({ ...item, method: '', id: item.file_id });
       });
-      // console.log(covtData);
-      setFileStaged([...fileStaged, ...covtData]);
-      sendDataParent(fileStaged);
+      setFileStaged([...covtData]);
+      sendDataParent([...covtData]);
     }
   }, [iniData]);
 
@@ -66,6 +70,10 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
     // console.log(newItem);
     setFileStaged(newItem);
     sendDataParent(newItem);
+  };
+
+  const openFileGuide = () => {
+    window.open(`${process.env.REACT_APP_URL_BE}static/ATTACHMENT GUIDE VENDOR WEB.pdf`);
   };
 
   const handleValidate = (event) => {
@@ -120,7 +128,14 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
   return (
     <>
       <Stack spacing={2}>
-        <Typography sx={{ ml: 2, mb: 2 }}>Upload File Here</Typography>
+        <Box style={{ display: 'flex', gap: 3, alignContent: 'center' }}>
+          <Typography sx={{ ml: 2, mb: 2, mt: 2 }}>Upload File Here</Typography>
+          <Tooltip title={<h4>Attachment File Guide</h4>}>
+            <IconButton color="primary" onClick={openFileGuide}>
+              <Help fontSize="large" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <Box sx={{ width: 500, height: 50, display: 'flex', alignItems: 'center' }}>
           <FormControl fullWidth>
             <InputLabel htmlFor="fileType" id="fileType-label">
@@ -146,8 +161,9 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
             variant="outlined"
             sx={{ height: 50, width: 300, margin: 2 }}
             onClick={handleValidate}
-            disabled={!allow}
+            disabled={!allow || (fileCheck && fileCheck[inTypes[typeFile].key] !== undefined)}
             loading={btnClicked}
+            ref={ref}
           >
             Upload
             <input type="file" id="fileUpload" name="fileUpload" multiple hidden onChange={handleUpload} />
@@ -163,9 +179,23 @@ export default function UploadButton({ inputTypes, onChildDataChange, iniData, i
             {statUpload.message}
           </Alert>
         </Snackbar>
-
-        <VenFileTable initData={fileStaged} upTable={handleUpFromTb} isallow={allow} isLoad={loadData} />
+        {requiredFiles.length > 0 && (
+          <>
+            <p style={{ color: 'red' }}>
+              Files are required : {requiredFiles.map((item) => t(item.message)).join(', ')}
+            </p>
+          </>
+        )}
+        <VenFileTable
+          initData={fileStaged}
+          upTable={handleUpFromTb}
+          isallow={allow}
+          isLoad={loadData}
+          delFile={deleteFile}
+        />
       </Stack>
     </>
   );
-}
+});
+
+export default UploadButton;

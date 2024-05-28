@@ -21,14 +21,14 @@ import AutoCompleteCustom from '../common/AutoCompleteCustom';
 import AutoCompleteBank from '../common/AutoCompleteBank';
 
 function EditToolbar(props) {
-  const { setVen_bank, setRowModesModel, idParent, isallow } = props;
+  const { setVen_bank, setRowModesModel, idParent, isallow, isLocal } = props;
   const handleClick = () => {
     const id = randomId();
     setVen_bank((oldRows) => [
       ...oldRows,
       {
         id: id,
-        country: { value: '', label: '' },
+        country: isLocal ? { value: 'ID', label: 'ID' } : { value: '', label: '' },
         bank_id: { value: '', label: '' },
         bank_acc: '',
         bank_curr: { value: '', label: '' },
@@ -62,6 +62,7 @@ export default function VenBankTable({
   isallow,
   ticketState,
   isLoad,
+  isLocal,
 }) {
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
@@ -215,7 +216,7 @@ export default function VenBankTable({
       editable: isallow,
       valueFormatter: ({ value }) => value?.label,
       renderEditCell: (params) => {
-        return <AutoCompleteCustom {...params} options={countriesData} />;
+        return <AutoCompleteCustom {...params} options={countriesData} is_local={isLocal} />;
       },
       width: 100,
     },
@@ -308,7 +309,7 @@ export default function VenBankTable({
             toolbar: EditToolbar,
           }}
           slotProps={{
-            toolbar: { setVen_bank, setRowModesModel, idParent, isallow },
+            toolbar: { setVen_bank, setRowModesModel, idParent, isallow, isLocal },
           }}
           getRowClassName={(params) => {
             if (params.row.method == 'delete') {

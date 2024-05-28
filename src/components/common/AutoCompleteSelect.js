@@ -20,11 +20,13 @@ export default function AutoCompleteSelect({
       render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
         <Autocomplete
           onChange={(e, newValue) => {
+            console.log(newValue);
             if (onChangeovr != undefined) {
               onChangeovr(newValue);
             }
             if (freeSolo) {
               if (typeof newValue === 'object') {
+                console.log('is object');
                 onChange(newValue);
               } else {
                 onChange(newValue?.toUpperCase());

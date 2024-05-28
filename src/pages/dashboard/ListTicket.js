@@ -383,15 +383,15 @@ export default function ListTicket() {
                   </IconButton>
                 </Tooltip>
               );
-              if (item.row.cur_pos === 'CEO') {
-                Buttons.push(
-                  <Tooltip key={item.id} title="Resend CEO">
-                    <IconButton onClick={handleButtonAction('RESEND', item.row)} onClose={handleOnBtnClose}>
-                      <MailOutline />
-                    </IconButton>
-                  </Tooltip>
-                );
-              }
+              // if (item.row.cur_pos === 'CEO') {
+              //   Buttons.push(
+              //     <Tooltip key={item.id} title="Resend CEO">
+              //       <IconButton onClick={handleButtonAction('RESEND', item.row)} onClose={handleOnBtnClose}>
+              //         <MailOutline />
+              //       </IconButton>
+              //     </Tooltip>
+              //   );
+              // }
             }
           }
         } else {

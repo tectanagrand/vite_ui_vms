@@ -1,22 +1,22 @@
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { useState, forwardRef, useEffect } from 'react';
-import { Delete as DeleteIcon, Undo, Download } from '@mui/icons-material';
-import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress, Skeleton } from '@mui/material';
+import { Delete as DeleteIcon, Undo, Download, Preview } from '@mui/icons-material';
+import { Alert as MuiAlert, Snackbar, Backdrop, CircularProgress, Skeleton, Tooltip } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 import axios from 'axios';
 import useAxiosPrivate from 'src/hooks/useAxiosPrivate';
 import fileDownload from 'js-file-download';
-import { axiosPrivate } from 'src/api/axios';
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
+export default function VenFileTable({ initData, upTable, isallow, isLoad, delFile }) {
   const [file_ven, setFile_ven] = useState(initData);
   const [sbarOpen, setSbarOpen] = useState(false);
   const [loaderOpen, setLoaderopen] = useState(false);
   const [fetchStat, setFetchStat] = useState({});
+  const axiosPrivate = useAxiosPrivate();
 
   useEffect(() => {
     setFile_ven(initData);
@@ -84,6 +84,7 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
               throw Error(response.message);
             }
           }
+          delFile(item);
         } else {
           prevData.push(item);
         }
@@ -133,10 +134,10 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
       width: 100,
       cellClassName: 'actions',
       renderCell: (item) => {
-        const handleDownloadClick = (item) => {
+        const handleDownloadClick = async (item) => {
           const fileName = item.row.file_name;
 
-          axiosPrivate
+          await axiosPrivate
             .get(`/master/file/${fileName}`, { responseType: 'blob' })
             .then((response) => {
               fileDownload(response.data, fileName);
@@ -155,6 +156,10 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
               onDeleteSBar();
             });
         };
+        const handlePreviewClick = (item) => {
+          const fileName = item.row.file_name;
+          window.open(`${process.env.REACT_APP_URL_BE}static/${fileName}`);
+        };
         if (item.row.method == 'delete') {
           return [
             <GridActionsCellItem
@@ -167,27 +172,49 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad }) {
         } else {
           if (isallow) {
             return [
-              <GridActionsCellItem
-                key={`delete-${item.id}`}
-                icon={<DeleteIcon />}
-                label="Delete"
-                onClick={() => handleDeleteClick(item.id)}
-              />,
-              <GridActionsCellItem
-                key={`dwn-${item.id}`}
-                icon={<Download />}
-                label="Download"
-                onClick={() => handleDownloadClick(item)}
-              />,
+              <Tooltip title="Delete" placement="top">
+                <GridActionsCellItem
+                  key={`delete-${item.id}`}
+                  icon={<DeleteIcon />}
+                  label="Delete"
+                  onClick={() => handleDeleteClick(item.id)}
+                />
+              </Tooltip>,
+              <Tooltip title="Download" placement="top">
+                <GridActionsCellItem
+                  key={`dwn-${item.id}`}
+                  icon={<Download />}
+                  label="Download"
+                  onClick={() => handleDownloadClick(item)}
+                />
+              </Tooltip>,
+              <Tooltip title="Preview" placement="top">
+                <GridActionsCellItem
+                  key={`prv-${item.id}`}
+                  icon={<Preview />}
+                  label="Preview"
+                  onClick={() => handlePreviewClick(item)}
+                />
+              </Tooltip>,
             ];
           } else {
             return [
-              <GridActionsCellItem
-                key={`dwn-${item.id}`}
-                icon={<Download />}
-                label="Download"
-                onClick={() => handleDownloadClick(item)}
-              />,
+              <Tooltip title="Download" placement="top">
+                <GridActionsCellItem
+                  key={`dwn-${item.id}`}
+                  icon={<Download />}
+                  label="Download"
+                  onClick={() => handleDownloadClick(item)}
+                />
+              </Tooltip>,
+              <Tooltip title="Preview" placement="top">
+                <GridActionsCellItem
+                  key={`prv-${item.id}`}
+                  icon={<Preview />}
+                  label="Preview"
+                  onClick={() => handlePreviewClick(item)}
+                />
+              </Tooltip>,
             ];
           }
         }
