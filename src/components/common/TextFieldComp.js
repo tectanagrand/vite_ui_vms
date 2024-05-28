@@ -11,6 +11,7 @@ export const TextFieldComp = ({
   onChangeovr,
   toUpperCase,
   toLowerCase,
+  Number,
   helperText,
 }) => {
   return (
@@ -29,6 +30,11 @@ export const TextFieldComp = ({
                 onChange(e.target.value.toUpperCase());
               } else if (toLowerCase) {
                 onChange(e.target.value.toLowerCase());
+              }
+              if (Number) {
+                if (!e.target.value.match(/[a-zA-Z!@#$%^&*(),.?":{}|<>-]/g) !== null) {
+                  onChange(e.target.value);
+                }
               } else {
                 onChange(e);
               }

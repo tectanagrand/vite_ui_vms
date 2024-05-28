@@ -4,7 +4,9 @@ import {
   GridRowEditStopReasons,
   GridRowModes,
   GridToolbarContainer,
+  GridEditInputCell,
 } from '@mui/x-data-grid';
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import { randomId } from '@mui/x-data-grid-generator';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -19,6 +21,43 @@ import { Button, Skeleton } from '@mui/material';
 import { styled, lighten, darken } from '@mui/material/styles';
 import AutoCompleteCustom from '../common/AutoCompleteCustom';
 import AutoCompleteBank from '../common/AutoCompleteBank';
+
+const StyledBox = styled('div')(({ theme }) => ({
+  width: '100%',
+  '& .MuiDataGrid-cell--editable': {
+    backgroundColor: theme.palette.mode === 'dark' ? '#376331' : 'rgb(217 243 190)',
+    '& .MuiInputBase-root': {
+      height: '100%',
+    },
+  },
+  '& .Mui-error': {
+    backgroundColor: `rgb(126,10,15, ${theme.palette.mode === 'dark' ? 0 : 0.1})`,
+    color: theme.palette.mode === 'dark' ? '#ff4343' : '#750f0f',
+  },
+}));
+
+const StyledTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(
+  ({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+      backgroundColor: theme.palette.error.main,
+      color: theme.palette.error.contrastText,
+    },
+  })
+);
+
+function NameEditInputCell(props) {
+  const { error } = props;
+
+  return (
+    <StyledTooltip open={!!error} title={error}>
+      <GridEditInputCell {...props} />
+    </StyledTooltip>
+  );
+}
+
+function renderEditName(params) {
+  return <NameEditInputCell {...params} />;
+}
 
 function EditToolbar(props) {
   const { setVen_bank, setRowModesModel, idParent, isallow, isLocal } = props;
@@ -245,10 +284,17 @@ export default function VenBankTable({
     {
       field: 'bank_acc',
       type: 'string',
+      preProcessEditCellProps: (params) => {
+        let isError = false;
+        if (params.props.value.match(/[a-zA-Z!@#$%^&*(),.?":{}|<>-]/g) !== null) {
+          isError = 'Field only accept numbers';
+        }
+        return { ...params.props, error: isError };
+      },
       headerName: 'Bank Account',
       width: 200,
       editable: isallow,
-      valueGetter: (params) => params.value?.toUpperCase(),
+      renderEditCell: renderEditName,
     },
     {
       field: 'acc_hold',
