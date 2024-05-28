@@ -181,9 +181,9 @@ export default function ListTicket() {
     try {
       if (type === 'Link') {
         if (navigator.clipboard === undefined) {
-          await copyToClipboard(`${location.host}/frm/newform/${row.id}`);
+          await copyToClipboard(`${location.protocol}/${location.host}/frm/newform/${row.id}`);
         } else {
-          navigator.clipboard.writeText(`${location.host}/frm/newform/${row.id}`);
+          navigator.clipboard.writeText(`${location.protocol}/${location.host}/frm/newform/${row.id}`);
         }
         setAnchorel(e.target);
         setBtn(true);

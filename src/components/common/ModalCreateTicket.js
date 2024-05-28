@@ -46,7 +46,7 @@ export default function ModalCreateTicket({ open, onClose, linkUrl, urlSet, popU
       });
       const createdTicket = response.data;
       if (param === 'VENDOR') {
-        urlSet(`${location.host}/${createdTicket.data.link}`);
+        urlSet(`${location.protocol}/${location.host}/${createdTicket.data.link}`);
       } else {
         onClose();
         navigate(`../form/${createdTicket.data.token}`);
