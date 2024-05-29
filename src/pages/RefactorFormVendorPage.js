@@ -18,6 +18,8 @@ import {
   AlertTitle,
   ToggleButton,
   ToggleButtonGroup,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -642,6 +644,7 @@ export default function RefactorFormVendorPage() {
   const bank_valid = useRef(false);
   const file_valid = useRef(false);
   const uploadButRef = useRef(null);
+  const rejectRef = useRef(null);
   // const initDataBank = useRef([]);
   // const initDataFile = useRef([]);
   const [initDataBank, setInitDbank] = useState([]);
