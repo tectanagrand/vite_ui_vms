@@ -40,6 +40,7 @@ import { LoadingButton } from '@mui/lab';
 import ConfirmComponent from 'src/components/common/ConfirmComponent';
 
 import { useTranslation } from 'react-i18next';
+import RejectLog from 'src/components/common/RejectLog';
 
 const ventypeList = {
   '3RD_PARTY': [
@@ -146,8 +147,6 @@ export default function RefactorFormVendorPage() {
     cur_pos: '',
   });
 
-  console.log(errors);
-
   useEffect(() => {
     const type = predata.type;
     const tokenform = predata.token;
@@ -217,6 +216,7 @@ export default function RefactorFormVendorPage() {
           panelFile: false,
           panelVendetail: false,
           panelApproval: false,
+          panelRejectLog: false,
         });
       } else {
         setCheckex(false);
@@ -231,6 +231,7 @@ export default function RefactorFormVendorPage() {
           panelFile: true,
           panelVendetail: true,
           panelApproval: true,
+          panelRejectLog: false,
         });
       }
 
@@ -345,6 +346,7 @@ export default function RefactorFormVendorPage() {
           panelFile: false,
           panelVendetail: false,
           panelApproval: false,
+          panelRejectLog: false,
         });
       } else {
         setCheckex(false);
@@ -359,6 +361,7 @@ export default function RefactorFormVendorPage() {
           panelFile: true,
           panelVendetail: true,
           panelApproval: true,
+          panelRejectLog: false,
         });
       }
 
@@ -457,6 +460,7 @@ export default function RefactorFormVendorPage() {
         panelFile: true,
         panelVendetail: true,
         panelApproval: true,
+        panelRejectLog: false,
       });
       setLoadex(false);
       setBtnclick(false);
@@ -474,6 +478,7 @@ export default function RefactorFormVendorPage() {
         panelFile: false,
         panelVendetail: false,
         panelApproval: false,
+        panelRejectLog: false,
       });
       setLoadex(false);
     }
@@ -516,6 +521,7 @@ export default function RefactorFormVendorPage() {
         panelFile: false,
         panelVendetail: false,
         panelApproval: false,
+        panelRejectLog: false,
       });
       setBtnclick(true);
     } else if (compName != '') {
@@ -529,6 +535,7 @@ export default function RefactorFormVendorPage() {
         panelFile: true,
         panelVendetail: true,
         panelApproval: true,
+        panelRejectLog: false,
       });
       setBtnclick(false);
     }
@@ -709,6 +716,7 @@ export default function RefactorFormVendorPage() {
     panelFile: true,
     panelVendetail: true,
     panelApproval: true,
+    panelRejectLog: false,
   });
   useMemo(() => ({ cities, countries, currencies }), [cities, countries, currencies]);
   //set active section
@@ -1115,6 +1123,36 @@ export default function RefactorFormVendorPage() {
                 <ToggleButton value="en">EN</ToggleButton>
               </ToggleButtonGroup>
             </Box>
+            {loader_data.data?.reject_by && (
+              <Alert
+                severity="error"
+                variant="filled"
+                sx={{
+                  width: '100%',
+                  mt: '1rem',
+                  mb: '1rem',
+                  '& .MuiAlert-message': {
+                    width: '96%',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: 'column', borderBox: 'box-sizing', width: '100%' }}>
+                  {t('Form Rejected')}
+                  <div
+                    style={{
+                      color: '#158fff',
+                      backgroundColor: 'white',
+                      borderRadius: '12px',
+                      padding: '0.5rem 0.5rem 0.5rem 0.5rem ',
+                      width: 'auto',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {loader_data.data?.remarks_readOnly}
+                  </div>
+                </Box>
+              </Alert>
+            )}
             <Alert severity="warning" variant="filled" sx={{ width: '45rem', mt: '1rem', mb: '1rem' }}>
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 {t('Please Download')}
@@ -2049,9 +2087,21 @@ export default function RefactorFormVendorPage() {
               </AccordionDetails>
             </Accordion>
           )}
-          <Box sx={{ my: 5, backgroundColor: 'white' }}>
-            <TextFieldComp name="remarks_readOnly" label="Rejection Remarks" control={control} readOnly={true} />
-          </Box>
+
+          <Accordion expanded={expanded.panelRejectLog} onChange={handleExpanded('panelRejectLog')}>
+            <AccordionSummary
+              sx={{ pointerEvents: 'none' }}
+              expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
+            >
+              <Typography>Rejection Log</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ my: 5, backgroundColor: 'white', borderRadius: '12px' }}>
+                {/* <TextFieldComp name="remarks_readOnly" label="Rejection Remarks" control={control} readOnly={true} /> */}
+                <RejectLog ticket_id={loader_data.ticket_id} ticket_state={ticketState} />
+              </Box>
+            </AccordionDetails>
+          </Accordion>
 
           <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
             <Box>
