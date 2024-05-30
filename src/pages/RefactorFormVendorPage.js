@@ -2016,7 +2016,12 @@ export default function RefactorFormVendorPage() {
                 banks={banks.current}
                 currencies={currencies.current}
                 countries={countries.current}
-                isallow={(UPDATE.INIT || UPDATE.CREA) && (ticketState === 'INIT' || loader_data.ticket_type === 'PROC')}
+                isallow={
+                  (UPDATE.INIT || UPDATE.CREA) &&
+                  ticketState === 'INIT' &&
+                  ticketState === 'CREA' &&
+                  loader_data.ticket_type === 'PROC'
+                }
                 ticketState={ticketState}
                 isLoad={loadingInitBank}
                 isLocal={chgLocal === 'LOCAL'}
