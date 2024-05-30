@@ -2018,9 +2018,9 @@ export default function RefactorFormVendorPage() {
                 countries={countries.current}
                 isallow={
                   (UPDATE.INIT || UPDATE.CREA) &&
-                  ticketState === 'INIT' &&
-                  ticketState === 'CREA' &&
-                  loader_data.ticket_type === 'PROC'
+                  (ticketState === 'INIT' ||
+                  (ticketState === 'CREA' &&
+                  loader_data.ticket_type === 'PROC'))
                 }
                 ticketState={ticketState}
                 isLoad={loadingInitBank}
