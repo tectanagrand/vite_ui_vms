@@ -22,7 +22,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useContext, createContext } from 'react';
 import { VenBankTable } from 'src/components/FormVendor';
 import UploadButton from 'src/components/common/UploadButton';
 import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
@@ -38,8 +38,8 @@ import PatternFieldComp from 'src/components/common/PatternFieldComp';
 import AutoCompleteSelect from 'src/components/common/AutoCompleteSelect';
 import { LoadingButton } from '@mui/lab';
 import ConfirmComponent from 'src/components/common/ConfirmComponent';
-
 import { useTranslation } from 'react-i18next';
+
 import RejectLog from 'src/components/common/RejectLog';
 
 const ventypeList = {
@@ -71,7 +71,7 @@ const ventypeList = {
   INTERDIVISION: [{ value: 'X', label: 'X' }],
 };
 
-export default function RefactorFormVendorPage() {
+function RefactorFormVendorPage() {
   const predata = useLoaderData();
   const axiosPrivate = useAxiosPrivate();
   const defaultValue = {
@@ -259,12 +259,12 @@ export default function RefactorFormVendorPage() {
       setExpanded({
         panelReqDet: true,
         panelCompDet: true,
-        panelAddr: false,
-        panelTax: false,
-        panelBank: false,
-        panelFile: false,
-        panelVendetail: false,
-        panelApproval: false,
+        panelAddr: true,
+        panelTax: true,
+        panelBank: true,
+        panelFile: true,
+        panelVendetail: true,
+        panelApproval: true,
       });
       const data = response.data.data;
       const valueForm = {
@@ -409,7 +409,8 @@ export default function RefactorFormVendorPage() {
   const [modalRejectopen, setModalopen] = useState(false);
   const [modalConfirmopen, setConfOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(false);
-  const [langCode, setLang] = useState('en');
+  const [langCode, setLang] = useState('id');
+  const { t, i18n } = useTranslation('translation', { lng: langCode });
 
   const funChgCountry = (item) => {
     setChgCty(item);
@@ -593,7 +594,7 @@ export default function RefactorFormVendorPage() {
         }
       })();
     }
-  }, [compTitle, chgLocal, loader_data]);
+  }, [compTitle, langCode, chgLocal, loader_data]);
 
   useEffect(() => {
     const firstError = Object.keys(errors).reduce((field, a) => {
@@ -673,8 +674,6 @@ export default function RefactorFormVendorPage() {
   const [loadingComp, setLoadComp] = useState(false);
   const [loadingPayterm, setLoadPayterm] = useState(false);
 
-  const { t, i18n } = useTranslation();
-
   const vengroups = [
     { value: '3RD_PARTY', label: '3RD Party' },
     { value: 'BANK', label: 'Bank' },
@@ -694,7 +693,7 @@ export default function RefactorFormVendorPage() {
     { value: 'LOCAL', label: t('Local') },
     {
       value: 'OVS',
-      label: 'Overseas',
+      label: t('Overseas'),
     },
   ];
 
@@ -1337,7 +1336,7 @@ export default function RefactorFormVendorPage() {
                     <Grid item xs={6}>
                       <TextFieldComp
                         name="search_term"
-                        label="Search Term"
+                        label={t('Search Term')}
                         control={control}
                         readOnly={!(UPDATE.CREA && ticketState === 'CREA')}
                         rules={{
@@ -1403,7 +1402,7 @@ export default function RefactorFormVendorPage() {
                     <Grid item xs={9}>
                       <TextFieldComp
                         name="street2"
-                        label="Address 2"
+                        label={t('Address') + ' 2'}
                         control={control}
                         readOnly={
                           !(
@@ -1527,7 +1526,7 @@ export default function RefactorFormVendorPage() {
                     <Grid item xs={9}>
                       <TextFieldComp
                         name="street2_npwp"
-                        label="Address 2"
+                        label={t('Address') + ' 2'}
                         control={control}
                         readOnly={
                           !(
@@ -1652,7 +1651,7 @@ export default function RefactorFormVendorPage() {
                     <Grid item xs={9}>
                       <TextFieldComp
                         name="street2_sppkp"
-                        label="Address 2"
+                        label={t('Address') + ' 2'}
                         control={control}
                         readOnly={
                           !(
@@ -1828,7 +1827,7 @@ export default function RefactorFormVendorPage() {
                     />
                   }
                 >
-                  <Typography>Vendor Details</Typography>
+                  <Typography>{t('Vendor Details')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
@@ -1943,7 +1942,7 @@ export default function RefactorFormVendorPage() {
                     <Grid item xs={5}>
                       <CheckboxComp
                         name="is_tender"
-                        label="Tender Vendor"
+                        label={t('Vendor Tender Participant')}
                         control={control}
                         readOnly={!(ticketState === 'CREA' && UPDATE.CREA)}
                         onChangeovr={funChgTdr}
@@ -1961,13 +1960,13 @@ export default function RefactorFormVendorPage() {
               maxWidth="lg"
               sx={{ zIndex: (theme) => theme.zIndex.drawer - 2 }}
             >
-              <DialogTitle>Reject Form</DialogTitle>
+              <DialogTitle>{t('Reject Form')}</DialogTitle>
               <Box
                 sx={{ width: '40rem', height: '12rem', display: 'flex', flexDirection: 'column', gap: 5, p: 2, mb: 3 }}
               >
                 <Alert severity="warning">
-                  <AlertTitle>Please provide rejection reasons</AlertTitle> Your current works will not be saved when
-                  rejecting form
+                  <AlertTitle>{t('Please provide rejection reasons')}</AlertTitle>{' '}
+                  {t('Your current works will not be saved when rejecting form')}
                 </Alert>
                 <TextFieldComp
                   name="remarks"
@@ -2018,13 +2017,12 @@ export default function RefactorFormVendorPage() {
                 countries={countries.current}
                 isallow={
                   (UPDATE.INIT || UPDATE.CREA) &&
-                  (ticketState === 'INIT' ||
-                  (ticketState === 'CREA' &&
-                  loader_data.ticket_type === 'PROC'))
+                  (ticketState === 'INIT' || (ticketState === 'CREA' && loader_data.ticket_type === 'PROC'))
                 }
                 ticketState={ticketState}
                 isLoad={loadingInitBank}
                 isLocal={chgLocal === 'LOCAL'}
+                t={t}
               />
             </AccordionDetails>
           </Accordion>
@@ -2098,7 +2096,7 @@ export default function RefactorFormVendorPage() {
               sx={{ pointerEvents: 'none' }}
               expandIcon={<ExpandMoreIcon sx={{ pointerEvents: 'auto' }} />}
             >
-              <Typography>Rejection Log</Typography>
+              <Typography>{t('Rejection Log')}</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ my: 5, backgroundColor: 'white', borderRadius: '12px' }}>
@@ -2119,7 +2117,7 @@ export default function RefactorFormVendorPage() {
                     navigate('../ticket');
                   }}
                 >
-                  Back
+                  {t('Back')}
                 </Button>
               )}
             </Box>
@@ -2134,7 +2132,7 @@ export default function RefactorFormVendorPage() {
                     setModalopen(true);
                   }}
                 >
-                  Reject
+                  {t('Reject')}
                 </Button>
               )}
               {UPDATE[ticketState] && loader_data.cur_pos !== 'MGR' && (
@@ -2150,7 +2148,7 @@ export default function RefactorFormVendorPage() {
                   }}
                   disabled={btnClicked}
                 >
-                  Save Draft
+                  {t('Save Draft')}
                 </Button>
               )}
               {UPDATE[ticketState] && loader_data.cur_pos !== 'MGR' && (
@@ -2169,7 +2167,7 @@ export default function RefactorFormVendorPage() {
                   })}
                   disabled={btnClicked}
                 >
-                  Submit
+                  {t('Submit')}
                 </Button>
               )}
             </Box>
@@ -2191,7 +2189,7 @@ export default function RefactorFormVendorPage() {
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <Alert severity="success" variant="filled">
-            {`Ticket Number ${loader_data.ticket_num} has already submitted`}
+            {`${t('Ticket Number')} ${loader_data.ticket_num} ${t('has already submitted')}`}
           </Alert>
         </Snackbar>
         <Backdrop
@@ -2231,9 +2229,12 @@ export default function RefactorFormVendorPage() {
           handleConfirm={confirmActionFun}
           onCloseConf={modalConfclose}
           sx={{ zIndex: (theme) => theme.zIndex.drawer - 2 }}
-          confirmText={`You're about to send this form to CEO/CFO, are you sure ?`}
+          confirmText={t(`You're about to send this form to CEO/CFO, are you sure ?`)}
+          t={t}
         />
       </Container>
     </>
   );
 }
+
+export default RefactorFormVendorPage;

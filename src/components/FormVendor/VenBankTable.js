@@ -102,6 +102,7 @@ export default function VenBankTable({
   ticketState,
   isLoad,
   isLocal,
+  ...props
 }) {
   let covtData = [];
   const [ven_bank, setVen_bank] = useState([]);
@@ -250,7 +251,7 @@ export default function VenBankTable({
     {
       field: 'country',
       // type: 'singleSelect',
-      headerName: 'Country',
+      headerName: props.t('Country'),
       // valueOptions: banksData,
       editable: isallow,
       valueFormatter: ({ value }) => value?.label,
@@ -262,7 +263,7 @@ export default function VenBankTable({
     {
       field: 'bank_id',
       // type: 'singleSelect',
-      headerName: 'Bank Name',
+      headerName: props.t('Bank Name'),
       // valueOptions: banksData,
       editable: isallow,
       valueFormatter: ({ value }) => value?.label,
@@ -274,7 +275,7 @@ export default function VenBankTable({
     {
       field: 'bank_curr',
       // type: 'singleSelect',
-      headerName: 'Currency',
+      headerName: props.t('Currency'),
       // valueOptions: banksData,
       editable: isallow,
       valueFormatter: ({ value }) => value?.label,
@@ -291,7 +292,7 @@ export default function VenBankTable({
         }
         return { ...params.props, error: isError };
       },
-      headerName: 'Bank Account',
+      headerName: props.t('Bank Account'),
       width: 200,
       editable: isallow,
       renderEditCell: renderEditName,
@@ -299,7 +300,7 @@ export default function VenBankTable({
     {
       field: 'acc_hold',
       type: 'string',
-      headerName: 'Account Holder',
+      headerName: props.t('Account Holder'),
       width: 250,
       editable: isallow,
       valueGetter: (params) => params.value?.toUpperCase(),
@@ -307,7 +308,7 @@ export default function VenBankTable({
     {
       field: 'action',
       type: 'actions',
-      headerName: 'Action',
+      headerName: props.t('Action'),
       width: 100,
       cellClassName: 'actions',
       getActions: (row) => {

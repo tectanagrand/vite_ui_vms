@@ -1,6 +1,6 @@
 import { Dialog, Button, Typography, Box, DialogActions } from '@mui/material';
 
-export default function ConfirmComponent({ open, handleConfirm, onCloseConf, sx, confirmText }) {
+export default function ConfirmComponent({ open, handleConfirm, onCloseConf, sx, confirmText, ...props }) {
   const modalConfClose = () => {
     onCloseConf();
   };
@@ -35,10 +35,10 @@ export default function ConfirmComponent({ open, handleConfirm, onCloseConf, sx,
           variant="contained"
           color="error"
         >
-          Cancel
+          {props.t('Cancel')}
         </Button>
         <Button color="primary" variant="contained" onClick={() => confirmAction()}>
-          Submit
+          {props.t('Submit')}
         </Button>
       </DialogActions>
     </Dialog>

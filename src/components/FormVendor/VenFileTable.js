@@ -11,7 +11,7 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function VenFileTable({ initData, upTable, isallow, isLoad, delFile }) {
+export default function VenFileTable({ initData, upTable, isallow, isLoad, delFile, ...props }) {
   const [file_ven, setFile_ven] = useState(initData);
   const [sbarOpen, setSbarOpen] = useState(false);
   const [loaderOpen, setLoaderopen] = useState(false);
@@ -123,14 +123,14 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad, delFi
     {
       field: 'desc_file',
       type: 'string',
-      headerName: 'Type',
+      headerName: props.t('Type'),
       width: 200,
     },
-    { field: 'file_name', type: 'string', headerName: 'File Name', width: 650 },
+    { field: 'file_name', type: 'string', headerName: props.t('File Name'), width: 650 },
     {
       field: 'action',
       type: 'actions',
-      headerName: 'Action',
+      headerName: props.t('Action'),
       width: 100,
       cellClassName: 'actions',
       renderCell: (item) => {
@@ -165,53 +165,53 @@ export default function VenFileTable({ initData, upTable, isallow, isLoad, delFi
             <GridActionsCellItem
               key={`undo-${item.id}`}
               icon={<Undo />}
-              label="Undo"
+              label={props.t('Undo')}
               onClick={handleUndoClick(item)}
             />,
           ];
         } else {
           if (isallow) {
             return [
-              <Tooltip title="Delete" placement="top">
+              <Tooltip title={props.t('Delete')} placement="top">
                 <GridActionsCellItem
                   key={`delete-${item.id}`}
                   icon={<DeleteIcon />}
-                  label="Delete"
+                  label={props.t('Delete')}
                   onClick={() => handleDeleteClick(item.id)}
                 />
               </Tooltip>,
-              <Tooltip title="Download" placement="top">
+              <Tooltip title={props.t('Download')} placement="top">
                 <GridActionsCellItem
                   key={`dwn-${item.id}`}
                   icon={<Download />}
-                  label="Download"
+                  label={props.t('Download')}
                   onClick={() => handleDownloadClick(item)}
                 />
               </Tooltip>,
-              <Tooltip title="Preview" placement="top">
+              <Tooltip title={props.t('Preview')} placement="top">
                 <GridActionsCellItem
                   key={`prv-${item.id}`}
                   icon={<Preview />}
-                  label="Preview"
+                  label={props.t('Preview')}
                   onClick={() => handlePreviewClick(item)}
                 />
               </Tooltip>,
             ];
           } else {
             return [
-              <Tooltip title="Download" placement="top">
+              <Tooltip title={props.t('Download')} placement="top">
                 <GridActionsCellItem
                   key={`dwn-${item.id}`}
                   icon={<Download />}
-                  label="Download"
+                  label={props.t('Download')}
                   onClick={() => handleDownloadClick(item)}
                 />
               </Tooltip>,
-              <Tooltip title="Preview" placement="top">
+              <Tooltip title={props.t('Preview')} placement="top">
                 <GridActionsCellItem
                   key={`prv-${item.id}`}
                   icon={<Preview />}
-                  label="Preview"
+                  label={props.t('Preview')}
                   onClick={() => handlePreviewClick(item)}
                 />
               </Tooltip>,

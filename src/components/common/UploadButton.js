@@ -29,7 +29,7 @@ const UploadButton = forwardRef(function UploadButton(
   { inputTypes, onChildDataChange, iniData, idParent, allow, loadData, deleteFile, requiredFiles, fileCheck, lang },
   ref
 ) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('translation', { lng: lang });
   const { session } = useSession();
   const [typeFile, setTypeFile] = useState(0);
   const [statUpload, setStatUpload] = useState({ stat: false, type: '', message: '' });
@@ -192,6 +192,7 @@ const UploadButton = forwardRef(function UploadButton(
           isallow={allow}
           isLoad={loadData}
           delFile={deleteFile}
+          t={t}
         />
       </Stack>
     </>
