@@ -62,7 +62,8 @@
       "has already submitted": "sudah terkirim",
       "You're about to send this form to CEO/CFO, are you sure": "Anda akan mengirim form ke CFO/CEO, anda yakin?",
       "Cancel": "Batal",
-      "Vendor Details": "Detail Vendor"
+      "Vendor Details": "Detail Vendor",
+      "Justification Form": "Form Justifikasi"
     }
   },
   "en": {
@@ -128,7 +129,8 @@
       "has already submitted": "has already submitted",
       "You're about to send this form to CEO/CFO, are you sure": "You're about to send this form to CEO/CFO, are you sure",
       "Cancel": "Cancel",
-      "Vendor Details": "Vendor Details"
+      "Vendor Details": "Vendor Details",
+      "Justification Form": "Justification Form"
     }
   }
 }
